@@ -1,0 +1,25 @@
+% Test error cases in all classes!
+
+# GammaDistributionContrainer.m 
+
+% TODO (low): Probably inheritance can be useful for these container
+% classes as well, e.g. 'GammaDistributionContainer' and 'GaussianDistributionContainer'
+% in which case the parameters of the distribution should be a structure
+
+% TODO (low): Maybe some of the error checking can be more flexible, e.g. if the
+% lengths don't match we can fill in/cut some of the values.
+
+% TODO (?): Do I need a 2D container of distributions, e.g. if each element in a 
+% matrix has a different parameters? Check GFA model. If so, I can still
+% implement it as 1D container and just define the access differently.
+
+
+
+
+
+
+# GaussianDistribution.m
+% TODO: Add a Base class 'Distribution' and inherit from it all
+% '...Distribution' classes
+% TODO (very low): Maybe add 'private' for properties and implement getters and
+% setters (it will complicate stuff a lot)
