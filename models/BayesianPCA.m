@@ -97,11 +97,13 @@ classdef BayesianPCA < handle
         function obj = qZUpdate(obj)
             % Update variational parameters for q(z)
             for i = 1:obj.N
-                muNew = obj.tau.Expectation * obj.Z
+                % All latent variables have the same covariance
+                muNew = obj.tau.Expectation * obj.Z.distributions(i).cov * obj.W.ExpectationCt * (obj.X.getObservation(i) - obj.mu.Expectation);
+                obj.Z.updateDistributionMu(i, muNew);
             end
 
             % Covariance update
-            covNew = Utility.matrixInverse(eye(dim.K) + obj.tau.Expectation * ... 
+            covNew = Utility.matrixInverse(eye(obj.K) + obj.tau.Expectation * ... 
                 obj.W.ExpectationCtC);
             obj.Z.updateAllDistributionsCovariance(covNew);
             
@@ -134,10 +136,21 @@ classdef BayesianPCA < handle
 
         function obj = qTauUpdate(obj)
             % Update variational parameters for q(tau)
-            obj.tau.a = obj.tau.a + obj.N * obj.D/2;
-            % obj.tau.b = ...
-           
-            
+            deltaA = obj.N * obj.D/2;
+            deltaB = 0;
+
+            for i = 1:obj.N
+                deltaB = deltaB + obj.X.getObservationNormSq(i) + ...
+                    obj.mu.ExpectationXtX + ...
+                    trace(obj.W.ExpectationCtC * obj.Z.ExpectationXXt{i}) + ...
+                    2 * obj.mu.ExpectationXt * obj.W.ExpectationC * obj.Z.Expectation{i} - ...
+                    2 * obj.X.getObservation(i, true) * obj.W.ExpectationC * obj.Z.Expectation{i} - ...
+                    2 * obj.X.getObservation(i, true) * obj.mu.Expectation;
+            end
+
+            deltaB = 1/2 * deltaB;
+
+            obj.tau.updateParameters(deltaA, deltaB); 
         end
         
         function ELBO = computeELBO(obj)
