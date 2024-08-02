@@ -1,5 +1,5 @@
 classdef GaussianDistributionTest < matlab.unittest.TestCase
-    methods (Static, Access = private)
+    methods (Static, Access = public)
         function verifyObject(testCase, obj, mu, cov, dim)
             if ~isempty(mu)
                 testCase.verifyEqual(obj.mu, mu);
@@ -22,7 +22,7 @@ classdef GaussianDistributionTest < matlab.unittest.TestCase
         end
 
         function testOneParameterConstructor(testCase)
-            mu = [1, 2, 3];
+            mu = [1; 2; 3];
             obj = GaussianDistribution(mu);
 
             GaussianDistributionTest.verifyObject(testCase, obj, ...
@@ -33,7 +33,7 @@ classdef GaussianDistributionTest < matlab.unittest.TestCase
             % Test 1
             % mu: []
             % cov: scalar
-            mu = [1, 2, 3];
+            mu = [1; 2; 3];
             cov = 4;
             obj = GaussianDistribution(mu, cov);
 
@@ -44,7 +44,7 @@ classdef GaussianDistributionTest < matlab.unittest.TestCase
             % Test 2
             % mu: []
             % cov: array
-            mu = [1, 2, 3, 4, 5];
+            mu = [1; 2; 3; 4; 5];
             cov = [1, 1, 2, 2, 3];
             obj = GaussianDistribution(mu, cov);
             
@@ -54,7 +54,7 @@ classdef GaussianDistributionTest < matlab.unittest.TestCase
             % Test 3
             % mu: []
             % cov: matrix
-            mu = [1, 2, 3];
+            mu = [1; 2; 3];
             cov = Utility.generateRandomSPDMatrix(length(mu));
             obj = GaussianDistribution(mu, cov);
             
@@ -77,7 +77,7 @@ classdef GaussianDistributionTest < matlab.unittest.TestCase
             % mu: scalar
             % cov: array
             mu = 5;
-            cov = [1, 2, 3];
+            cov = [1; 2; 3];
             obj = GaussianDistribution(mu, cov);
             
             GaussianDistributionTest.verifyObject(testCase, obj, ...
@@ -110,6 +110,7 @@ classdef GaussianDistributionTest < matlab.unittest.TestCase
         
         %% Dependent properties
         function testDependentProperties(testCase)
+            % Test 1
             dim = 10;
             obj = GaussianDistribution(0, 1, dim);
             
@@ -120,6 +121,19 @@ classdef GaussianDistributionTest < matlab.unittest.TestCase
 
             testCase.verifyEqual(obj.ExpectationXtX, dim);
             testCase.verifyEqual(obj.ExpectationXXt, eye(dim));
+
+            % Test 2
+            dim = 10;
+            cov = Utility.generateRandomSPDMatrix(dim);
+            mu = ones(dim, 1);
+            obj = GaussianDistribution(mu, cov);
+            
+            testCase.verifyEqual(obj.Expectation, mu);
+            testCase.verifyEqual(obj.Variance, cov);
+            testCase.verifyEqual(obj.ExpectationXt, mu');
+
+            testCase.verifyEqual(obj.ExpectationXtX, mu' * mu + trace(cov));
+            testCase.verifyEqual(obj.ExpectationXXt, mu * mu' + cov);
         end
         
 

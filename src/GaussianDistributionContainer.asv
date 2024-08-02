@@ -152,19 +152,13 @@ classdef GaussianDistributionContainer < handle
             value = zeros(obj.Size, obj.Size);
             for i = 1:obj.Size
                 for j = 1:obj.Size
-                    % [NOTE] E[Wt * W] is a matrix where each entry is e.g. E[w1^T *
+                    % E[Wt * W] is a matrix where each entry is e.g. E[w1^T *
                     % w2] (w1 and w2 are columns of the matrix W and there
                     % are independent random variable). Given the
-                    % independence this is E[w1^T]E[w2], but when i == j
-                    % then the independence doesn't hold and in that case
-                    % we should use ExpectationXtX from the
-                    % GaussianDistribution class.
-                    if i ~= j
-                        value(i, j) = obj.distributions(i).ExpectationXt * ...
+                    % independence this is E[w1^T]E[w2],
+
+                    value(i, j) = obj.distributions(i).ExpectationXt * ...
                         obj.distributions(j).Expectation;
-                    else 
-                        value(i, j) = obj.distributions(i).ExpectationXtX;
-                    end
                 end
             end
         end

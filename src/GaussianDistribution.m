@@ -37,9 +37,13 @@ classdef GaussianDistribution < handle
                         error(['Error in class ' mfilename ': Parameter is not a valid covariance matrix.']);
                     end
     
-                    if Utility.isArray(mu) && Utility.isArray(cov) && length(mu) ~= length(cov) || ...
-                            Utility.isArray(mu) && Utility.isMatrix(cov) && length(mu) ~= size(cov, 1)
-                        error(['Error in ' mfilename ': Dimensions do not match.']);
+                    % [NOTE]: I use size for 'mu' because it is not the
+                    % same if the mu is row or column array, but for 'cov'
+                    % it is the same because it is passed to the diag() in
+                    % case it is an array!
+                    if Utility.isArray(mu) && Utility.isArray(cov) && size(mu, 1) ~= length(cov) || ...
+                            Utility.isArray(mu) && Utility.isMatrix(cov) && size(mu, 1) ~= size(cov, 1)
+                        error(['Error in ' mfilename ': Dimensions do not match. Try transposing parameter for the mean.']);
                     end
     
                     % 'mu' is an array
@@ -125,7 +129,7 @@ classdef GaussianDistribution < handle
         end
 
         function obj = updateCovariance(obj, cov)
-            if nargin < 1
+            if nargin < 2
                 error(['Error in class ' class(obj) ': Too few arguments passed.']);
             end
 
@@ -142,7 +146,7 @@ classdef GaussianDistribution < handle
         end
         
         function obj = updateMu(obj, mu)
-            if nargin < 1
+            if nargin < 2
                 error(['Error in class ' class(obj) ': Too few arguments passed.']);
             end
 
