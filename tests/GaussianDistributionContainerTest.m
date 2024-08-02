@@ -44,14 +44,32 @@ classdef GaussianDistributionContainerTest < matlab.unittest.TestCase
             end
         end
 
+        function testFourParameterConstructorWithCovariance(testCase)
+            dim = 5;
+            numDistributions = 2;
+            prec = diag(1:dim); % 'prec' is a covariance matrix now
+
+            obj = GaussianDistributionContainer(dim, false, numDistributions, prec);
+
+            testCase.verifyEqual(obj.Size, numDistributions);
+            testCase.verifyEqual(obj.cols, false);
+
+            % Test that each distribution is a multivariate normal with
+            % diagonal covariance matrix
+            for i = 1:obj.Size
+                GaussianDistributionTest.verifyObject(testCase, obj.distributions(i), zeros(dim, 1), prec, dim);
+            end
+        end
+
 
 
         %% Dependent properties
-        function testDependentProperties(testCase)
+        function testDependentPropertiesColumnFormat(testCase)
             dim = 2;
+            cols = true;
             numDistributions = 3;
 
-            obj = GaussianDistributionContainer(dim, true, numDistributions);
+            obj = GaussianDistributionContainer(dim, cols, numDistributions);
 
             % Size
             testCase.verifyEqual(obj.Size, numDistributions);
@@ -75,17 +93,58 @@ classdef GaussianDistributionContainerTest < matlab.unittest.TestCase
             end
 
             % ExpectationC, ExpectationCt, ExpectationCtC
-            if obj.cols
-                expectedVal = [obj.distributions(1).Expectation, obj.distributions(2).Expectation ...
+
+            expectedVal = [obj.distributions(1).Expectation, obj.distributions(2).Expectation ...
                     obj.distributions(3).Expectation];
-            else
-                expectedVal = [obj.distributions(1).Expectation'; obj.distributions(2).Expectation'; ...
-                    obj.distributions(3).Expectation'];
-                
-            end
+
             testCase.verifyEqual(obj.ExpectationC, expectedVal);
             testCase.verifyEqual(obj.ExpectationCt, expectedVal');
             testCase.verifyEqual(obj.ExpectationCtC, [[2, 0, 0]; [0, 6, 3]; [0, 3, 17]]);
+        end
+
+        function testDependentPropertiesRowFormat(testCase)
+            dim = 2;
+            cols = false;
+            numDistributions = 3;
+
+            obj = GaussianDistributionContainer(dim, cols, numDistributions);
+
+            % Size
+            testCase.verifyEqual(obj.Size, numDistributions);
+
+            % Setup
+            %   standard normal
+            %   mu = 1, cov: diag(2)
+            %   mu = [1; 2], cov: newCov
+
+            obj.updateDistributionParams(2, ones(dim, 1), 2);
+            newCov = [10, 1; 1, 2];
+            obj.updateDistributionParams(3, [1; 2], newCov);
+
+            % assignin('base', 'objT', obj);
+
+            % Expectation, ExpectationXXt, ExpectationXtX
+            for i = 1:numDistributions
+                testCase.verifyEqual(obj.Expectation{i}, obj.distributions(i).Expectation);
+                testCase.verifyEqual(obj.ExpectationXXt{i}, obj.distributions(i).ExpectationXXt);
+                testCase.verifyEqual(obj.ExpectationXtX{i}, obj.distributions(i).ExpectationXtX);
+            end
+
+            % ExpectationC, ExpectationCt, ExpectationCtC
+
+            expectedVal = [obj.distributions(1).Expectation'; obj.distributions(2).Expectation'; ...
+                    obj.distributions(3).Expectation'];
+            % else
+            %     expectedVal = [obj.distributions(1).Expectation'; obj.distributions(2).Expectation'; ...
+            %         obj.distributions(3).Expectation'];
+                
+            % end
+            testCase.verifyEqual(obj.ExpectationC, expectedVal);
+            testCase.verifyEqual(obj.ExpectationCt, expectedVal');
+            testCase.verifyEqual(obj.ExpectationCtC, [[15, 4]; [4, 10]]);
+
+            col1SqNorm = obj.getExpectationOfColumnNormSq();
+            testCase.verifyEqual(col1SqNorm, [107 14]);
         end
 
         

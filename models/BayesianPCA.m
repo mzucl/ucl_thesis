@@ -6,7 +6,13 @@ classdef BayesianPCA < handle
         % Model parameters with prior distributions
         Z               % GaussianDistributionContainer      [size: N; for each latent variable zn]
         mu              % Gaussian                           [D x 1; all observations have the same 'mu' parameter]
-        W               % GaussianDistributionContainer      [size: K; for each column in W matrix]
+        W               % GaussianDistributionContainer      [size: D; for each row in W matrix]
+                        % Prior over W is defined per columns (each column
+                        % has its own precision parameter, but update
+                        % equations are defined by rows, so we are
+                        % representing W as a size D container in a row
+                        % format.
+
         alpha           % GammaDistributionContainer         [size: K]
         tau             % Gamma                              [scalar]
 
@@ -47,6 +53,7 @@ classdef BayesianPCA < handle
             obj.elboVals = -Inf(1, obj.maxIter);
                 
             % Z
+            % dim, cols, numOfDistributions
             obj.Z = GaussianDistributionContainer(K, true, obj.N);
 
             % mu
@@ -55,8 +62,11 @@ classdef BayesianPCA < handle
             % alpha
             obj.alpha = GammaDistributionContainer(obj.alphaParams.a, obj.alphaParams.b, K);
             
-            % W
-            obj.W = GaussianDistributionContainer(obj.D, true, K, obj.alpha.Value);
+            % W: 
+            % #distributions: D 
+            % dim: K
+            % Each distribution describes a row in a matrix W (cols = false);
+            obj.W = GaussianDistributionContainer(obj.K, false, obj.D, diag(obj.alpha.Value));
             
             % tau
             obj.tau = GammaDistribution(obj.tauParams.a, obj.tauParams.b); % tau is a scalar
@@ -111,13 +121,35 @@ classdef BayesianPCA < handle
         
         function obj = qWUpdate(obj)
             % Update variational parameters for q(W)
-            cov = Utility.matrixInverse((diag(obj.alpha.Expectation)) + obj.tau.Expectation); %* TODO; FInish 
+
+            %% [NOTE] Initial distribution is defined per columns of W, but
+            % update equations are defined per rows!
+
+            % Covariance update
+            covNew = zeros(obj.K);
+            for k = 1:obj.N
+                covNew = covNew + obj.Z.ExpectationXXt{k};
+            end
+
+            covNew = Utility.matrixInverse((diag(obj.alpha.ExpectationC)) + obj.tau.Expectation * covNew);
+
+            obj.W.updateAllDistributionsCovariance(covNew);
+
+            % Mean update
+            for k = 1:obj.K
+                muNew = zeros(obj.K, 1);
+                for n = 1:obj.N
+                    muNew = muNew + obj.Z.Expectation{n} * (obj.X.getObservationEntry(n, k) - obj.mu.Expectation(k));
+                end
+                muNew = obj.tau.Expectation * obj.W.distributions(k).cov * muNew;
+                obj.W.updateDistributionMu(k, muNew);
+            end
             
         end
 
         function obj = qAlphaUpdate(obj)
             % Update variational parameters for q(alpha)
-            obj.alpha.updateAllDistributionsParams(obj.N * obj.D / 2, diag(obj.W.ExpectationCtC) / 2);
+            obj.alpha.updateAllDistributionsParams(obj.N * obj.D / 2, 1/2 * obj.W.getExpectationOfColumnNormSq());
         end
 
         function obj = qMuUpdate(obj)

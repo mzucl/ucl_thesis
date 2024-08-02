@@ -9,6 +9,7 @@ classdef GammaDistributionContainer < handle
                         % This is a cell array where each entry is an
                         % expectation of one component; 
                         % obj.Expectation{i}
+        ExpectationC    % Array of expectations of all components
         Value           
     end
 
@@ -164,6 +165,10 @@ classdef GammaDistributionContainer < handle
             for i = 1:obj.Size
                 value{i} = obj.distributions(i).Expectation;
             end
+        end
+
+        function value = get.ExpectationC(obj)
+            value = cell2mat(obj.Expectation);
         end
 
         function value = get.Value(obj)
