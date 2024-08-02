@@ -1,11 +1,3 @@
-% Class to handle the dataset, in GFA that it is termed view
-% TODO (medium): Extend this to enable passing in the file path instead of
-% passing in the data matrix
-
-% [NOTE] Not sure if it is a good idea to merge generation of the view data
-% (by e.g. calling 'generateSyntheticData' and 'handling'; probably better
-% to separate the two, but something to think about.
-
 classdef ViewHandler
     properties
         data
@@ -16,11 +8,22 @@ classdef ViewHandler
         D       % Dimensionality
     end
 
+    methods(Access = private)
+        % Helper method that throws an error if index (of the sample) is not valid
+        function validateIndex(obj, idx)
+            if idx < 1 || idx > obj.N 
+                error(['Error in ' class(obj) ': Index out of range.']); 
+            end
+        end
+    end
+
     methods
         function obj = ViewHandler(data)
-            % TODO (medium): We assume here that the observations (N of them) are in
+            % TODO (high): We assume here that the observations (N of them) are in
             % the columns of 'data', thus data is DxN matrix. Implement something to get rid of this
-            % assumption.
+            % assumption. I could pass in number of samples as well and
+            % check which dimension of 'data' corresponds to it, but this
+            % will make problems when we import views from external files.
             if nargin < 1
                 error(['Error in class ' class(obj) ': Too few arguments passed.']);
             else
@@ -29,20 +32,21 @@ classdef ViewHandler
         end
         
         function col = getObservation(obj, idx, tr)
-            % Default value for 'tr' is False
+            if nargin < 2
+                error(['Error in class ' class(obj) ': Too few arguments passed.']);
+            end
+            % Default value for 'tr' is false
             if nargin < 3
-                tr = 0;
+                tr = false;
             end
-            if idx > 0 && idx <= obj.N
-                observation = obj.data(:, idx);
-                col = Utility.ternary(tr == 0, observation, observation');
-            else
-                error(['Error in class ' class(obj) ': Index out of bounds.']);
-            end
+
+            validateIndex(obj, idx);
+
+            observation = obj.data(:, idx);
+            col = Utility.ternary(tr, observation', observation);
         end
 
         function normSq = getObservationNormSq(obj, idx)
-            % TODO: Add try-catch blocks
             col = obj.getObservation(idx);
             normSq = norm(col) ^ 2;
         end

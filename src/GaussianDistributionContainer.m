@@ -50,7 +50,7 @@ classdef GaussianDistributionContainer < handle
                     %   All distributions are zero-mean normal multivariate
                     %   Gaussians with the same dimensionality and
                     %   different covariances given by precision array
-                    if length(prec) ~= dim
+                    if length(prec) ~= numDistributions
                         error(['Error in class ' class(obj) ': Invalid arguments.']);
                     end
 

@@ -23,3 +23,14 @@
 % '...Distribution' classes
 % TODO (very low): Maybe add 'private' for properties and implement getters and
 % setters (it will complicate stuff a lot)
+
+
+
+# ViewHandler.m
+% Class to handle the dataset, in GFA that it is termed view
+% TODO (medium): Extend this to enable passing in the file path instead of
+% passing in the data matrix
+
+% [NOTE] Not sure if it is a good idea to merge generation of the view data
+% (by e.g. calling 'generateSyntheticData' and 'handling'; probably better
+% to separate the two, but something to think about.

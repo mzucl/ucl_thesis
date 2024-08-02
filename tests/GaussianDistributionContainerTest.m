@@ -31,7 +31,7 @@ classdef GaussianDistributionContainerTest < matlab.unittest.TestCase
         function testFourParameterConstructor(testCase)
             dim = 10;
             numDistributions = 2;
-            prec = 1:dim;
+            prec = 1:numDistributions;
 
             obj = GaussianDistributionContainer(dim, false, numDistributions, prec);
 
@@ -94,7 +94,7 @@ classdef GaussianDistributionContainerTest < matlab.unittest.TestCase
         function testGetDistribution(testCase)
             dim = 10;
             numDistributions = 5;
-            prec = 1:dim;
+            prec = 1:numDistributions;
 
             obj = GaussianDistributionContainer(dim, false, numDistributions, prec);
 
