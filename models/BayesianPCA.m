@@ -1,10 +1,10 @@
 classdef BayesianPCA < handle
     properties 
-        X               % Observations DxN (dimensionality x number of samples
+        X               % ViewHandler
         K               % Number of latent dimensions/principal components
 
         % Model parameters with prior distributions
-        z               % GaussianDistributionContainer      [size: N; for each latent variable zn]
+        Z               % GaussianDistributionContainer      [size: N; for each latent variable zn]
         mu              % Gaussian                           [D x 1; all observations have the same 'mu' parameter]
         W               % GaussianDistributionContainer      [size: K; for each column in W matrix]
         alpha           % GammaDistributionContainer         [size: K]
@@ -32,7 +32,7 @@ classdef BayesianPCA < handle
     
     methods
         function obj = BayesianPCA(X, K)
-            obj.X = X;
+            obj.X = ViewHandler(X);
             obj.K = K;
             
             % Init hyperparameters
@@ -47,7 +47,7 @@ classdef BayesianPCA < handle
             obj.elboVals = -Inf(1, obj.maxIter);
                 
             % Z
-            obj.z = GaussianDistributionContainer(K, true, obj.N);
+            obj.Z = GaussianDistributionContainer(K, true, obj.N);
 
             % mu
             obj.mu = GaussianDistribution(0, 1./obj.betaParam, obj.D);
@@ -97,13 +97,13 @@ classdef BayesianPCA < handle
         function obj = qZUpdate(obj)
             % Update variational parameters for q(z)
             for i = 1:obj.N
-                muNew = obj.tau.Expectation * obj.z
+                muNew = obj.tau.Expectation * obj.Z
             end
 
             % Covariance update
             covNew = Utility.matrixInverse(eye(dim.K) + obj.tau.Expectation * ... 
                 obj.W.ExpectationCtC);
-            obj.z.updateAllDistributionsCovariance(covNew);
+            obj.Z.updateAllDistributionsCovariance(covNew);
             
         end
         
@@ -119,10 +119,16 @@ classdef BayesianPCA < handle
         end
 
         function obj = qMuUpdate(obj)
-            obj.mu.updateParameters()
-            
             % Update variational parameters for q(mu)
-            cov = 1./(obj.betaParam + obj.N * obj.tau.Expectation) * eye(obj.D);
+            newMu = zeros(obj.D, 1);
+           
+            for i = 1:obj.N
+                newMu = newMu + obj.X.getObservation(i) - obj.W.ExpectationC * obj.Z.Expectation{i};
+            end
+            newMu = obj.tau.Expectation * obj.mu.cov * newMu;
+            newCov = 1./(obj.betaParam + obj.N * obj.tau.Expectation) * eye(obj.D);
+
+            obj.mu.updateParameters(newMu, newCov);
             
         end
 
@@ -144,11 +150,11 @@ classdef BayesianPCA < handle
 
         %% Getters
         function value = get.N(obj)
-            value = size(obj.X, 2);
+            value = obj.X.N;
         end
         
         function value = get.D(obj)
-            value = size(obj.X, 1);
+            value = obj.X.D;
         end
     end
 end

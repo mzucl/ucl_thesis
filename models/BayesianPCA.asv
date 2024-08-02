@@ -122,6 +122,7 @@ classdef BayesianPCA < handle
             obj.mu.updateParameters()
             
             % Update variational parameters for q(mu)
+            mu = obj.tau.Expectation * obj.mu.cov *  
             cov = 1./(obj.betaParam + obj.N * obj.tau.Expectation) * eye(obj.D);
             
         end
