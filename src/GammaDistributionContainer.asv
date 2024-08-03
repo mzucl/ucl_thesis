@@ -184,9 +184,9 @@ classdef GammaDistributionContainer < handle
         end
 
         function value = get.HC(obj)
-            value = 0;
+            value = cell(1, obj.Size);
             for i = 1:obj.Size
-                value = value + obj.distributions(i).H;
+                value{i} = obj.distributions(i).H;
             end
         end
 

@@ -26,6 +26,14 @@ classdef GammaDistributionContainerTest < matlab.unittest.TestCase
             for i = 1:size
                 testCase.verifyEqual(obj.Expectation{i}, aVals(i) / bVals(i));
             end
+            
+            a = 1; b = 1;
+            obj = GammaDistributionContainer(a, b, size);
+            for i = 1:size
+                testCase.verifyEqual(obj.H{i}, 1);
+            end
+            testCase.verifyEqual(obj.H, dim);
+
 
         end
 
