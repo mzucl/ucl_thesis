@@ -24,26 +24,26 @@ obj = BayesianPCA(data', K); % Expects data in DxN format
 
 
 % Usage:
-% X = randn(100, 5); % Example data
-% K = 2; % Number of principal components
-% model = BayesianPCA(X, K);
-% model = model.fit();
-
-% numPoints = 100;
-% d = 10;
-% stdDevs = [0.5 2 0.5 2 0.5 0.5 0.5 0.5 2 0.5];
+% % X = randn(100, 5); % Example data
+% % K = 2; % Number of principal components
+% % model = BayesianPCA(X, K);
+% % model = model.fit();
 % 
-% try
-%     data = generateSyntheticData(numPoints, d, stdDevs);
-% 
-%     W = PPCA(data, 9);
-% 
-%     hintonDiagram(W);
-% catch e
-%     % Handle errors
-%     disp('An error occurred:');
-%     disp(e.message);
-% end
+% % numPoints = 100;
+% % d = 10;
+% % stdDevs = [0.5 2 0.5 2 0.5 0.5 0.5 0.5 2 0.5];
+% % 
+% % try
+% %     data = generateSyntheticData(numPoints, d, stdDevs);
+% % 
+% %     W = PPCA(data, 9);
+% % 
+% %     hintonDiagram(W);
+% % catch e
+% %     % Handle errors
+% %     disp('An error occurred:');
+% %     disp(e.message);
+% % end
 % 
 % 
 % 
