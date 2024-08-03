@@ -162,7 +162,12 @@ classdef GaussianDistributionContainerTest < matlab.unittest.TestCase
                 testCase.verifyEqual(obj.H{i}, 1 + 2 * log(2*pi));
             end
 
-            testCase.verifyEqual(obj.HC, numDistributions * (1 + 2 * log(2*pi)));
+            testCase.verifyEqual(obj.HC, )
+
+
+            dim = 2;
+            obj = GaussianDistribution(0, 2*pi, dim);
+            testCase.verifyEqual(obj.H, 1 + 2 * log(2*pi));
         end
         
         

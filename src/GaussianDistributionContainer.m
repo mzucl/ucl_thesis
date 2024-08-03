@@ -16,6 +16,8 @@ classdef GaussianDistributionContainer < handle
         ExpectationC        % 'C' stands for container, and this is expectation of the whole container
         ExpectationCt 
         ExpectationCtC
+        H                   % Similar to above, each entry is entropy of a single component
+        HC                  % Entropy of the collection
     end
 
     methods(Access = private)
@@ -213,6 +215,20 @@ classdef GaussianDistributionContainer < handle
                 for i = 1:obj.Size
                     value = value + obj.distributions(i).ExpectationXXt;
                 end
+            end
+        end
+
+        function value = get.H(obj)
+            value = cell(1, obj.Size);
+            for i = 1:obj.Size
+                value{i} = obj.distributions(i).H;
+            end
+        end
+
+        function value = get.HC(obj)
+            value = 0;
+            for i = 1:obj.Size
+                value = value + obj.distributions(i).H;
             end
         end
     end
