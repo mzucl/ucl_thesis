@@ -33,6 +33,14 @@ classdef GammaDistributionTest < matlab.unittest.TestCase
 
             testCase.verifyEqual(obj.Expectation, 0.5);
             testCase.verifyEqual(obj.Variance, 0.25);
+
+            a = 1; b = 1;
+            obj.updateParameters(a, b, false);
+            testCase.verifyEqual(obj.H, 1);
+
+            a = 1; b = exp(1);
+            obj.updateParameters(a, b, false);
+            testCase.verifyEqual(obj.H, 0);
         end
         
         % TODO (low): This can be split into multiple test methods

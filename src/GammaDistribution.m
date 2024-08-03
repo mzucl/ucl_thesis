@@ -7,7 +7,8 @@ classdef GammaDistribution < handle
     properties (Dependent)
         Expectation
         Variance
-        Value
+        H                   % Entropy
+        Value               % Sample from the distribution
     end
     
     methods
@@ -76,6 +77,15 @@ classdef GammaDistribution < handle
         
         function value = get.Variance(obj)
             value = obj.a / obj.b^2;
+        end
+
+        function value = get.H(obj)
+            % From MATLAB help
+            % Y = gammaln(X) computes the natural logarithm of the gamma function for each element of X.
+            % log(X) is the natural logarithm of the elements of X.
+            % psi(X) evaluates the psi function (also know as the digamma function) for each element of X.
+
+            value = gammaln(obj.a) - (obj.a - 1) * psi(obj.a) - log(obj.b) + obj.a;
         end
 
         function value = get.Value(obj)

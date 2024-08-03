@@ -8,7 +8,8 @@ classdef GaussianDistribution < handle
     properties (Dependent)
         Expectation
         Variance
-        Value
+        Value               % Sample from the distribution
+        H                   % Entropy
         ExpectationXt       % E[x^T]
         ExpectationXtX      % E[x^Tx]
         ExpectationXXt      % E[xx^T]
@@ -170,6 +171,10 @@ classdef GaussianDistribution < handle
         
         function value = get.Variance(obj)
             value = obj.cov;
+        end
+
+        function value = get.H(obj)
+            value = 1/2 * log(det(obj.cov)) + obj.dim/2 * (1 + log(2 * pi)); 
         end
 
         function value = get.Value(obj)
