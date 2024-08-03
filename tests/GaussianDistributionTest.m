@@ -134,6 +134,10 @@ classdef GaussianDistributionTest < matlab.unittest.TestCase
 
             testCase.verifyEqual(obj.ExpectationXtX, mu' * mu + trace(cov));
             testCase.verifyEqual(obj.ExpectationXXt, mu * mu' + cov);
+
+            dim = 2;
+            obj = GaussianDistribution(0, 2*pi, dim);
+            testCase.verifyEqual(obj.H, 1 + 2 * log(2*pi));
         end
         
 
