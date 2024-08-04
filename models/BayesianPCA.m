@@ -27,7 +27,6 @@ classdef BayesianPCA < handle
 
         % Hyperparameters
         alphaParams     % struct('a', 'b')
-        tauParams       % struct('a', 'b')
         betaParam       % scalar
     end
 
@@ -43,7 +42,6 @@ classdef BayesianPCA < handle
             
             % Init hyperparameters
             obj.alphaParams = struct('a', Constants.DEFAULT_GAMMA_A, 'b', Constants.DEFAULT_GAMMA_B);
-            obj.tauParams = struct('a', Constants.DEFAULT_GAMMA_A, 'b', Constants.DEFAULT_GAMMA_B);
             obj.betaParam = Constants.DEFAULT_GAUSS_PRECISION;
 
             % Init optimization parameters
@@ -69,7 +67,8 @@ classdef BayesianPCA < handle
             obj.W = GaussianDistributionContainer(obj.K, false, obj.D, diag(obj.alpha.Value));
             
             % tau
-            obj.tau = GammaDistribution(obj.tauParams.a, obj.tauParams.b); % tau is a scalar
+            tauPrior = GammaDistribution(Constants.DEFAULT_GAMMA_A, Constants.DEFAULT_GAMMA_B);
+            obj.tau = GammaDistribution(Constants.DEFAULT_GAMMA_A, Constants.DEFAULT_GAMMA_B, tauPrior);
         end
         
         function obj = fit(obj)

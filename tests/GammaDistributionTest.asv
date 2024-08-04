@@ -3,9 +3,8 @@ classdef GammaDistributionTest < matlab.unittest.TestCase
         function verifyObject(testCase, obj, a, b, prior)
             testCase.verifyEqual(obj.a, a);
             testCase.verifyEqual(obj.b, b);
-            % Verify obj.prior if prior is passed in as a parameter
-            if nargin > 4
-                testCase.verifyEqual(obj.prior, prior);
+            if ~isnan(prior)
+                testCase.verify
             end
         end
         
@@ -33,10 +32,10 @@ classdef GammaDistributionTest < matlab.unittest.TestCase
             aPrior = 1;
             bPrior = 2;
             % Three parameters constructor
-            prior = GammaDistribution(aPrior, bPrior);
             obj = GammaDistribution(a, b, prior);
 
-            GammaDistributionTest.verifyObject(testCase, obj, a, b, prior);
+            GammaDistributionTest.verifyObject(testCase, obj, a, b);
+
             GammaDistributionTest.verifyObject(testCase, obj.prior, aPrior, bPrior);
 
         end
@@ -56,7 +55,7 @@ classdef GammaDistributionTest < matlab.unittest.TestCase
             obj.updateParameters(a, b, false);
             testCase.verifyEqual(obj.H, 0);
 
-            testCase.verifyEqual(obj.ExpectationLn, psi(obj.a) - log(obj.b));
+            testCase.verifyEqual(obj.ExpectationLn, psi(obj.a) - ln(obj.b));
         end
         
         % TODO (low): This can be split into multiple test methods

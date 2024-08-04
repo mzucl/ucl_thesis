@@ -2,18 +2,21 @@ classdef GammaDistribution < handle
     properties
         a  
         b
+        prior
     end
     
     properties (Dependent)
         Expectation
         Variance
         H                   % Entropy
+        ExpectationLn       % E[ln(x)] -> used often
         Value               % Sample from the distribution
     end
     
     methods
-        function obj = GammaDistribution(a, b)
-            % Optional parameters: a, b
+        function obj = GammaDistribution(a, b, prior)
+            % Optional parameters: a, b, prior
+            obj.prior = NaN;
             switch nargin
                 case 0
                     % Default values
@@ -25,6 +28,10 @@ classdef GammaDistribution < handle
                 case 2
                     obj.a = a;
                     obj.b = b;
+                case 3
+                    obj.a = a;
+                    obj.b = b;
+                    obj.prior = prior;
                 otherwise
                     error(['Error in class ' class(obj) ': Too many arguments passed into the constructor.']);
             end
@@ -86,6 +93,10 @@ classdef GammaDistribution < handle
             % psi(X) evaluates the psi function (also know as the digamma function) for each element of X.
 
             value = gammaln(obj.a) - (obj.a - 1) * psi(obj.a) - log(obj.b) + obj.a;
+        end
+
+        function value = get.ExpectationLn(obj)
+            value = psi(obj.a) - log(obj.b);
         end
 
         function value = get.Value(obj)

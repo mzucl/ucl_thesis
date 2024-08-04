@@ -1,10 +1,10 @@
 classdef GaussianDistributionTest < matlab.unittest.TestCase
     methods (Static, Access = public)
         function verifyObject(testCase, obj, mu, cov, dim)
-            if ~isempty(mu)
+            if ~isnan(mu)
                 testCase.verifyEqual(obj.mu, mu);
             end
-            if ~isempty(cov)
+            if ~isnan(cov)
                 testCase.verifyEqual(obj.cov, cov);
             end
             testCase.verifyEqual(obj.dim, dim);
@@ -31,7 +31,7 @@ classdef GaussianDistributionTest < matlab.unittest.TestCase
 
         function testTwoParameterConstructor(testCase)
             % Test 1
-            % mu: []
+            % mu: array
             % cov: scalar
             mu = [1; 2; 3];
             cov = 4;
@@ -42,7 +42,7 @@ classdef GaussianDistributionTest < matlab.unittest.TestCase
 
 
             % Test 2
-            % mu: []
+            % mu: array
             % cov: array
             mu = [1; 2; 3; 4; 5];
             cov = [1, 1, 2, 2, 3];
@@ -52,7 +52,7 @@ classdef GaussianDistributionTest < matlab.unittest.TestCase
                 mu, diag(cov), length(mu));
 
             % Test 3
-            % mu: []
+            % mu: array
             % cov: matrix
             mu = [1; 2; 3];
             cov = Utility.generateRandomSPDMatrix(length(mu));
@@ -165,7 +165,7 @@ classdef GaussianDistributionTest < matlab.unittest.TestCase
             obj.updateCovariance(cov);
 
             GaussianDistributionTest.verifyObject(testCase, obj, ...
-                [], cov, dim); % Don't validate 'mu', it hasn't been updated
+                NaN, cov, dim); % Don't validate 'mu', it hasn't been updated
         end
 
         function testUpdateMu(testCase)
@@ -177,7 +177,7 @@ classdef GaussianDistributionTest < matlab.unittest.TestCase
             obj.updateMu(mu);
 
             GaussianDistributionTest.verifyObject(testCase, obj, ...
-                mu, [], dim); % Don't validate 'cov', it hasn't been updated
+                mu, NaN, dim); % Don't validate 'cov', it hasn't been updated
         end
     end
 end
