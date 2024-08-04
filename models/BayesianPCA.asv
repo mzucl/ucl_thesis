@@ -183,6 +183,10 @@ classdef BayesianPCA < handle
             obj.tau.updateParameters(deltaA, deltaB); 
         end
         
+        
+        %% ELBO
+        function val 
+
         function elbo = computeELBO(obj)
             % Compute the Evidence Lower Bound
             elbo = 0;
@@ -190,7 +194,7 @@ classdef BayesianPCA < handle
             % PART 1: p(.)
 
             % PART 2: q(.)
-            elbo = elbo + q.Z.H + q.W.H + q.alpha
+            elbo = elbo + obj.Z.H + obj.W.H + obj.alpha.H + obj.mu.H + obj.tau.H;
         end
 
 

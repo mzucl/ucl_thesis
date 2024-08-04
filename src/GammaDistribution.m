@@ -9,8 +9,9 @@ classdef GammaDistribution < handle
         Expectation
         Variance
         H                   % Entropy
-        ExpectationLn       % E[ln(x)] -> used often
+        ExpectationLn       % E[ln(x)]; used often
         Value               % Sample from the distribution
+        ExpectationLnP      % E[ln(p(x))] wrt to the q(x)
     end
     
     methods
@@ -97,6 +98,14 @@ classdef GammaDistribution < handle
 
         function value = get.ExpectationLn(obj)
             value = psi(obj.a) - log(obj.b);
+        end
+
+        function value = get.ExpectationLnP(obj)
+            if ~isa(obj.prior, 'GammaDistribution')
+                error(['Error in class ' class(obj) ': Prior must be defined.']);
+            end
+            value = -gammaln(obj.prior.a) + obj.prior.a * log(obj.prior.b) + ...
+                (obj.prior.a - 1) * obj.ExpectationLn - obj.prior.b * obj.Expectation;
         end
 
         function value = get.Value(obj)

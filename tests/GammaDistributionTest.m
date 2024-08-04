@@ -30,8 +30,7 @@ classdef GammaDistributionTest < matlab.unittest.TestCase
 
             GammaDistributionTest.verifyObject(testCase, obj, a, b);
 
-            aPrior = 1;
-            bPrior = 2;
+            aPrior = 1; bPrior = 2;
             % Three parameters constructor
             prior = GammaDistribution(aPrior, bPrior);
             obj = GammaDistribution(a, b, prior);
@@ -57,6 +56,13 @@ classdef GammaDistributionTest < matlab.unittest.TestCase
             testCase.verifyEqual(obj.H, 0);
 
             testCase.verifyEqual(obj.ExpectationLn, psi(obj.a) - log(obj.b));
+
+            aPrior = 1; bPrior = 1;
+            a = 14; b = 7;
+            prior = GammaDistribution(aPrior, bPrior);
+            obj = GammaDistribution(a, b, prior);
+
+            testCase.verifyEqual(obj.ExpectationLnP, -2);
         end
         
         % TODO (low): This can be split into multiple test methods
