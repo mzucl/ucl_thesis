@@ -1,7 +1,7 @@
 %% [NOTE]
-% Components inside the container are always independent and they always
+% Components inside the container are always independent, thus always
 % appear as factor inside the product, e.g. p(Z) is product of p(zn) for
-% each (zn is a latent variable corresponding to the observation xn).
+% each zn (zn is a latent variable corresponding to the observation xn).
 %%
 classdef GammaDistributionContainer < handle
     properties

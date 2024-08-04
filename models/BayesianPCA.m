@@ -1,7 +1,7 @@
 classdef BayesianPCA < handle
     properties 
         X               % ViewHandler
-        K               % Number of latent dimensions/principal
+        K               % Number of latent dimensions/principal components
 
         % Model parameters with prior distributions
         Z               % GaussianDistributionContainer      [size: N; for each latent variable zn]
@@ -22,8 +22,6 @@ classdef BayesianPCA < handle
         %   number of iterations until convergance;
         maxIter
         tol
-        convIter    
-        elboVals
 
         % Hyperparameters
         alphaParams     % struct('a', 'b')
@@ -36,7 +34,23 @@ classdef BayesianPCA < handle
     end
     
     methods
-        function obj = BayesianPCA(X, K)
+        function obj = BayesianPCA(X, K, maxIter, tol)
+            % Optional parameters: maxIter, tol
+            switch nargin
+                case {0, 1}
+                    error(['Error in class ' class(obj) ': Too few arguments passed.']);
+                case 2
+                    % Set other parameters to default values
+                    obj.maxIter = Constants.DEFAULT_MAX_ITER;
+                    obj.tol = Constants.DEFAULT_TOL;
+                case 3
+                    obj.maxIter = maxIter;
+                    obj.tol = Constants.DEFAULT_TOL;
+                case 4
+                    obj.maxIter = maxIter;
+                    obj.tol = tol;
+            end
+
             obj.X = ViewHandler(X);
             obj.K = K;
             
@@ -44,11 +58,6 @@ classdef BayesianPCA < handle
             obj.alphaParams = struct('a', Constants.DEFAULT_GAMMA_A, 'b', Constants.DEFAULT_GAMMA_B);
             obj.betaParam = Constants.DEFAULT_GAUSS_PRECISION;
 
-            % Init optimization parameters
-            obj.maxIter = 15;
-            obj.tol = 1e-6;
-            obj.convIter = 0;
-            obj.elboVals = -Inf(1, obj.maxIter);
                 
             % Z
             % dim, cols, numOfDistributions
@@ -72,9 +81,9 @@ classdef BayesianPCA < handle
         end
         
         function obj = fit(obj)
+            elboVals = -Inf(1, obj.maxIter);
+        
             for it = 1:obj.maxIter
-                obj.convIter = obj.convIter + 1;
-
                 obj.qWUpdate();
                 obj.qZUpdate();
                 obj.qTauUpdate();

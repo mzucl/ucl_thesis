@@ -9,5 +9,9 @@ classdef Constants
         DEFAULT_GAUSS_COV = 1;
         DEFAULT_GAUSS_DIM = 1;
         DEFAULT_GAUSS_PRECISION = 10^-14;
+
+        % Default optimization parameters
+        DEFAULT_MAX_ITER = 100;
+        DEFAULT_TOL = 1e-6;
     end
 end
