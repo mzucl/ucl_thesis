@@ -24,7 +24,6 @@ classdef BayesianPCA < handle
         tol
 
         % Hyperparameters
-        alphaParams     % struct('a', 'b')
         betaParam       % scalar
     end
 
@@ -55,7 +54,6 @@ classdef BayesianPCA < handle
             obj.K = K;
             
             % Init hyperparameters
-            obj.alphaParams = struct('a', Constants.DEFAULT_GAMMA_A, 'b', Constants.DEFAULT_GAMMA_B);
             obj.betaParam = Constants.DEFAULT_GAUSS_PRECISION;
 
                 
@@ -67,7 +65,8 @@ classdef BayesianPCA < handle
             obj.mu = GaussianDistribution(0, 1./obj.betaParam, obj.D);
 
             % alpha
-            obj.alpha = GammaDistributionContainer(obj.alphaParams.a, obj.alphaParams.b, K);
+            alphaPrior = GammaDistribution(Constants.DEFAULT_GAMMA_A, Constants.DEFAULT_GAMMA_B);
+            obj.alpha = GammaDistributionContainer(Constants.DEFAULT_GAMMA_A, Constants.DEFAULT_GAMMA_B, alphaPrior, K);
             
             % W: 
             % #distributions: D 
@@ -105,6 +104,7 @@ classdef BayesianPCA < handle
                 %     break;
                 % end
             end
+            disp(obj.computeELBO());
             
             % % Display the principal components
             % disp('Principal Components:');
@@ -199,11 +199,11 @@ classdef BayesianPCA < handle
         function elbo = computeELBO(obj)
             % Compute the Evidence Lower Bound
             elbo = 0;
-
             % PART 1: p(.)
+            elbo = elbo + obj.tau.ExpectationLnP + obj.alpha.ExpectationLnPC;
 
             % PART 2: q(.)
-            elbo = elbo + obj.Z.H + obj.W.H + obj.alpha.H + obj.mu.H + obj.tau.H;
+            elbo = elbo + obj.Z.HC + obj.W.HC + obj.alpha.HC + obj.mu.H + obj.tau.H;
         end
 
 

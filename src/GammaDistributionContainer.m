@@ -9,16 +9,17 @@ classdef GammaDistributionContainer < handle
     end
     
     properties (Dependent)
-        Size            % Number of distributions in the container
-        Expectation     % Under the assumption of independence of each component
-                        % This is a cell array where each entry is an
-                        % expectation of one component; 
-                        % e.g. access ith component expectation using obj.Expectation{i}
-        ExpectationC    % Array of expectations of all components
-        H               % This is a cell array where each entry is an
-                        % entropy of one component; 
-        HC              % This is the entropy of the collection, under the assumptions given in the [NOTE] above
-        
+        Size                % Number of distributions in the container
+        Expectation         % Under the assumption of independence of each component
+                            % This is a cell array where each entry is an
+                            % expectation of one component; 
+                            % e.g. access ith component expectation using obj.Expectation{i}
+        ExpectationC        % Array of expectations of all components
+        H                   % This is a cell array where each entry is an
+                            % entropy of one component; 
+        HC                  % This is the entropy of the collection, under the assumptions given in the [NOTE] above
+        ExpectationLnP      % Cell array where each entry is ExpectationLnP
+        ExpectationLnPC     % The sum of all entries in ExpectationLnP
         Value           
     end
 
@@ -226,6 +227,20 @@ classdef GammaDistributionContainer < handle
 
         function value = get.ExpectationC(obj)
             value = cell2mat(obj.Expectation);
+        end
+
+        function value = get.ExpectationLnP(obj)
+            value = cell(1, obj.Size);
+                for i = 1:obj.Size
+                    value{i} = obj.distributions(i).ExpectationLnP;
+                end
+        end
+
+        function value = get.ExpectationLnPC(obj)
+            value = 0;
+            for i = 1:obj.Size
+                value = value + obj.distributions(i).ExpectationLnP;
+            end
         end
 
         function value = get.Value(obj)
