@@ -1,7 +1,7 @@
 classdef BayesianPCA < handle
     properties 
         X               % ViewHandler
-        K               % Number of latent dimensions/principal components
+        K               % Number of latent dimensions/principal
 
         % Model parameters with prior distributions
         Z               % GaussianDistributionContainer      [size: N; for each latent variable zn]
@@ -27,7 +27,6 @@ classdef BayesianPCA < handle
 
         % Hyperparameters
         alphaParams     % struct('a', 'b')
-        tauParams       % struct('a', 'b')
         betaParam       % scalar
     end
 
@@ -43,7 +42,6 @@ classdef BayesianPCA < handle
             
             % Init hyperparameters
             obj.alphaParams = struct('a', Constants.DEFAULT_GAMMA_A, 'b', Constants.DEFAULT_GAMMA_B);
-            obj.tauParams = struct('a', Constants.DEFAULT_GAMMA_A, 'b', Constants.DEFAULT_GAMMA_B);
             obj.betaParam = Constants.DEFAULT_GAUSS_PRECISION;
 
             % Init optimization parameters
@@ -69,8 +67,8 @@ classdef BayesianPCA < handle
             obj.W = GaussianDistributionContainer(obj.K, false, obj.D, diag(obj.alpha.Value));
             
             % tau
-            tauPrior = GammaDistribution(Constants.DEFAULT_GAMMA_A, Constants.DEFAULT_GAMMA_B)
-            obj.tau = GammaDistribution(obj.tauParams.a, obj.tauParams.b, );
+            tauPrior = GammaDistribution(Constants.DEFAULT_GAMMA_A, Constants.DEFAULT_GAMMA_B);
+            obj.tau = GammaDistribution(Constants.DEFAULT_GAMMA_A, Constants.DEFAULT_GAMMA_B, tauPrior);
         end
         
         function obj = fit(obj)
@@ -185,10 +183,14 @@ classdef BayesianPCA < handle
             obj.tau.updateParameters(deltaA, deltaB); 
         end
         
-        function ELBO = computeELBO(obj)
+        function elbo = computeELBO(obj)
             % Compute the Evidence Lower Bound
-            % This is a simplified placeholder for actual calculations
-            ELBO = -sum(sum((obj.X - obj.mu * obj.W').^2));
+            elbo = 0;
+
+            % PART 1: p(.)
+
+            % PART 2: q(.)
+            elbo = elbo + q.Z.H + q.W.H + q.alpha
         end
 
 

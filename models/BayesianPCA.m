@@ -1,7 +1,7 @@
 classdef BayesianPCA < handle
     properties 
         X               % ViewHandler
-        K               % Number of latent dimensions/principal components
+        K               % Number of latent dimensions/principal
 
         % Model parameters with prior distributions
         Z               % GaussianDistributionContainer      [size: N; for each latent variable zn]
@@ -183,10 +183,14 @@ classdef BayesianPCA < handle
             obj.tau.updateParameters(deltaA, deltaB); 
         end
         
-        function ELBO = computeELBO(obj)
+        function elbo = computeELBO(obj)
             % Compute the Evidence Lower Bound
-            % This is a simplified placeholder for actual calculations
-            ELBO = -sum(sum((obj.X - obj.mu * obj.W').^2));
+            elbo = 0;
+
+            % PART 1: p(.)
+
+            % PART 2: q(.)
+            elbo = elbo + obj.Z.H + obj.W.H + obj.alpha.H + obj.mu.H + obj.tau.H;
         end
 
 

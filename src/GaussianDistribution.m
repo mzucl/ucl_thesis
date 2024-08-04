@@ -3,6 +3,7 @@ classdef GaussianDistribution < handle
         mu 
         cov
         dim
+        prior
     end
     
     properties (Dependent)
@@ -75,7 +76,7 @@ classdef GaussianDistribution < handle
                 case 3
                     % This is the case where 'dim' is explicitly set, and it
                     % can only be used for the case where 'mu' and 'cov' are
-                    % scalars; If we want to infer the 'dim' from other params,
+                    % scalars; In case where we want to infer the 'dim' from other params,
                     % the previous constructor should be used.
                     mu = varargin{1};
                     cov = varargin{2};
