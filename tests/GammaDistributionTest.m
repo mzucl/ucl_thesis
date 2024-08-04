@@ -1,5 +1,5 @@
 classdef GammaDistributionTest < matlab.unittest.TestCase
-    methods (Static, Access = private)
+    methods (Static)
         function verifyObject(testCase, obj, a, b, prior)
             testCase.verifyEqual(obj.a, a);
             testCase.verifyEqual(obj.b, b);

@@ -17,7 +17,7 @@ classdef GammaDistribution < handle
     methods
         function obj = GammaDistribution(a, b, prior)
             % Optional parameters: a, b, prior
-            obj.prior = NaN;
+            obj.prior = NaN; % It is only set when the number of parameters passed is 3
             switch nargin
                 case 0
                     % Default values

@@ -9,6 +9,10 @@ classdef Utility
             res = ~isscalar(x) && ismatrix(x) && ~Utility.isArray(x);
         end
 
+        function res = isNaNOrInstanceOf(obj, className)
+            res = isnumeric(obj) && isnan(obj) || isa(obj, className);
+        end
+
         function res = areAllInstancesOf(arr, className)
             res = all(arrayfun(@(x) isa(x, className), arr));
         end

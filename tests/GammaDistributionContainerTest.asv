@@ -230,6 +230,7 @@ classdef GammaDistributionContainerTest < matlab.unittest.TestCase
             % deltaA: array
             % deltaB: scalar
             % inc: true
+
             obj = GammaDistributionContainer(aVals, bVals);
 
             deltaA = 0.25 * 1:numOfDistr;
@@ -246,6 +247,7 @@ classdef GammaDistributionContainerTest < matlab.unittest.TestCase
             % deltaA: array
             % deltaB: scalar
             % inc: false
+
             obj = GammaDistributionContainer(aVals, bVals);
 
             deltaA = 0.25 * 1:numOfDistr;
@@ -263,6 +265,7 @@ classdef GammaDistributionContainerTest < matlab.unittest.TestCase
             % deltaA: scalar
             % deltaB: array
             % inc: true
+
             obj = GammaDistributionContainer(aVals, bVals);
             
             deltaA = 5;
@@ -276,57 +279,22 @@ classdef GammaDistributionContainerTest < matlab.unittest.TestCase
                 testCase.verifyEqual(obj.distributions(i).b, bVals(i) + deltaB(i));
             end
 
-            % Test 6: 
+            % Test 4: 
             % deltaA: scalar
-            % deltaB: array
+            % deltaB: scalar
             % inc: false
-            obj = GammaDistributionContainer(aVals, bVals);
-            
-            deltaA = 5;
-            deltaB = 0.25 * 1:numOfDistr;
-            obj.updateAllDistributionsParams(deltaA, deltaB, false);
 
-            % Add test for priors - update shouldn't affect priors
-            for i = 1:obj.Size
-                testCase.verifyTrue(isnan(obj.distributions(i).prior), 'All priors are not NaN');
-                testCase.verifyEqual(obj.distributions(i).a, deltaA);
-                testCase.verifyEqual(obj.distributions(i).b, deltaB(i));
-            end
-
-            % Test 7: 
-            % deltaA: array
-            % deltaB: array
-            % inc: true
             obj = GammaDistributionContainer(aVals, bVals);
-            
-            deltaA = 0.1 * 1:numOfDistr;
-            deltaB = 0.25 * 1:numOfDistr;
-            obj.updateAllDistributionsParams(deltaA, deltaB);
 
-            % Add test for priors - update shouldn't affect priors
-            for i = 1:obj.Size
-                testCase.verifyTrue(isnan(obj.distributions(i).prior), 'All priors are not NaN');
-                testCase.verifyEqual(obj.distributions(i).a, aVals(i) + deltaA(i));
-                testCase.verifyEqual(obj.distributions(i).b, bVals(i) + deltaB(i));
-            end
-            
-            % Test 8: 
-            % deltaA: array
-            % deltaB: array
-            % inc: false
-            obj = GammaDistributionContainer(aVals, bVals);
-            
-            deltaA = 0.1 * 1:numOfDistr;
-            deltaB = 0.25 * 1:numOfDistr;
+            deltaA = 0.25 * 1:numOfDistr;
             obj.updateAllDistributionsParams(deltaA, deltaB, false);
 
             % Add test for priors - update shouldn't affect priors
             for i = 1:obj.Size
                 testCase.verifyTrue(isnan(obj.distributions(i).prior), 'All priors are not NaN');
                 testCase.verifyEqual(obj.distributions(i).a, deltaA(i));
-                testCase.verifyEqual(obj.distributions(i).b, deltaB(i));
+                testCase.verifyEqual(obj.distributions(i).b, deltaB);
             end
-            
         end
     end
 end
