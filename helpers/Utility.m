@@ -25,7 +25,7 @@ classdef Utility
                 Utility.areAllInstancesOf(obj, className);
         end
 
-        % Built in 'isnan' doesn't work for instances of a class
+        % Built-in 'isnan' doesn't work for instances of a class
         function res = isNaN(obj)
             res = isnumeric(obj) && isnan(obj);
         end
@@ -48,7 +48,28 @@ classdef Utility
         function res = areAllInstancesOf(arr, className)
             res = all(arrayfun(@(x) isa(x, className), arr));
         end
+        
+        function result = ternary(cond, valTrue, valFalse)
+            if cond
+                result = valTrue;
+            else
+                result = valFalse;
+            end
+        end
+        
+        % Optimized version that doesn't evaluate the unnecessary value,
+        % either 'valTrue' or 'valFalse'
+        function result = ternaryOpt(cond, valTrueFunc, valFalseFunc)
+            if cond
+                result = valTrueFunc();
+            else
+                result = valFalseFunc();
+            end
+        end
 
+
+
+        %% Algebra
         function res = isSquareMatrix(matrix)
             [rows, cols] = size(matrix);
             res = (rows == cols);
@@ -96,14 +117,6 @@ classdef Utility
             % Compute the inverse using LU decomposition
             [L, U, P] = lu(A);
             invA = U \ (L \ P);
-        end
-
-        function result = ternary(cond, valTrue, valFalse)
-            if cond
-                result = valTrue;
-            else
-                result = valFalse;
-            end
         end
 
         function A = generateRandomSPDMatrix(n)

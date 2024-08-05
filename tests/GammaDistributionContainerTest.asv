@@ -36,10 +36,9 @@ classdef GammaDistributionContainerTest < matlab.unittest.TestCase
 
             testCase.verifyEqual(obj.Size, numDists);
             for i = 1:numDists
-                GammaDistributionTest.verifyObject(testCase, obj.distributions(i), Constants.DEFAULT_GAMMA_A, ...
-                Constants.DEFAULT_GAMMA_B, truePriors(i));
+                GammaDistributionTest.verifyObject(testCase, obj.distributions(i), truePriors(i).a, ...
+                truePriors(i).b, truePriors(i));
             end
-         
         end
 
         function testConstructorWithTwoParameters(testCase)
@@ -90,18 +89,18 @@ classdef GammaDistributionContainerTest < matlab.unittest.TestCase
 
         function testConstructorWithThreeParameters(testCase)
             aPrior = 4; bPrior = 5;
-            prior = GammaDistribution(aPrior, bPrior);
+            priors = GammaDistribution(aPrior, bPrior);
 
             % Test 1: 
             % a: scalar
             % b: scalar
             a = 1; b = 2;
             
-            obj = GammaDistributionContainer(a, b, prior);
+            obj = GammaDistributionContainer(a, b, priors);
 
             testCase.verifyEqual(obj.Size, 1); % Single element container
             for i = 1:obj.Size
-                GammaDistributionTest.verifyObject(testCase, obj.distributions(i), a, b, prior);
+                GammaDistributionTest.verifyObject(testCase, obj.distributions(i), a, b, priors);
                 GammaDistributionTest.verifyObject(testCase, obj.distributions(i).prior, aPrior, bPrior);
             end
 
@@ -109,11 +108,11 @@ classdef GammaDistributionContainerTest < matlab.unittest.TestCase
             % a: scalar
             % b: array
             a = 1; b = [1, 2, 3, 4];
-            obj = GammaDistributionContainer(a, b, prior);
+            obj = GammaDistributionContainer(a, b, priors);
 
             testCase.verifyEqual(obj.Size, length(b));
             for i = 1:obj.Size
-                GammaDistributionTest.verifyObject(testCase, obj.distributions(i), a, b(i), prior);
+                GammaDistributionTest.verifyObject(testCase, obj.distributions(i), a, b(i), priors);
                 GammaDistributionTest.verifyObject(testCase, obj.distributions(i).prior, aPrior, bPrior);
             end
 
@@ -121,11 +120,11 @@ classdef GammaDistributionContainerTest < matlab.unittest.TestCase
             % a: array
             % b: scalar
             a = 1:10; b = 2;
-            obj = GammaDistributionContainer(a, b, prior);
+            obj = GammaDistributionContainer(a, b, priors);
 
             testCase.verifyEqual(obj.Size, length(a));
             for i = 1:obj.Size
-                GammaDistributionTest.verifyObject(testCase, obj.distributions(i), a(i), b, prior);
+                GammaDistributionTest.verifyObject(testCase, obj.distributions(i), a(i), b, priors);
                 GammaDistributionTest.verifyObject(testCase, obj.distributions(i).prior, aPrior, bPrior);
             end
 
@@ -133,13 +132,29 @@ classdef GammaDistributionContainerTest < matlab.unittest.TestCase
             % a: array
             % b: array
             a = 1:10; b = ones(10, 1);
-            obj = GammaDistributionContainer(a, b, prior);
+            obj = GammaDistributionContainer(a, b, priors);
 
             testCase.verifyEqual(obj.Size, length(a));
             for i = 1:obj.Size
-                GammaDistributionTest.verifyObject(testCase, obj.distributions(i), a(i), b(i), prior);
+                GammaDistributionTest.verifyObject(testCase, obj.distributions(i), a(i), b(i), priors);
                 GammaDistributionTest.verifyObject(testCase, obj.distributions(i).prior, aPrior, bPrior);
             end
+            
+            % Test 5: 
+            % a: scalar
+            % b: array
+            a = 1; b = [1, 2, 3, 4];
+            priors = [GammaDistribution(aPrior, bPrior), NaN, NaN, NaN];
+            obj = GammaDistributionContainer(a, b, priors);
+
+            testCase.verifyEqual(obj.Size, length(b));
+            for i = 1:obj.Size
+                GammaDistributionTest.verifyObject(testCase, obj.distributions(i), a, b(i), priors(i));
+                % 
+            end
+            GammaDistributionTest.verifyObject(testCase, obj.distributions(1).prior, aPrior, bPrior); % First componenet has a not NaN prior
+
+
         end
 
         function testConstructorWithFourParameters(testCase)
@@ -149,22 +164,32 @@ classdef GammaDistributionContainerTest < matlab.unittest.TestCase
 
             testCase.verifyEqual(obj.Size, size);
             for i = 1:size
-                testCase.verifyTrue(isnan(obj.distributions(i).prior), 'All priors are not NaN');
+                GammaDistributionTest.verifyObject(testCase, obj.distributions(i), a, b, NaN);
             end
 
-            % Test 2: 'priors' is set
+            % Test 2: 'priors' is set to a single GammaDistribution
             aPrior = 5;
             bPrior = 2;
-            prior = GammaDistribution(aPrior, bPrior);
-            obj = GammaDistributionContainer(a, b, prior, 10);
-            
+            priors = GammaDistribution(aPrior, bPrior);
+            obj = GammaDistributionContainer(a, b, priors, 10);
+
             testCase.verifyEqual(obj.Size, size);
             for i = 1:obj.Size
-                testCase.verifyEqual(obj.distributions(i).prior, prior);
+                testCase.verifyEqual(obj.distributions(i).prior, priors);
+            end
+
+            % Test 3: 'priors' is set to an array of GammaDistribution
+            % objects
+            aPrior = 5;
+            bPrior = 2;
+            priors = [GammaDistribution(aPrior, bPrior), NaN, GammaDistribution(aPrior, bPrior), NaN];
+            obj = GammaDistributionContainer(a, b, priors, length(priors));
+
+            testCase.verifyEqual(obj.Size, length(priors));
+            for i = 1:obj.Size
+                testCase.verifyEqual(obj.distributions(i).prior, priors(i));
             end
         end
-        
-        
         %% 
 
 

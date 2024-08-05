@@ -69,7 +69,7 @@ classdef GammaDistributionContainer < handle
                     if Utility.isSingleNumber(a)
                         numDistributions = a;
                         obj.distributions = repmat(GammaDistribution(), numDistributions, 1); % Preallocate
-                        
+
                         for i=1:numDistributions
                             obj.distributions(i) = GammaDistribution();
                         end
@@ -86,12 +86,10 @@ classdef GammaDistributionContainer < handle
                     end
 
                 case {2, 3}
-                    hasPriors = nargin == 3 && ~Utility.isNaN(priors); % priors is not 'NaN'
+                    % Prepare first 'a' and 'b' - they hold the parameter
+                    % values and are set for both types of constructor
 
-                    if nargin == 2 % This is necessary because when nargin == 2 then 'priors' is not defined
-                        priors = NaN;
-                    end
-                    % Different values for parameters of each distribution;
+                    % OPTION 1
                     % a: []
                     % b: []
                     if Utility.isArray(a) && Utility.isArray(b)
@@ -101,67 +99,58 @@ classdef GammaDistributionContainer < handle
                         end
 
                         numDistributions = length(a);
-
-                        obj.distributions = repmat(GammaDistribution(), numDistributions, 1); % Preallocate
-         
-                        if hasPriors && length(priors) > 1 && length(priors) ~= length(a)
-                            error(['Error in ' class(obj) ': Arrays of values' ...
-                                ' for a and priors should be of the same size.']);
-                        end
-
-                        for i = 1:numDistributions
-                            if ~hasPriors
-                                obj.distributions(i) = GammaDistribution(a(i), b(i));
-                            else
-                                % isscalar(priors) is the same as length(priors) ==
-                                % 1, even though priors is an object!
-                                obj.distributions(i) = Utility.ternary(isscalar(priors), ...
-                                GammaDistribution(a(i), b(i), priors), GammaDistribution(a(i), b(i), priors(i)));
-
-                            end
-                        end
                     end
     
     
-                    % Different values of 'b' parameter for each distribution;
-                    % 'a' is the same for all distributions.
+                    % OPTION 2
                     % a: scalar
                     % b: []
                     if isscalar(a) && Utility.isArray(b)
                         numDistributions = length(b);
-                        obj.distributions = repmat(GammaDistribution(), numDistributions, 1); % Preallocate
-         
-                        for i = 1:numDistributions
-                            obj.distributions(i) = Utility.ternary(hasPriors, ...
-                                GammaDistribution(a, b(i), priors), GammaDistribution(a, b(i)));
-                        end
+
+                        a = repmat(a, 1, numDistributions); % repmat(a, 1, N);
                     end
     
-                    % Different values of 'a' parameter for each
-                    % distribution; 'b' is the same for all distributions.
+                    % OPTION 3
                     % a: []
                     % b: scalar
                     if Utility.isArray(a) && isscalar(b)
                         numDistributions = length(a);
-                        obj.distributions = repmat(GammaDistribution(), numDistributions, 1); % Preallocate
-         
-                        for i = 1:numDistributions
-                            obj.distributions(i) = Utility.ternary(hasPriors, ...
-                                GammaDistribution(a(i), b, priors), GammaDistribution(a(i), b));
-                        end
+
+                        b = repmat(b, 1, numDistributions); % repmat(a, 1, N);
                     end
                     % Container with only 1 distribution
                     % a: scalar
                     % b: scalar
                     if isscalar(a) && isscalar(b)
                         numDistributions = 1;
-                        obj.distributions = repmat(GammaDistribution(), numDistributions, 1); % Preallocate
+                    end
+
+                    % Priors
+                    hasPriors = nargin == 3 && ~Utility.isNaN(priors);
+
+                    if hasPriors && length(priors) > 1 && length(priors) ~= length(a)
+                        error(['Error in ' class(obj) ': Arrays of values' ...
+                            ' for a and priors should be of the same size.']);
+                    end
+
+                    obj.distributions = repmat(GammaDistribution(), numDistributions, 1); % Preallocate
+
+                    if nargin == 2 % This is necessary because when nargin == 2 then 'priors' is not defined
+                        priors = NaN;
+                    end
+
+                    for i = 1:numDistributions
+                        if ~hasPriors
+                            obj.distributions(i) = GammaDistribution(a(i), b(i));
+                        else
+                            % "isscalar(priors)" is equivalent to "length(priors) == 1", even though priors is an object!
+                            obj.distributions(i) = Utility.ternaryOpt(isscalar(priors), ...
+                            @() GammaDistribution(a(i), b(i), priors), @() GammaDistribution(a(i), b(i), priors(i)));
     
-                        for i = 1:numDistributions
-                            obj.distributions(i) = Utility.ternary(hasPriors, GammaDistribution(a, b, priors), ...
-                                GammaDistribution(a, b));
                         end
                     end
+
 
                 % Constructor with 4 parameters: all distributions have the
                 % same parameter values for 'a', 'b' and 'prior' parameter. 'a'
@@ -172,17 +161,16 @@ classdef GammaDistributionContainer < handle
                 % conflict between the number of priors in 'priors' and
                 % 'numDistributions' results in an error.
                 % a: scalar
-                % b: scalar 
+                % b: scalar
+                % ------------------------------------------------------------------
                 case 4
                     hasPriors = ~Utility.isNaN(priors); % 'priors' is set
 
-                    validParameters = isnumeric(a) && isnumeric(b) && isnumeric(numDistributions) && ...
-                        (~hasPriors || Utility.isNaNOrInstanceOf(priors, 'GammaDistribution') && length(priors) == numDistributions);
-                            
-                    % 'priors' are NaN or they are all of the type
-                    % GammaDistribution and the number of them is equal to
-                    % 'numDistributions'
-                    
+                    validParameters = Utility.isSingleNumber(a) && Utility.isSingleNumber(b) && ...
+                        Utility.isSingleNumber(numDistributions) && ...
+                        (~hasPriors || Utility.areAllInstancesOf(priors, 'GammaDistribution') && ...
+                        (length(priors) == numDistributions) || isscalar(priors));
+     
                     if ~validParameters
                         error(['Error in ' class(obj) ': Invalid input arguments.'])
                     end
@@ -190,8 +178,12 @@ classdef GammaDistributionContainer < handle
                     obj.distributions = repmat(GammaDistribution(), numDistributions, 1); % Preallocate
                     
                     for i = 1:numDistributions
-                        obj.distributions(i) = Utility.ternary(hasPriors, GammaDistribution(a, b, priors(i)), ...
-                            GammaDistribution(a, b));
+                        if ~hasPriors
+                            obj.distributions(i) = GammaDistribution(a, b);
+                        else
+                            obj.distributions(i) = Utility.ternaryOpt(isscalar(priors), @() GammaDistribution(a, b, priors), ...
+                            @() GammaDistribution(a, b, priors(i)));
+                        end
                     end
 
                 otherwise
