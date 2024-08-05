@@ -21,15 +21,11 @@ classdef Utility
         % Used to compare obj1 and obj2 that can be NaN or instances of a
         % class
         function res = areEqual(obj1, obj2)
-            if Utility.isNaN(obj1) && Utility.isNaN(obj2)
-                res = true;
-            elseif ~Utility.isNaN(obj1) && Utility.isNaN(obj2) || ...
-                    Utility.isNaN(obj1) && ~Utility.isNaN(obj2)
-                res = false;
-            else 
-                res = obj1 == obj2;
-            end
+
         end
+
+        if Utility.isNaN(obj.prior) && ~Utility.isNaN(p) || ~Utility.isNaN(obj.prior) && Utility.isNaN(p) || ...
+                    ~Utility.isNaN(obj.prior) && ~Utility.isNaN(p) && obj.prior ~= p
 
         function res = areAllInstancesOf(arr, className)
             res = all(arrayfun(@(x) isa(x, className), arr));

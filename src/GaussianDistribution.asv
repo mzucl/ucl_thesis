@@ -168,13 +168,16 @@ classdef GaussianDistribution < handle
                 error(['Error in class ' class(obj) ': Too few arguments passed.']);
             end
             
-            % We can ignore 'prior' returned, but not 'dim', because 'dim'
-            % can be inferred from the 'mu' and 'cov' params, thus can be
-            % changed, unlike the 'prior'
-            [m, c, ~, d] = GaussianDistribution.initParameters(varargin{:});
+            [m, c, p, d] = GaussianDistribution.initParameters(varargin{:});
 
             if obj.dim ~= d
                 error(['Error in class ' class(obj) ': Dimension cannot be changed via update method.']);
+            end
+
+            if isnan(obj.prior) && ~isnan(p) || isnan(obj.prior) && ~isnan(p)
+                
+                obj.prior ~= p
+                error(['Error in class ' class(obj) ': Prior cannot be changed via update method.']);
             end
 
             obj.mu = m;

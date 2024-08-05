@@ -209,66 +209,36 @@ classdef GaussianDistributionTest < matlab.unittest.TestCase
 
             GaussianDistributionTest.verifyObject(testCase, obj, ...
                 mu * ones(dim, 1), cov, NaN, dim);
-        end
 
-        function testUpdateParameters2(testCase)
             % Test if prior is affected by the update method
-            dim = 10;
             priorPrec = 2;
             % 'true value' for the prior
             prior = GaussianDistribution(0, 1/priorPrec * eye(dim));
-
             obj = GaussianDistribution(0, 1, priorPrec, dim);
-
-            % Verify both prior and the obj
-            GaussianDistributionTest.verifyObject(testCase, obj.prior, ...
-                zeros(dim, 1), 1/priorPrec * eye(dim), NaN, dim);
-
-            GaussianDistributionTest.verifyObject(testCase, obj, ...
-                zeros(dim, 1), eye(dim), prior, dim);
-
-           
-            % Update
-            mu = 5;
-            cov = Utility.generateRandomSPDMatrix(dim); % We want to keep the same dimension
-
-            obj.updateParameters(mu, cov);
-
-            % Verify both prior and the obj
-            GaussianDistributionTest.verifyObject(testCase, obj.prior, ...
-                zeros(dim, 1), 1/priorPrec * eye(dim), NaN, dim);
-
-            GaussianDistributionTest.verifyObject(testCase, obj, ...
-                mu * ones(dim, 1), cov, prior, dim);
-            
         end
 
         function testUpdateCovariance(testCase)
             dim = 10;
-            priorPrec = 2;
-            % 'true value' for the prior
-            prior = GaussianDistribution(0, 1/priorPrec * eye(dim));
-
-            obj = GaussianDistribution(0, 1, priorPrec, dim);
+            obj = GaussianDistribution(0, 1, NaN, dim);
 
             cov = Utility.generateRandomSPDMatrix(dim); % We want to keep the same dimension
 
             obj.updateCovariance(cov);
 
             GaussianDistributionTest.verifyObject(testCase, obj, ...
-                zeros(dim, 1), cov, prior, dim);
+                NaN, cov, dim); % Don't validate 'mu', it hasn't been updated
         end
 
         function testUpdateMu(testCase)
             dim = 10;
-            obj = GaussianDistribution(0, 1, NaN, dim);
+            obj = GaussianDistribution(0, 1, dim);
 
             mu = 5 * ones(dim); % We want to keep the same dimension
 
             obj.updateMu(mu);
 
             GaussianDistributionTest.verifyObject(testCase, obj, ...
-                mu, eye(dim), NaN, dim); % Don't validate 'cov', it hasn't been updated
+                mu, NaN, dim); % Don't validate 'cov', it hasn't been updated
         end
     end
 end

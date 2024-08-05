@@ -156,7 +156,10 @@ classdef BayesianPCA < handle
 
         function obj = qAlphaUpdate(obj)
             % Update variational parameters for q(alpha)
-            obj.alpha.updateAllDistributionsParams(obj.D / 2, 1/2 * obj.W.getExpectationOfColumnNormSq());
+            newAVals = arrayfun(@(d) d.prior.a, obj.alpha.distributions) + obj.D/2;
+            newBVals = arrayfun(@(d) d.prior.b, obj.alpha.distributions) + 1/2 * obj.W.getExpectationOfColumnNormSq();
+            
+            obj.alpha.updateAllDistributionsParams(newAVals, newBVals, false);
         end
 
         function obj = qMuUpdate(obj)
@@ -189,7 +192,7 @@ classdef BayesianPCA < handle
 
             deltaB = 1/2 * deltaB;
 
-            obj.tau.updateParameters(deltaA, deltaB); 
+            obj.tau.updateParameters(obj.tau.prior.a + deltaA, obj.tau.prior.b + deltaB, false); 
         end
         
         

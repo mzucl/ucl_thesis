@@ -16,6 +16,8 @@ classdef GammaDistribution < handle
     
     methods
         function obj = GammaDistribution(a, b, prior)
+            % TODO: Values from the prior can be used to initialize object
+            %   - consider adding this
             % Optional parameters: a, b, prior
             obj.prior = NaN; % It is only set when the number of parameters passed is 3
             switch nargin
@@ -26,13 +28,12 @@ classdef GammaDistribution < handle
                 case 1
                     obj.a = a;
                     obj.b = a;
-                case 2
+                case {2, 3}
                     obj.a = a;
                     obj.b = b;
-                case 3
-                    obj.a = a;
-                    obj.b = b;
-                    obj.prior = prior;
+                    if nargin == 3 % 'prior' is passed in
+                        obj.prior = prior;
+                    end
                 otherwise
                     error(['Error in class ' class(obj) ': Too many arguments passed into the constructor.']);
             end

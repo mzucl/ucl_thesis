@@ -104,7 +104,7 @@ classdef BayesianPCA < handle
                 %     break;
                 % end
             end
-            print(obj.computeELBO());
+            disp(obj.computeELBO());
             
             % % Display the principal components
             % disp('Principal Components:');
@@ -156,7 +156,9 @@ classdef BayesianPCA < handle
 
         function obj = qAlphaUpdate(obj)
             % Update variational parameters for q(alpha)
-            obj.alpha.updateAllDistributionsParams(obj.D / 2, 1/2 * obj.W.getExpectationOfColumnNormSq());
+            obj.alpha.updateAllDistributionsParams(...
+                obj.distributions( obj.D / 2, ...
+                1/2 * obj.W.getExpectationOfColumnNormSq(), false);
         end
 
         function obj = qMuUpdate(obj)
@@ -203,7 +205,7 @@ classdef BayesianPCA < handle
             elbo = elbo + obj.tau.ExpectationLnP + obj.alpha.ExpectationLnPC;
 
             % PART 2: q(.)
-            elbo = elbo + obj.Z.HC + obj.W.HC + obj.alpha.H + obj.mu.H + obj.tau.H;
+            elbo = elbo + obj.Z.HC + obj.W.HC + obj.alpha.HC + obj.mu.H + obj.tau.H;
         end
 
 

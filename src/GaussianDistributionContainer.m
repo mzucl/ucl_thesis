@@ -1,8 +1,8 @@
 classdef GaussianDistributionContainer < handle
     properties
         distributions       % A list of distributions inside the container
-        cols                % Boolean: true when the distributions are columns of a matrix
-                            % false when they are rows. This is important
+        cols                % Boolean: true when distributions describe columns of a matrix
+                            % false when they are describe rows. This is important
                             % when the dependent properties are calculated
     end
     
