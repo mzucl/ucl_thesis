@@ -389,7 +389,6 @@ classdef GammaDistributionContainerTest < matlab.unittest.TestCase
                 testCase.verifyEqual(obj.distributions(i).a, deltaA(i));
                 testCase.verifyEqual(obj.distributions(i).b, deltaB(i));
             end
-            
         end
     end
 end
