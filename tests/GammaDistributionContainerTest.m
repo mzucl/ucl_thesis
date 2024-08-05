@@ -171,18 +171,18 @@ classdef GammaDistributionContainerTest < matlab.unittest.TestCase
 
             % 'updateDistributionParams' method
             deltaA = 0.1; deltaB = 0.01;
-            obj.updateDistributionParams(idx, deltaA, deltaB);
+            obj.updateDistributionParams(idx, deltaA, deltaB, true);
 
             testCase.verifyEqual(obj.distributions(idx).a, aVals(idx) + deltaA);
             testCase.verifyEqual(obj.distributions(idx).b, bVals(idx) + deltaB);
 
             % 'updateDistributionParams' method with 'inc' = false
-            obj.updateDistributionParams(idx, deltaA, deltaB, false);
+            obj.updateDistributionParams(idx, deltaA, deltaB);
 
             testCase.verifyEqual(obj.distributions(idx).a, deltaA);
             testCase.verifyEqual(obj.distributions(idx).b, deltaB);
             
-            obj.updateAllDistributionsParams(aVals, bVals, false);
+            obj.updateAllDistributionsParams(aVals, bVals);
 
             for i = 1:obj.Size
                 testCase.verifyEqual(obj.distributions(i).a, aVals(i));
@@ -203,7 +203,7 @@ classdef GammaDistributionContainerTest < matlab.unittest.TestCase
             obj = GammaDistributionContainer(aVals, bVals);
     
             deltaA = 0.1; deltaB = 0.01;
-            obj.updateAllDistributionsParams(deltaA, deltaB);
+            obj.updateAllDistributionsParams(deltaA, deltaB, true);
 
             % Add test for priors - update shouldn't affect priors
             for i = 1:obj.Size
@@ -217,7 +217,7 @@ classdef GammaDistributionContainerTest < matlab.unittest.TestCase
             % deltaB: scalar
             % inc: false
             obj = GammaDistributionContainer(aVals, bVals);
-            obj.updateAllDistributionsParams(deltaA, deltaB, false);
+            obj.updateAllDistributionsParams(deltaA, deltaB);
 
             % Add test for priors - update shouldn't affect priors
             for i = 1:obj.Size
@@ -233,7 +233,7 @@ classdef GammaDistributionContainerTest < matlab.unittest.TestCase
             obj = GammaDistributionContainer(aVals, bVals);
 
             deltaA = 0.25 * 1:numOfDistr;
-            obj.updateAllDistributionsParams(deltaA, deltaB);
+            obj.updateAllDistributionsParams(deltaA, deltaB, true);
 
             % Add test for priors - update shouldn't affect priors
             for i = 1:obj.Size
@@ -249,7 +249,7 @@ classdef GammaDistributionContainerTest < matlab.unittest.TestCase
             obj = GammaDistributionContainer(aVals, bVals);
 
             deltaA = 0.25 * 1:numOfDistr;
-            obj.updateAllDistributionsParams(deltaA, deltaB, false);
+            obj.updateAllDistributionsParams(deltaA, deltaB);
 
             % Add test for priors - update shouldn't affect priors
             for i = 1:obj.Size
@@ -267,7 +267,7 @@ classdef GammaDistributionContainerTest < matlab.unittest.TestCase
             
             deltaA = 5;
             deltaB = 0.25 * 1:numOfDistr;
-            obj.updateAllDistributionsParams(deltaA, deltaB);
+            obj.updateAllDistributionsParams(deltaA, deltaB, true);
 
             % Add test for priors - update shouldn't affect priors
             for i = 1:obj.Size
@@ -284,7 +284,7 @@ classdef GammaDistributionContainerTest < matlab.unittest.TestCase
             
             deltaA = 5;
             deltaB = 0.25 * 1:numOfDistr;
-            obj.updateAllDistributionsParams(deltaA, deltaB, false);
+            obj.updateAllDistributionsParams(deltaA, deltaB);
 
             % Add test for priors - update shouldn't affect priors
             for i = 1:obj.Size
@@ -301,7 +301,7 @@ classdef GammaDistributionContainerTest < matlab.unittest.TestCase
             
             deltaA = 0.1 * 1:numOfDistr;
             deltaB = 0.25 * 1:numOfDistr;
-            obj.updateAllDistributionsParams(deltaA, deltaB);
+            obj.updateAllDistributionsParams(deltaA, deltaB, true);
 
             % Add test for priors - update shouldn't affect priors
             for i = 1:obj.Size
@@ -318,7 +318,7 @@ classdef GammaDistributionContainerTest < matlab.unittest.TestCase
             
             deltaA = 0.1 * 1:numOfDistr;
             deltaB = 0.25 * 1:numOfDistr;
-            obj.updateAllDistributionsParams(deltaA, deltaB, false);
+            obj.updateAllDistributionsParams(deltaA, deltaB);
 
             % Add test for priors - update shouldn't affect priors
             for i = 1:obj.Size

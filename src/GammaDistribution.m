@@ -61,8 +61,8 @@ classdef GammaDistribution < handle
                 case {1, 2}
                     error(['Error in class ' class(obj) ': Too few arguments passed.']);
                 case 3
-                    % Default for 'inc' is true
-                    inc = true;
+                    % Default for 'inc' is false
+                    inc = false;
             end
             obj.a = Utility.ternary(inc, obj.a + a, a);
             obj.b = Utility.ternary(inc, obj.b + b, b);  
@@ -74,8 +74,8 @@ classdef GammaDistribution < handle
                 case 1
                     error(['Error in class ' class(obj) ': Too few arguments passed.']);
                 case 2
-                    % Default for 'inc' is true
-                    inc = true;
+                    % Default for 'inc' is false
+                    inc = false;
             end
 
             obj.a = Utility.ternary(inc, obj.a + a, a);
@@ -87,8 +87,8 @@ classdef GammaDistribution < handle
                 case 1
                     error(['Error in class ' class(obj) ': Too few arguments passed.']);
                 case 2
-                    % Default for 'inc' is true
-                    inc = true;
+                    % Default for 'inc' is false
+                    inc = false;
             end
 
             obj.b = Utility.ternary(inc, obj.b + b, b);

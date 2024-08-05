@@ -37,12 +37,10 @@ classdef GammaDistributionContainer < handle
             % infered from other parameters in some cases. 'priors' is the
             % same for all distributions for now (NaN can be passed in as well), but code can be extended
             % to accomodate for different priors if needed (thus the name in plural).
-            %
-            %
             % (Utility.areAllInstancesOf(dists, 'GammaDistribution')) - if
             % the 'priors' is an array, all elements have to be instances
             % of 'GammaDistribution' class.
-            % -------------------------------------------------------------------------------------------
+
             if nargin < 2
                 error(['Error in class ' class(obj) ': Too few arguments passed.']);
 
@@ -157,9 +155,9 @@ classdef GammaDistributionContainer < handle
             end
             obj.validateIndex(idx);
 
-            % Default for 'inc' is false
+            % Default for 'inc' is true
             if nargin == 4
-                inc = false;
+                inc = true;
             end
 
             obj.distributions(idx).updateParameters(a, b, inc);
@@ -170,9 +168,9 @@ classdef GammaDistributionContainer < handle
             if nargin < 3
                 error(['Error in class ' class(obj) ': Too few arguments passed.']);
             end
-            % Default for 'inc' is false
+            % Default for 'inc' is true
             if nargin == 3
-                inc = false;
+                inc = true;
             end
 
             % Check 'a'

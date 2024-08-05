@@ -81,11 +81,11 @@ classdef GammaDistributionTest < matlab.unittest.TestCase
             %% updateA
             deltaA = 10;
             for i=1:10
-                obj.updateA(deltaA);
+                obj.updateA(deltaA, true);
                 GammaDistributionTest.verifyObject(testCase, obj, a + deltaA * i, b);
             end
     
-            obj.updateA(deltaA, false);
+            obj.updateA(deltaA);
 
             GammaDistributionTest.verifyObject(testCase, obj, deltaA, b);
             
@@ -96,21 +96,21 @@ classdef GammaDistributionTest < matlab.unittest.TestCase
             deltaB = 100;
 
             for i=1:10
-                obj.updateB(deltaB);
+                obj.updateB(deltaB, true);
                 GammaDistributionTest.verifyObject(testCase, obj, a, b + deltaB * i);
             end
     
-            obj.updateB(deltaB, false);
+            obj.updateB(deltaB);
 
             GammaDistributionTest.verifyObject(testCase, obj, a, deltaB);
 
             a = obj.a; b = obj.b;
             %% updateParameters
-            obj.updateParameters(deltaA, deltaB);
+            obj.updateParameters(deltaA, deltaB, true);
 
             GammaDistributionTest.verifyObject(testCase, obj, a + deltaA, b + deltaB);
 
-            obj.updateParameters(deltaA, deltaB, false);
+            obj.updateParameters(deltaA, deltaB);
             
             GammaDistributionTest.verifyObject(testCase, obj, deltaA, deltaB);
         end
