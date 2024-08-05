@@ -1,15 +1,6 @@
 % TODO (medium): Write tests for methods in this file
-% [NOTE] isnumeric and isscalar are different methods
-% isnumeric checks if the variable is of a numeric type (even array).
-% isscalar checks if the variable is a single element (1x1 array), regardless of its type.
-%%
-
 classdef Utility
     methods (Static)
-        function res = isSingleNumber(x)
-            res = isnumeric(x) && isscalar(x);
-        end
-
         function res = isArray(x)
             res = ~isscalar(x) && ismatrix(x) && numel(size(x)) == 2 && (size(x, 1) == 1 || size(x, 2) == 1);
         end
@@ -18,11 +9,11 @@ classdef Utility
             res = ~isscalar(x) && ismatrix(x) && ~Utility.isArray(x);
         end
 
-        % This will return true if the obj is NaN, a single instance of the
-        % class, or an array of instances of a class
         function res = isNaNOrInstanceOf(obj, className)
-            res = isnumeric(obj) && isnan(obj) || isa(obj, className) || ...
-                Utility.areAllInstancesOf(obj, className);
+            if isnumeric(obj) && isnan(obj) %
+            elseif
+            else
+            res = isnumeric(obj) && isnan(obj) || isa(obj, className);
         end
 
         % Built in 'isnan' doesn't work for instances of a class
@@ -43,8 +34,6 @@ classdef Utility
             end
         end
 
-        % This will return true even if arr is just a single instance of
-        % the class
         function res = areAllInstancesOf(arr, className)
             res = all(arrayfun(@(x) isa(x, className), arr));
         end

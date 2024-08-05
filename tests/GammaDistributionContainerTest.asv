@@ -36,9 +36,10 @@ classdef GammaDistributionContainerTest < matlab.unittest.TestCase
 
             testCase.verifyEqual(obj.Size, numDists);
             for i = 1:numDists
-                GammaDistributionTest.verifyObject(testCase, obj.distributions(i), truePriors(i).a, ...
-                truePriors(i).b, truePriors(i));
+                GammaDistributionTest.verifyObject(testCase, obj.distributions(i), Constants.DEFAULT_GAMMA_A, ...
+                Constants.DEFAULT_GAMMA_B, truePriors(i));
             end
+         
         end
 
         function testConstructorWithTwoParameters(testCase)
