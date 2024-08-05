@@ -21,28 +21,16 @@ classdef GammaDistribution < handle
     methods
         function obj = GammaDistribution(a, b, prior)
             % Optional parameters: a, b, prior
-            obj.prior = NaN; % It is only set when the number of parameters passed in is 3
+            obj.prior = NaN; % It is only set when the number of parameters passed is 3
             switch nargin
                 case 0
                     % Default values
                     obj.a = Constants.DEFAULT_GAMMA_A;
                     obj.b = Constants.DEFAULT_GAMMA_B;
                 case 1
-                    % If the ONLY parameter is of type GammaDistribution that is
-                    % the prior and we can use values of those parameters
-                    % to initialize 'a' and 'b'
-                    if Utility.areAllInstancesOf(a, 'GammaDistribution')
-                        obj.a = a.a;
-                        obj.b = a.b;
-                        
-                        % In this case 'a' is the prior
-                        obj.prior = a;
-                    % The one parameter passed in is the value for 'a', set
-                    % both 'a' and 'b' to that value
-                    else
-                        obj.a = a;
-                        obj.b = a;
-                    end
+                    % If the parameter is of type GammaDistribution
+                    obj.a = a;
+                    obj.b = a;
                 case {2, 3}
                     obj.a = a;
                     obj.b = b;

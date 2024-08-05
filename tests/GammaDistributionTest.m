@@ -18,6 +18,14 @@ classdef GammaDistributionTest < matlab.unittest.TestCase
 
             GammaDistributionTest.verifyObject(testCase, obj, Constants.DEFAULT_GAMMA_A, Constants.DEFAULT_GAMMA_B);
 
+            % One parameter constructor - the only parameter is the prior
+            truePrior = GammaDistribution();
+            obj = GammaDistribution(truePrior);
+
+            % Validate prior and obj
+            GammaDistributionTest.verifyObject(testCase, obj.prior, Constants.DEFAULT_GAMMA_A, Constants.DEFAULT_GAMMA_B, NaN);
+            GammaDistributionTest.verifyObject(testCase, obj, Constants.DEFAULT_GAMMA_A, Constants.DEFAULT_GAMMA_B, truePrior);
+
             a = 5;
             % One parameter constructor
             obj = GammaDistribution(a);

@@ -34,6 +34,9 @@ classdef BayesianPCA < handle
     
     methods
         function obj = BayesianPCA(X, K, maxIter, tol)
+            % TODO: K can be optional as well, set to the D - 1, so we
+            % should use obj.K instead of K below; Also, implement this!
+
             % Optional parameters: maxIter, tol
             switch nargin
                 case {0, 1}
@@ -62,7 +65,8 @@ classdef BayesianPCA < handle
             obj.Z = GaussianDistributionContainer(K, true, obj.N);
 
             % mu
-            obj.mu = GaussianDistribution(0, 1./obj.betaParam, obj.D);
+            % Constructor parameters: mu, cov, priorPrec, dim
+            obj.mu = GaussianDistribution(0, 1/Constants.DEFAULT_GAUSS_PRECISION, Constants.DEFAULT_GAUSS_PRECISION, obj.D);
 
             % alpha
             alphaPrior = GammaDistribution(Constants.DEFAULT_GAMMA_A, Constants.DEFAULT_GAMMA_B);
@@ -76,18 +80,18 @@ classdef BayesianPCA < handle
             
             % tau
             tauPrior = GammaDistribution(Constants.DEFAULT_GAMMA_A, Constants.DEFAULT_GAMMA_B);
-            obj.tau = GammaDistribution(Constants.DEFAULT_GAMMA_A, Constants.DEFAULT_GAMMA_B, tauPrior);
+            obj.tau = GammaDistribution(tauPrior);
         end
         
         function obj = fit(obj)
             elboVals = -Inf(1, obj.maxIter);
         
             for it = 1:obj.maxIter
-                obj.qWUpdate();
-                obj.qZUpdate();
+                % obj.qWUpdate();
+                % obj.qZUpdate();
                 obj.qTauUpdate();
                 obj.qAlphaUpdate();
-                obj.qMuUpdate();
+                % obj.qMuUpdate();
                 
 
                 

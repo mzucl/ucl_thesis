@@ -8,19 +8,19 @@ addpath('helpers');
 addpath('tests');
 
 % Uncomment to run tests
-testResults = runtests('tests');
+% testResults = runtests('tests');
 
 
-% % Generate data
-% numPoints = 100;
-% dim = 10;
-% stdDevs = [0.5 2 0.5 2 0.5 0.5 0.5 0.5 2 0.5];
-% 
-% data = generateSyntheticData(numPoints, dim, stdDevs);
-% 
-% K = 2; % dim - 1, because BPCA can infer the number of components
-% obj = BayesianPCA(data', K, 100); % Expects data in DxN format
-% obj.fit();
+% Generate data
+numPoints = 100;
+dim = 10;
+stdDevs = [0.5 2 0.5 2 0.5 0.5 0.5 0.5 2 0.5];
+
+data = generateSyntheticData(numPoints, dim, stdDevs);
+
+K = 2; % dim - 1, because BPCA can infer the number of components
+obj = BayesianPCA(data', K, 1); % Expects data in DxN format
+obj.fit();
 
 
 
