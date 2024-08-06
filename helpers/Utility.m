@@ -115,6 +115,19 @@ classdef Utility
             res = Utility.isSymmetricMatrix(matrix) && Utility.isSemiPositiveDefinite(matrix);
         end
 
+        function [isDiagonal, diagElementsOrValue] = checkAndExtractDiagonal(A)
+            isDiagonal = isequal(A, diag(diag(A)));
+            
+            if isDiagonal
+                diagElements = diag(A);
+
+                diagElementsOrValue = Utility.ternary(all(diagElements == diagElements(1)), ...
+                    diagElements(1), diagElements);
+            else
+                diagElementsOrValue = [];
+            end
+        end
+
         function invA = matrixInverse(A)
             % Compute the inverse of matrix A using LU decomposition
             if ~Utility.isSquareMatrix(A)

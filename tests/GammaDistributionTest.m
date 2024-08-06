@@ -37,6 +37,7 @@ classdef GammaDistributionTest < matlab.unittest.TestCase
             GammaDistributionTest.verifyObject(testCase, objCopy, aNew, bNew);
         end
 
+        % Deep copy with prior set
         function testDeepCopy2(testCase)
             a = 1; b = 2;
             obj = GammaDistribution(a, b, GammaDistribution());
@@ -52,6 +53,32 @@ classdef GammaDistributionTest < matlab.unittest.TestCase
             GammaDistributionTest.verifyObject(testCase, obj, a, b);
             GammaDistributionTest.verifyObject(testCase, objCopy, aNew, bNew);
         end
+
+        % Deep copy with update methods (this was not really needed, we
+        % don't create new objects in update methods)
+        function testDeepCopy3(testCase)
+            a = 1; b = 2;
+            obj = GammaDistribution(a, b);
+
+            % Test 1: Deep copy
+            objCopy = obj.copy();
+          
+            aNew = 5; bNew = 6;
+            objCopy.updateParameters(aNew, bNew);
+
+            % Only 'objCopy' is updated
+            GammaDistributionTest.verifyObject(testCase, obj, a, b);
+            GammaDistributionTest.verifyObject(testCase, objCopy, aNew, bNew);
+
+            % Test 2: Shallow copy
+            objCopySh = obj;
+            objCopySh.updateParameters(aNew, bNew);
+            
+            % Both 'obj' and 'objCopySh' are updated
+            GammaDistributionTest.verifyObject(testCase, obj, aNew, bNew);
+            GammaDistributionTest.verifyObject(testCase, objCopy, aNew, bNew);
+        end
+
 
         function testConstructor(testCase)
             % Default constructor

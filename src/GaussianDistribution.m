@@ -9,6 +9,7 @@ classdef GaussianDistribution < handle
     properties (Dependent)
         Expectation
         Variance
+        Precision           % Set only if the covariance matrix is spherical or diagonal
         Value               % Sample from the distribution
         H                   % Entropy
         ExpectationXt       % E[x^T]
@@ -152,8 +153,11 @@ classdef GaussianDistribution < handle
             
             % Copy the prior (manually)
             if ~Utility.isNaN(obj.prior)
-                newObj.prior.a = obj.prior.a;
-                newObj.prior.b = obj.prior.b;
+                newObj.prior = GaussianDistribution();
+
+                newObj.prior.mu = obj.prior.mu;
+                newObj.prior.cov = obj.prior.cov;
+                newObj.prior.dim = obj.prior.dim;
             end
         end
 
@@ -172,13 +176,14 @@ classdef GaussianDistribution < handle
 
 
         %% Methods
-        % [NOTE] Gaussian parameters are correlated, don't allow setting
+        % [NOTE] Gaussian parameters are correlated (via 'dim'), don't allow setting
         % them independently (if we want to implement this properly we should make attributes private)! 
         % Also, 'dim' will never change in these updates, so for now they
         % can be set separately as long as the update doesn't change the
         % 'dim'.
         function updateParameters(obj, varargin)
-            if nargin < 3
+            % Dimension and prior cannot be changed in these update methods
+            if nargin ~= 3
                 error(['Error in class ' class(obj) ': Too few arguments passed.']);
             end
             
@@ -193,7 +198,6 @@ classdef GaussianDistribution < handle
 
             obj.mu = m;
             obj.cov = c;
-            obj.dim = d;
         end
 
         function obj = updateCovariance(obj, cov)
@@ -205,7 +209,7 @@ classdef GaussianDistribution < handle
                 error(['Error in class ' class(obj) ': Argument is not a valid covariance matrix.']);
             end
 
-            if obj.dim ~= size(cov, 1)
+            if  size(cov, 1) ~= obj.dim
                 error(['Error in class ' class(obj) ': Dimension cannot be changed via update method.']);
             end
             
@@ -218,7 +222,7 @@ classdef GaussianDistribution < handle
                 error(['Error in class ' class(obj) ': Too few arguments passed.']);
             end
 
-            if obj.dim ~= length(mu)
+            if length(mu) ~= obj.dim
                 error(['Error in class ' class(obj) ': Dimension cannot be changed via update method.']);
             end
             

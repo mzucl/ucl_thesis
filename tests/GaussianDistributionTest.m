@@ -3,13 +3,58 @@ classdef GaussianDistributionTest < matlab.unittest.TestCase
         function verifyObject(testCase, obj, mu, cov, prior, dim)
             testCase.verifyEqual(obj.mu, mu);
             testCase.verifyEqual(obj.cov, cov);
-            testCase.verifyEqual(obj.prior, prior);
-            testCase.verifyEqual(obj.dim, dim);
+            if nargin > 5
+                testCase.verifyEqual(obj.prior, prior);
+                if nargin == 6
+                    testCase.verifyEqual(obj.dim, dim);
+                end
+            end
         end
         
     end
 
     methods (Test)
+        function testDeepCopy(testCase)
+            mu = 1; cov = 1;
+            obj = GaussianDistribution(mu, cov);
+
+            % Test 1: Deep copy
+            objCopy = obj.copy();
+          
+            muNew = 5; covNew = 6;
+            objCopy.mu = muNew;
+            objCopy.cov = covNew;
+
+            % Only 'objCopy' is updated
+            GaussianDistributionTest.verifyObject(testCase, obj, mu, cov);
+            GaussianDistributionTest.verifyObject(testCase, objCopy, muNew, covNew);
+
+            % Test 2: Shallow copy
+            objCopySh = obj;
+            objCopySh.mu = muNew;
+            objCopySh.cov = covNew;
+            
+            % Both 'obj' and 'objCopySh' are updated
+            GaussianDistributionTest.verifyObject(testCase, obj, muNew, covNew);
+            GaussianDistributionTest.verifyObject(testCase, objCopy, muNew, covNew);
+        end
+
+        function testDeepCopy2(testCase)
+            a = 1; b = 2;
+            obj = GammaDistribution(a, b, GammaDistribution());
+
+            % Test 1: Deep copy
+            objCopy = obj.copy();
+          
+            aNew = 5; bNew = 6;
+            objCopy.a = aNew;
+            objCopy.b = bNew;
+
+            % Only 'objCopy' is updated
+            GammaDistributionTest.verifyObject(testCase, obj, a, b);
+            GammaDistributionTest.verifyObject(testCase, objCopy, aNew, bNew);
+        end
+
         %% Constructors
         function testDefaultConstructor(testCase)
             obj = GaussianDistribution();
