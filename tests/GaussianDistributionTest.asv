@@ -248,14 +248,14 @@ classdef GaussianDistributionTest < matlab.unittest.TestCase
             % a diagonal matrix, which is possible
             obj = GaussianDistribution([1, 2], Utility.generateRandomSPDMatrix(2));
             testCase.verifyEqual(obj.Precision, NaN);
-
+            
             % Test 3
             obj = GaussianDistribution([1, 2], diag(4 * ones(2, 1)));
             testCase.verifyEqual(obj.Precision, 1/4);
 
             % Test 4
-            obj = GaussianDistribution([1, 2], diag([2, 4]));
-            testCase.verifyEqual(obj.Precision, [1/2; 1/4]);
+            obj = GaussianDistribution([1, 2], diag(diag(Utility.generateRandomSPDMatrix(2))));
+            testCase.verifyEqual(obj.Precision, 1/4);
         end
 
         %% Update methods

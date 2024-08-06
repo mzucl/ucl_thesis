@@ -247,6 +247,11 @@ classdef GaussianDistribution < handle
         function value = get.H(obj)
             value = 1/2 * log(det(obj.cov)) + obj.dim/2 * (1 + log(2 * pi)); 
         end
+        
+        function value = get.Precision(obj)
+            [isDiag, diagEl] = Utility.checkAndExtractDiagonal(obj.cov);
+            value = Utility.ternary(isDiag, 1./diagEl, NaN);
+        end
 
         function value = get.Value(obj)
             value = mvnrnd(obj.mu, obj.cov)'; % Transpose to get a column vector

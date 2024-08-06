@@ -54,8 +54,7 @@ classdef GammaDistributionTest < matlab.unittest.TestCase
             GammaDistributionTest.verifyObject(testCase, objCopy, aNew, bNew);
         end
 
-        % Deep copy with update methods (this was not really needed, we
-        % don't create new objects in update methods)
+        % Deep copy with update methods
         function testDeepCopy3(testCase)
             a = 1; b = 2;
             obj = GammaDistribution(a, b);
