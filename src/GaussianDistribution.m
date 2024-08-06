@@ -143,6 +143,20 @@ classdef GaussianDistribution < handle
     end
     
     methods
+        function newObj = copy(obj)
+            newObj = GaussianDistribution();
+            
+            newObj.mu = obj.mu;
+            newObj.cov = obj.cov;
+            newObj.dim = obj.dim;
+            
+            % Copy the prior (manually)
+            if ~Utility.isNaN(obj.prior)
+                newObj.prior.a = obj.prior.a;
+                newObj.prior.b = obj.prior.b;
+            end
+        end
+
         function obj = GaussianDistribution(varargin)
             % [NOTE] We pass in priorPrec not the prior (scalar not the
             % GaussianDistribution object)

@@ -27,6 +27,7 @@ classdef GammaDistribution < handle
             
             % Copy the prior (manually)
             if ~Utility.isNaN(obj.prior)
+                newObj.prior = GammaDistribution();
                 newObj.prior.a = obj.prior.a;
                 newObj.prior.b = obj.prior.b;
             end
