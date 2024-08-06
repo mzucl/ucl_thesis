@@ -218,6 +218,10 @@ classdef GaussianDistribution < handle
                 error(['Error in class ' class(obj) ': Dimension cannot be changed via update method.']);
             end
 
+            if size(m, 1) == 1
+                m = m';
+            end
+            
             obj.mu = m;
             obj.cov = c;
         end
@@ -232,7 +236,8 @@ classdef GaussianDistribution < handle
             end
 
             if  size(cov, 1) ~= obj.dim
-                error(['Error in class ' class(obj) ': Dimension cannot be changed via update method.']);
+                error(['Error in class ' class(obj) ': The dimensionality of new covariance doesn' ...
+                    't match the distribution dimensionality.']);
             end
             
             % Update covariance
@@ -248,6 +253,11 @@ classdef GaussianDistribution < handle
                 error(['Error in class ' class(obj) ': Dimension cannot be changed via update method.']);
             end
             
+            % 'mu' is a column vector
+            if size(mu, 1) == 1
+                mu = mu';
+            end
+
             obj.mu = mu;
         end
 

@@ -31,31 +31,65 @@ classdef GaussianDistributionContainer < handle
     end
 
     methods
-        function obj = GaussianDistributionContainer(numDistributions, prior, cols)
-            % [NOTE] For now we have only three parameters constructor 
-            if nargin < 3
-                error(['Error in class ' class(obj) ': Too few arguments passed.']);
-            else
-                validParams = isnumeric(numDistributions) && isscalar(prior) && ...
-                    Utility.isNaNOrInstanceOf(prior, 'GaussianDistribution') && ...
-                    ~Utility.isNaN(prior) && islogical(cols);
+        function obj = GaussianDistributionContainer(numDistributions, , numDistributions, prec)
+            % [NOTE] For now we have only a three parameters constructor
+            % prior, cols, number of distributions
+            switch nargin
+                case {0, 1}
+                    error(['Error in class ' class(obj) ': Too few arguments passed.']);
+                
+                case 2
+                    % Constructor with 3 scalar parameters
+                    %   All distributions are standard normal multivariate
+                    %   Gaussians with the same dimensionality
+                    obj.cols = cols;
+                    obj.distributions = repmat(GaussianDistribution(), numDistributions, 1); % Preallocate
+                    for i = 1:numDistributions
+                        obj.distributions(i) = GaussianDistribution(0, 1, dim);
+                    end
 
-                if ~validParams
-                    error(['Error in class ' class(obj) ': Invalid parameters.']);
-                end
+                case 4
+                    % Constructor with 4 scalar parameters
+                    %   Option 1: When 'prec' is an array, it is an array
+                    %   of precisions for each of the components in container.
+                    %   All distributions are zero-mean normal multivariate
+                    %   Gaussians with the same dimensionality and
+                    %   different covariances given by precision array
+                    %   
+                    %   Option 2: When 'prec' is a matrix it is a
+                    %   covariance for each of the components
+                    obj.cols = cols;
+                    obj.distributions = repmat(GaussianDistribution(), numDistributions, 1); % Preallocate
 
-                obj.cols = cols;
-                obj.distributions = repmat(GaussianDistribution(), numDistributions, 1); % Preallocate
-                for i = 1:numDistributions
-                    obj.distributions(i) = GaussianDistribution(prior);
-                end
+                    if Utility.isArray(prec)
+                        if length(prec) ~= numDistributions
+                            error(['Error in class ' class(obj) ': Invalid arguments.']);
+                        end
+    
+                        for i = 1:numDistributions
+                            obj.distributions(i) = GaussianDistribution(0, 1./prec(i), dim);
+                        end
+                    elseif Utility.isMatrix(prec)
+                        if size(prec, 1) ~= dim || size(prec, 2) ~= dim
+                            error(['Error in class ' class(obj) ': Invalid arguments.']);
+                        end
+
+                        if ~Utility.isValidCovarianceMatrix(prec)
+                            error(['Error in class ' class(obj) ': Invalid arguments: covariance parameter is not a valid covariance matrix.']);
+                        end
+
+                        for i = 1:numDistributions
+                            obj.distributions(i) = GaussianDistribution(0, prec);
+                        end
+                            
+                    else
+                        error(['Error in class ' class(obj) ': Invalid arguments.']);
+                    end
             end
         end
        
 
 
-
-        
         %% Methods
         function dist = getDistribution(obj, idx)
             % Returns the distribution at index 'idx'
