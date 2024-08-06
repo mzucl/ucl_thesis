@@ -74,16 +74,21 @@ classdef GaussianDistribution < handle
                     % case it is an array!
                     if Utility.isArray(mu) && Utility.isArray(cov) && size(mu, 1) ~= length(cov) || ...
                             Utility.isArray(mu) && Utility.isMatrix(cov) && size(mu, 1) ~= size(cov, 1)
-                        error(['Error in ' mfilename ': Dimensions do not match.']);
+                        error(['Error in ' mfilename ': Dimensions for mu and cov do not match.']);
                     end
 
-                    if nargin == 3 && ~isscalar(varargin{3})
-                        error(['Error in class ' mfilename ': Precision of the prior must be a scalar or NaN.']);
-                    end
+                    % Validate 'prior'
+                    if nargin == 3
+                        if ~Utility.isNaNOrInstanceOf(varargin{3}, 'GaussianDistribution')
+                            error(['Error in class ' mfilename ': Prior must be an instance of a class or NaN.']);
+                        elseif ~Utility.isNaN(varargin{3}) && varargin{3}.dim ~= size(mu, 1)
+                            error(['Error in class ' mfilename ': Dimension of the prior must match with mu and cov.']);
+                        end
+                    end 
 
-                   % ------------------------------------------------------
-                   % When we get this far all parameters are valid and all
-                   % dimensions match
+                    % ------------------------------------------------------
+                    % When we get this far all parameters are valid and all
+                    % dimensions match
     
                     % 'mu' is an array
                     if Utility.isArray(mu)
@@ -120,17 +125,21 @@ classdef GaussianDistribution < handle
                     % [NOTE] 'NaN' can be passed for 'prior'
                     % This is the case where 'dim' is explicitly set, and it
                     % can ONLY be used for the case where 'mu' and 'cov' are
-                    % scalars. This means 'cov' is just sigma^2/. 
+                    % scalars. This means 'cov' is just sigma^2. 
                     % In case where we want to infer the 'dim' from other params,
-                    % the previous constructor should be used.
+                    % constructors with two or three parameters should be used.
                     mu = varargin{1};
                     cov = varargin{2};
-                    prior = varargin{3}; % For now this is scalar - they all have the same prior
+                    prior = varargin{3};
                     dim = varargin{4};
+
+                    if size(mu, 1) == 1
+                        mu = mu'; % 'mu' is a column vector
+                    end 
                     
                     if ~Utility.isSingleNumber(mu) || ~Utility.isSingleNumber(cov) || ~isscalar(prior) || ...
-                            ~Utility.isNaNOrInstanceOf('GaussianDistribution') || ~Utility.isSingleNumber(dim)
-                        error(['Error in class ' mfilename ': Method with four parameters can be used only with scalar values for mu and cov and prior.']);
+                            ~Utility.isNaNOrInstanceOf(prior, 'GaussianDistribution') || ~Utility.isSingleNumber(dim)
+                        error(['Error in class ' mfilename ': Method with four parameters can be used only with scalar values for mu, cov, and prior.']);
                     end
     
                     if ~Utility.isNaN(prior) && prior.dim ~= dim

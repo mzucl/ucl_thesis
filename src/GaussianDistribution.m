@@ -30,10 +30,11 @@ classdef GaussianDistribution < handle
         function [mu, cov, prior, dim] = initParameters(varargin)
             prior = NaN; % Default value for prior
 
-            % One dimensional Gaussian
             switch nargin
+                % One dimensional Gaussian
                 case 0
                     [mu, cov, prior, dim] = GaussianDistribution.getDefaultDistributionParams();
+
 
                 case 1
                     mu = varargin{1};
@@ -58,6 +59,7 @@ classdef GaussianDistribution < handle
                         error(['Error in class ' class(obj) ': Invalid arguments passed.']);
                     end
 
+
                 case {2, 3}
                     mu = varargin{1};
                     if size(mu, 1) == 1
@@ -74,22 +76,17 @@ classdef GaussianDistribution < handle
                     % case it is an array!
                     if Utility.isArray(mu) && Utility.isArray(cov) && size(mu, 1) ~= length(cov) || ...
                             Utility.isArray(mu) && Utility.isMatrix(cov) && size(mu, 1) ~= size(cov, 1)
-                        error(['Error in ' mfilename ': Dimensions do not match.']);
+                        error(['Error in ' mfilename ': Dimensions for mu and cov do not match.']);
                     end
 
-                    if nargin == 3 && ~isscalar(varargin{3})
-                        error(['Error in class ' mfilename ': Precision of the prior must be a scalar or NaN.']);
-                    end
-
-                   % ------------------------------------------------------
-                   % When we get this far all parameters are valid and all
-                   % dimensions match
+                    % ------------------------------------------------------
+                    % When we get this far mu and cov parameters are valid and all
+                    % dimensions match
     
                     % 'mu' is an array
                     if Utility.isArray(mu)
                         dim = size(mu, 1);
-                        % If it is a matrix it is already set with 'cov =
-                        % varargin{2};' above
+                        % If it is a matrix it is already set with 'cov = varargin{2};' above
                         if ~Utility.isMatrix(cov)
                             if Utility.isArray(cov)
                                 cov = diag(cov);
@@ -112,10 +109,26 @@ classdef GaussianDistribution < handle
                             dim = 1;
                         end
                     end
-                    if nargin == 3 && ~isnan(varargin{3}) % Set the prior only if not NaN is passed in for priorPrec
-                        prior = GaussianDistribution(0, diag(1 / varargin{3} * ones(dim, 1)));
+                
+                    % Validate 'prior'
+                    % I validate it here and not above with mu and cov
+                    % because the 'dim' depends on which case we are in, so
+                    % we can validate the dimensionality of the prior when
+                    % we get 'final' value for mu and cov
+                    if nargin == 3
+                        if ~Utility.isNaNOrInstanceOf(varargin{3}, 'GaussianDistribution')
+                            error(['Error in class ' mfilename ': Prior must be an instance of a class or NaN.']);
+                        elseif ~Utility.isNaN(varargin{3}) && varargin{3}.dim ~= size(mu, 1)
+                            error(['Error in class ' mfilename ': Dimension of the prior must match with mu and cov.']);
+                        end
+                    end 
+
+            
+                    if nargin == 3 && ~Utility.isNaN(varargin{3}) % Set the prior only if not NaN is passed in for priorPrec
+                        prior = varargin{3}.copy();
                     end
 
+                    
                 case 4
                     % [NOTE] 'NaN' can be passed for 'prior'
                     % This is the case where 'dim' is explicitly set, and it

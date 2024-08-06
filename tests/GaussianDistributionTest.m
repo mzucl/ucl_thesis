@@ -162,12 +162,11 @@ classdef GaussianDistributionTest < matlab.unittest.TestCase
             % cov: scalar
             mu = [1; 2; 3];
             cov = 4;
-            priorPrec = 2;
 
             % 'true value' for the prior
-            prior = GaussianDistribution(0, 1/priorPrec * eye(length(mu)));
+            prior = GaussianDistribution(0, 1/2 * eye(length(mu)));
 
-            obj = GaussianDistribution(mu, cov, priorPrec);
+            obj = GaussianDistribution(mu, cov, prior);
 
             GaussianDistributionTest.verifyObject(testCase, obj, ...
                 mu, cov * eye(length(mu)), prior, length(mu));
@@ -177,18 +176,17 @@ classdef GaussianDistributionTest < matlab.unittest.TestCase
             % cov: matrix
             mu = 5;
             cov = Utility.generateRandomSPDMatrix(5);
-            priorPrec = 2;
 
             % 'true value' for the dim and prior
             trueDim = size(cov, 1);
-            prior = GaussianDistribution(0, 1/priorPrec * eye(trueDim));
+            prior = GaussianDistribution(0, 1/2 * eye(trueDim));
 
-            obj = GaussianDistribution(mu, cov, priorPrec);
+            obj = GaussianDistribution(mu, cov, prior);
             
             GaussianDistributionTest.verifyObject(testCase, obj, ...
                 mu * ones(trueDim, 1), cov, prior, trueDim);
 
-            % NaN for the priorPrec
+            % NaN for 'prior'
             obj = GaussianDistribution(mu, cov, NaN);
             
             GaussianDistributionTest.verifyObject(testCase, obj, ...
@@ -289,10 +287,11 @@ classdef GaussianDistributionTest < matlab.unittest.TestCase
             % Test if prior is affected by the update method
             dim = 10;
             priorPrec = 2;
+
             % 'true value' for the prior
             prior = GaussianDistribution(0, 1/priorPrec * eye(dim));
 
-            obj = GaussianDistribution(0, 1, priorPrec, dim);
+            obj = GaussianDistribution(0, 1, prior, dim);
 
             % Verify both prior and the obj
             GaussianDistributionTest.verifyObject(testCase, obj.prior, ...
@@ -323,7 +322,7 @@ classdef GaussianDistributionTest < matlab.unittest.TestCase
             % 'true value' for the prior
             prior = GaussianDistribution(0, 1/priorPrec * eye(dim));
 
-            obj = GaussianDistribution(0, 1, priorPrec, dim);
+            obj = GaussianDistribution(0, 1, prior, dim);
 
             cov = Utility.generateRandomSPDMatrix(dim); % We want to keep the same dimension
 
