@@ -252,21 +252,25 @@ classdef GaussianDistributionTest < matlab.unittest.TestCase
         
         function testDependentProperties2(testCase)
             % Test 1
-            obj = GaussianDistribution(2, 4);
-            testCase.verifyEqual(obj.Precision, 1/4);
+            prior = GaussianDistribution();
+            obj = GaussianDistribution(2, 4, prior);
+            testCase.verifyEqual(obj.PriorPrecision, Constants.DEFAULT_GAUSS_PRECISION);
 
             % Test 2: this test can fail if generateRandomSPDMatrix returns
-            % a diagonal matrix, which is possible
-            obj = GaussianDistribution([1, 2], Utility.generateRandomSPDMatrix(2));
-            testCase.verifyEqual(obj.Precision, NaN);
+            % a diagonal matrix, which is possible!
+            prior = GaussianDistribution([1, 2], Utility.generateRandomSPDMatrix(2));
+            obj = GaussianDistribution([0, 0], 1, prior);
+            testCase.verifyEqual(obj.PriorPrecision, NaN);
 
             % Test 3
-            obj = GaussianDistribution([1, 2], diag(4 * ones(2, 1)));
-            testCase.verifyEqual(obj.Precision, 1/4);
+            prior = GaussianDistribution([1, 2], diag(4 * ones(2, 1)));
+            obj = GaussianDistribution([0, 0], 1, prior);
+            testCase.verifyEqual(obj.PriorPrecision, 1/4);
 
             % Test 4
-            obj = GaussianDistribution([1, 2], diag([2, 4]));
-            testCase.verifyEqual(obj.Precision, [1/2; 1/4]);
+            prior = GaussianDistribution([1, 2], diag([2, 4]));
+            obj = GaussianDistribution([0, 0], 1, prior);
+            testCase.verifyEqual(obj.PriorPrecision, [1/2; 1/4]);
         end
 
         %% Update methods

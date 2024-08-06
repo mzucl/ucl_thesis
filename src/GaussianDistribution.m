@@ -9,7 +9,7 @@ classdef GaussianDistribution < handle
     properties (Dependent)
         Expectation
         Variance
-        Precision           % Set only if the covariance matrix is spherical or diagonal, otherwise NaN
+        PriorPrecision      % Set only if the prior covariance matrix is spherical or diagonal, otherwise NaN
         Value               % Sample from the distribution
         H                   % Entropy
         ExpectationXt       % E[x^T]
@@ -270,9 +270,13 @@ classdef GaussianDistribution < handle
             value = 1/2 * log(det(obj.cov)) + obj.dim/2 * (1 + log(2 * pi)); 
         end
         
-        function value = get.Precision(obj)
-            [isDiag, diagEl] = Utility.checkAndExtractDiagonal(obj.cov);
-            value = Utility.ternary(isDiag, 1./diagEl, NaN);
+        function value = get.PriorPrecision(obj)
+            if Utility.isNaN(obj.prior)
+                value = NaN;
+            else
+                [isDiag, diagEl] = Utility.checkAndExtractDiagonal(obj.prior.cov);
+                value = Utility.ternary(isDiag, 1./diagEl, NaN);
+            end
         end
 
         function value = get.Value(obj)

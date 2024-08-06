@@ -165,6 +165,22 @@ classdef GaussianDistributionContainerTest < matlab.unittest.TestCase
             testCase.verifyEqual(obj.HC, numDistributions * (1 + 2 * log(2*pi)));
         end
         
+        % [NOTE] PriorPrecision property is independent of the format col/row
+        function testPriorPrecisionProperty(testCase)
+            testCase.verifyEqual(3, 4); % Fail on purpose
+            % numDistributions = 3;
+            % dim = 2;
+            % 
+            % % Covariance matrix for each of the components
+            % compCov = 2 * pi * eye(dim);
+            % obj = GaussianDistributionContainer(dim, true, numDistributions, compCov);
+            % 
+            % for i = 1:obj.Size
+            %     testCase.verifyEqual(obj.H{i}, 1 + 2 * log(2*pi));
+            % end
+            % 
+            % testCase.verifyEqual(obj.HC, numDistributions * (1 + 2 * log(2*pi)));
+        end
         
 
         %% Update/retrieve methods

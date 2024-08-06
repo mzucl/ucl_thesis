@@ -11,6 +11,7 @@ classdef GaussianDistributionContainer < handle
         Expectation         % Under the assumption of independence of each component; 
                             % This is a cell array where each entry is an
                             % expectation of one component;
+        PriorPrecision      % Similar to above, each entry is precision of the prior of one component
         ExpectationXXt      % Similar to above, each entry is E[XXt]
         ExpectationXtX      % Similar to above, each entry is E[XtX], which is equivalent to E[|X|^2]
         ExpectationC        % 'C' stands for container, and this is expectation of the whole container
@@ -215,6 +216,13 @@ classdef GaussianDistributionContainer < handle
                 for i = 1:obj.Size
                     value = value + obj.distributions(i).ExpectationXXt;
                 end
+            end
+        end
+
+        function value = get.PriorPrecision(obj)
+            value = cell(1, obj.Size);
+            for i = 1:obj.Size
+                value{i} = obj.distributions(i).PriorPrecision;
             end
         end
 
