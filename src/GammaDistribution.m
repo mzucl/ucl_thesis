@@ -25,7 +25,7 @@ classdef GammaDistribution < handle
             newObj.a = obj.a;
             newObj.b = obj.b;
             
-            % Copy the prior
+            % Copy the prior (manually)
             if ~Utility.isNaN(obj.prior)
                 newObj.prior.a = obj.prior.a;
                 newObj.prior.b = obj.prior.b;
@@ -34,7 +34,7 @@ classdef GammaDistribution < handle
 
         function obj = GammaDistribution(a, b, prior)
             % Optional parameters: a, b, prior
-
+            % -------------------------------------------------------------
             obj.prior = NaN; % It is only set when the number of parameters passed in is 3
 
             switch nargin
@@ -49,22 +49,21 @@ classdef GammaDistribution < handle
                     if Utility.areAllInstancesOf(a, 'GammaDistribution')
                         obj = a.copy();
                         obj.prior = a.copy();
-                        % obj.a = a.a;
-                        % obj.b = a.b;
-                        
-                        % In this case 'a' is the prior
-                        % obj.prior = a.copy();
+
                     % The one parameter passed in is the value for 'a', set
                     % both 'a' and 'b' to that value
-                    else
+                    elseif Utility.isSingleNumber(a)
                         obj.a = a;
                         obj.b = a;
+                    else
+                        error(['Error in class ' class(obj) ': Invalid arguments passed.']);
                     end
+            
                 case {2, 3}
                     obj.a = a;
                     obj.b = b;
-                    if nargin == 3 % 'prior' is passed in
-                        obj.prior = prior;
+                    if nargin == 3 && ~Utility.isNaN(prior) % 'prior' is passed in
+                        obj.prior = prior.copy();
                     end
                 otherwise
                     error(['Error in class ' class(obj) ': Too many arguments passed into the constructor.']);

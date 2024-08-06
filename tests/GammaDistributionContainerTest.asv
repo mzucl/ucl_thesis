@@ -1,7 +1,4 @@
-% TODO(medium/high) If any of the priors passed in 'priors' array is NaN
-% then some of tests fail. If this is needed as a feature fix it!
-%% 
-
+% 
 classdef GammaDistributionContainerTest < matlab.unittest.TestCase
     methods (Test)
         %% Constructor tests

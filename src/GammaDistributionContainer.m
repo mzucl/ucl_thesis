@@ -2,6 +2,10 @@
 % Components inside the container are always independent, thus they always
 % appear as factors inside the product, e.g. p(Z) is product of p(zn) for
 % each zn (zn is a latent variable corresponding to the observation xn).
+
+% I never copy objects of type GammaDistributionContainer, so deep copy is
+% not implemented, but if that is needed don't forget to call the 'copy'
+% method of the inner - GammaDistribution class.
 %%
 classdef GammaDistributionContainer < handle
     properties
@@ -23,7 +27,6 @@ classdef GammaDistributionContainer < handle
     end
 
     methods(Access = private)
-        % Helper method that throws an error if index is not valid
         function validateIndex(obj, idx)
             if idx < 1 || idx > obj.Size 
                 error(['Error in ' class(obj) ': Index out of range.']); 
@@ -44,7 +47,7 @@ classdef GammaDistributionContainer < handle
             %
             % Similar to the implementation of GammaDistribution class, we
             % can pass only one parameter to the constructor. In that case
-            % 'a' is the array of priors used to initialize components.
+            % 'a' is the array of priors used to initialize components and their priors.
             % -------------------------------------------------------------------------------------------
             
             switch nargin
@@ -73,7 +76,8 @@ classdef GammaDistributionContainer < handle
                         for i=1:numDistributions
                             obj.distributions(i) = GammaDistribution();
                         end
-                    % 'a' is a list of priors
+                    % 'a' is a list of GammaDistribution objects or a
+                    % single instance of it
                     elseif Utility.areAllInstancesOf(a, 'GammaDistribution')
                         numDistributions = length(a);
                         obj.distributions = repmat(GammaDistribution(), numDistributions, 1); % Preallocate
@@ -122,7 +126,7 @@ classdef GammaDistributionContainer < handle
                     % Container with only 1 distribution
                     % a: scalar
                     % b: scalar
-                    if isscalar(a) && isscalar(b)
+                    if Utility.isSingleNumber(a) && Utility.isSingleNumber(b)
                         numDistributions = 1;
                     end
 
@@ -144,7 +148,6 @@ classdef GammaDistributionContainer < handle
                         if ~hasPriors
                             obj.distributions(i) = GammaDistribution(a(i), b(i));
                         else
-                            % "isscalar(priors)" is equivalent to "length(priors) == 1", even though priors is an object!
                             obj.distributions(i) = Utility.ternaryOpt(isscalar(priors), ...
                             @() GammaDistribution(a(i), b(i), priors), @() GammaDistribution(a(i), b(i), priors(i)));
     
