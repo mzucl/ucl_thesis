@@ -10,7 +10,7 @@ classdef Constants
         DEFAULT_GAUSS_PRECISION = 10^-3;
 
         % Default optimization parameters
-        DEFAULT_MAX_ITER = 5;
+        DEFAULT_MAX_ITER = 1;
         DEFAULT_TOL = 1e-6;
     end
 end

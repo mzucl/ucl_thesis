@@ -56,8 +56,8 @@ classdef BayesianPCA < handle
             end
    
             % Z
-            % dim, cols, numOfDistributions
-            obj.Z = GaussianDistributionContainer(K, true, obj.N);
+            zPrior = GaussianDistribution(0, eye(obj.K));
+            obj.Z = GaussianDistributionContainer(obj.N, zPrior, true);
 
             % mu
             muPrior = GaussianDistribution(0, 1/Constants.DEFAULT_GAUSS_PRECISION * eye(obj.D));
@@ -67,11 +67,10 @@ classdef BayesianPCA < handle
             alphaPrior = GammaDistribution(Constants.DEFAULT_GAMMA_A, Constants.DEFAULT_GAMMA_B);
             obj.alpha = GammaDistributionContainer(repmat(alphaPrior, K, 1));
             
-            % W: 
-            % #distributions: D 
-            % dim: K
-            % Each distribution describes a row in a matrix W (cols = false);
-            obj.W = GaussianDistributionContainer(obj.K, false, obj.D, diag(obj.alpha.Value));
+            % W; sample from obj.alpha for the prior
+            disp(obj.alpha.Value)
+            wPrior = GaussianDistribution(0, diag(obj.alpha.Value));
+            obj.W = GaussianDistributionContainer(obj.D, wPrior, false);
             
             % tau
             tauPrior = GammaDistribution(Constants.DEFAULT_GAMMA_A, Constants.DEFAULT_GAMMA_B);
@@ -82,9 +81,9 @@ classdef BayesianPCA < handle
             elboVals = -Inf(1, obj.maxIter);
         
             for it = 1:obj.maxIter
-                % obj.qZUpdate();
-                % obj.qMuUpdate();
-                % obj.qWUpdate();
+                obj.qZUpdate();
+                obj.qMuUpdate();
+                obj.qWUpdate();
                 obj.qTauUpdate();
                 obj.qAlphaUpdate();
                 
@@ -104,7 +103,7 @@ classdef BayesianPCA < handle
                 %     break;
                 % end
             end
-            disp(obj.computeELBO());
+            % disp(obj.computeELBO());
             
             % % Display the principal components
             % disp('Principal Components:');
@@ -170,7 +169,7 @@ classdef BayesianPCA < handle
                 newMu = newMu + obj.X.getObservation(n) - obj.W.ExpectationC * obj.Z.Expectation{n};
             end
             newMu = obj.tau.Expectation * obj.mu.cov * newMu;
-            newCov = 1./(obj.betaParam + obj.N * obj.tau.Expectation) * eye(obj.D);
+            newCov = 1./(obj.mu.PriorPrecision + obj.N * obj.tau.Expectation) * eye(obj.D);
 
             obj.mu.updateParameters(newMu, newCov);
             

@@ -19,9 +19,6 @@ classdef BayesianPCA < handle
         % Optimization parameters: 
         maxIter
         tol
-
-        % Hyperparameters
-        betaParam       % scalar
     end
 
     properties (Dependent)
@@ -38,47 +35,44 @@ classdef BayesianPCA < handle
             % Set obj.X right away, so it can be used below to set obj.K
             obj.X = ViewHandler(X);
 
+            % Set params to default values that will be updated if value is
+            % provided
+            obj.maxIter = Constants.DEFAULT_MAX_ITER;
+            obj.tol = Constants.DEFAULT_TOL;
+
             % Optional parameters: maxIter, tol
             switch nargin
                 case 1
                     obj.K = obj.D - 1;
                 case 2
                     obj.K = K;
-
-                    obj.maxIter = Constants.DEFAULT_MAX_ITER;
-                    obj.tol = Constants.DEFAULT_TOL;
                 case 3
                     obj.K = K;
                     obj.maxIter = maxIter;
-
-                    obj.tol = Constants.DEFAULT_TOL;
                 case 4
                     obj.K = K;
                     obj.maxIter = maxIter;
                     obj.tol = tol;
             end
-            
-            % Init hyperparameters
-            obj.betaParam = Constants.DEFAULT_GAUSS_PRECISION;
-
-                
+   
             % Z
-            % dim, cols, numOfDistributions
-            obj.Z = GaussianDistributionContainer(K, true, obj.N);
+            zPrior = GaussianDistribution(0, eye(obj.K));
+            obj.Z = GaussianDistributionContainer(obj.N, zPrior, true);
 
             % mu
-            muPrior = GaussianDistribution(0, 1/Constants.DEFAULT_GAUSS_PRECISION, pb)
-            obj.mu = GaussianDistribution(0, 1/Constants.DEFAULT_GAUSS_PRECISION, Constants.DEFAULT_GAUSS_PRECISION, obj.D);
+            muPrior = GaussianDistribution(0, 1/Constants.DEFAULT_GAUSS_PRECISION * eye(obj.D));
+            obj.mu = GaussianDistribution(muPrior);
 
             % alpha
             alphaPrior = GammaDistribution(Constants.DEFAULT_GAMMA_A, Constants.DEFAULT_GAMMA_B);
             obj.alpha = GammaDistributionContainer(repmat(alphaPrior, K, 1));
             
-            % W: 
+            % W
+            wPrior = GaussianDistribution(0, diag(obj.alpha.Value));
             % #distributions: D 
             % dim: K
             % Each distribution describes a row in a matrix W (cols = false);
-            obj.W = GaussianDistributionContainer(obj.K, false, obj.D, diag(obj.alpha.Value));
+            % obj.W = GaussianDistributionContainer(obj.K, false, obj.D, diag(obj.alpha.Value));
             
             % tau
             tauPrior = GammaDistribution(Constants.DEFAULT_GAMMA_A, Constants.DEFAULT_GAMMA_B);
