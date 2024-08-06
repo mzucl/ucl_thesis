@@ -19,41 +19,28 @@ classdef GammaDistribution < handle
     end
     
     methods
-         function newObj = copy(obj)
-            newObj = GammaDistribution();
-            
-            newObj.a = obj.a;
-            newObj.b = obj.b;
-            
-            % Copy the prior
-            if ~Utility.isNaN(obj.prior)
-                newObj.prior.a = obj.prior.a;
-                newObj.prior.b = obj.prior.b;
-            end
-        end
-
         function obj = GammaDistribution(a, b, prior)
             % Optional parameters: a, b, prior
-
             obj.prior = NaN; % It is only set when the number of parameters passed in is 3
 
             switch nargin
                 case 0
+                    % Default values
                     obj.a = Constants.DEFAULT_GAMMA_A;
                     obj.b = Constants.DEFAULT_GAMMA_B;
 
                 case 1
-                    % If the ONLY parameter is of a type GammaDistribution that is
-                    % the prior and we initialize the obj and its prior
-                    % using that value
+                    % If the ONLY parameter is of type GammaDistribution that is
+                    % the prior and we can use values of those parameters
+                    % to initialize 'a' and 'b'
                     if Utility.areAllInstancesOf(a, 'GammaDistribution')
-                        obj = a.copy();
-                        obj.prior = a.copy();
-                        % obj.a = a.a;
-                        % obj.b = a.b;
+                        obj.a = a.a;
+                        obj.b = a.b;
                         
+                        % TODO (high): Check about deep copy for 'handle'
+                        % classe
                         % In this case 'a' is the prior
-                        % obj.prior = a.copy();
+                        obj.prior = a;
                     % The one parameter passed in is the value for 'a', set
                     % both 'a' and 'b' to that value
                     else

@@ -1,15 +1,24 @@
 % TODO (medium): Write tests for methods in this file
 % [NOTE] isnumeric and isscalar are different methods
-% isnumeric checks if the variable is of a numeric type (even array).
-% isscalar checks if the variable is a single element (1x1 array), regardless of its type.
+%   isnumeric checks if the variable is of a numeric type (even array).
+%   isscalar checks if the variable is a single element (1x1 array), regardless of its type.
+% 
+%   isnumeric(NaN) -> true
+%   isnumeric([any element is not numeric]) -> fals [single boolean value]
+%   
+%   isscalar(NaN) -> true
+%   
+%   isnan(obj) -> ERROR
+%   isnan([]) -> returns elements wise isnan check!
 %%
 
 classdef Utility
     methods (Static)
         function res = isSingleNumber(x)
-            res = isnumeric(x) && isscalar(x);
+            res = isscalar(x) && isnumeric(x) && ~isnan(x);
         end
 
+        % ismatrix(3) -> true
         function res = isArray(x)
             res = ~isscalar(x) && ismatrix(x) && numel(size(x)) == 2 && (size(x, 1) == 1 || size(x, 2) == 1);
         end
@@ -21,16 +30,15 @@ classdef Utility
         % This will return true if the obj is NaN, a single instance of the
         % class, or an array of instances of a class
         function res = isNaNOrInstanceOf(obj, className)
-            res = isnumeric(obj) && isnan(obj) || isa(obj, className) || ...
-                Utility.areAllInstancesOf(obj, className);
+            res = isnumeric(obj) && isnan(obj) || Utility.areAllInstancesOf(obj, className);
         end
 
-        % Built-in 'isnan' doesn't work for instances of a class
+        % Built-in 'isnan' results in error for instances of a class
         function res = isNaN(obj)
             res = isnumeric(obj) && isnan(obj);
         end
 
-        % Used to compare obj1 and obj2 that can be NaN or instances of a
+        % Compare obj1 and obj2 that can be NaN or instances of a
         % class
         function res = areEqual(obj1, obj2)
             if Utility.isNaN(obj1) && Utility.isNaN(obj2)
@@ -43,8 +51,7 @@ classdef Utility
             end
         end
 
-        % This will return true even if arr is just a single instance of
-        % the class
+        % Returns true even if arr is just a single instance of the class
         function res = areAllInstancesOf(arr, className)
             res = all(arrayfun(@(x) isa(x, className), arr));
         end
@@ -58,7 +65,7 @@ classdef Utility
         end
         
         % Optimized version that doesn't evaluate the unnecessary value,
-        % either 'valTrue' or 'valFalse'
+        % either 'valTrue' or 'valFalse' depending on the 'cond'
         function result = ternaryOpt(cond, valTrueFunc, valFalseFunc)
             if cond
                 result = valTrueFunc();
