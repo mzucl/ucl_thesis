@@ -120,21 +120,17 @@ classdef GaussianDistribution < handle
                     % [NOTE] 'NaN' can be passed for 'prior'
                     % This is the case where 'dim' is explicitly set, and it
                     % can ONLY be used for the case where 'mu' and 'cov' are
-                    % scalars. This means 'cov' is just sigma^2. 
+                    % scalars. This means 'cov' is just sigma^2/. 
                     % In case where we want to infer the 'dim' from other params,
-                    % constructors with two or three parameters should be used.
+                    % the previous constructor should be used.
                     mu = varargin{1};
                     cov = varargin{2};
-                    prior = varargin{3};
+                    prior = varargin{3}; % For now this is scalar - they all have the same prior
                     dim = varargin{4};
-
-                    if size(mu, 1) == 1
-                        mu = mu'; % 'mu' is a column vector
-                    end 
                     
                     if ~Utility.isSingleNumber(mu) || ~Utility.isSingleNumber(cov) || ~isscalar(prior) || ...
-                            ~Utility.isNaNOrInstanceOf(prior, 'GaussianDistribution') || ~Utility.isSingleNumber(dim)
-                        error(['Error in class ' mfilename ': Method with four parameters can be used only with scalar values for mu, cov, and prior.']);
+                            ~Utility.isNaNOrInstanceOf('GaussianDistribution') || ~Utility.isSingleNumber(dim)
+                        error(['Error in class ' mfilename ': Method with four parameters can be used only with scalar values for mu and cov and prior.']);
                     end
     
                     if ~Utility.isNaN(prior) && prior.dim ~= dim

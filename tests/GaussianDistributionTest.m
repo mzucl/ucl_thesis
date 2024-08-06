@@ -63,17 +63,31 @@ classdef GaussianDistributionTest < matlab.unittest.TestCase
         end
 
         function testOneParameterConstructor(testCase)
+            % Test 1
             mu = [1; 2; 3]; % Column vector
             obj = GaussianDistribution(mu);
 
             GaussianDistributionTest.verifyObject(testCase, obj, ...
                 mu, eye(length(mu)), NaN, length(mu));
 
+            % Test 2
             mu = [1, 2, 3]; % Row vector
             obj = GaussianDistribution(mu);
 
             GaussianDistributionTest.verifyObject(testCase, obj, ...
                 mu', eye(length(mu)), NaN, length(mu));
+
+            % Test 3: When parameter is a prior distribution
+            prior = GaussianDistribution();
+            obj = GaussianDistribution(prior);
+            
+            % Test both 'prior' and 'obj'
+            GaussianDistributionTest.verifyObject(testCase, obj.prior, ...
+                prior.mu, prior.cov, NaN, prior.dim);
+
+            GaussianDistributionTest.verifyObject(testCase, obj, ...
+                prior.mu, prior.cov, prior, prior.dim);
+
         end
 
         function testTwoParameterConstructor(testCase)
@@ -185,16 +199,15 @@ classdef GaussianDistributionTest < matlab.unittest.TestCase
             mu = 5;
             cov = 1;
             dim = 10;
-            priorPrec = 2;
 
-            obj = GaussianDistribution(mu, cov, priorPrec, dim);
+            priorMu = 1:dim;
+            prior = GaussianDistribution(priorMu); % mu = [1, 2, ..., dim]
 
-            % 'true value' for the prior
-            prior = GaussianDistribution(0, 1/priorPrec * eye(dim));
+            obj = GaussianDistribution(mu, cov, prior, dim);
 
             % Verify prior
             GaussianDistributionTest.verifyObject(testCase, obj.prior, ...
-                mu * zeros(dim, 1), 1/priorPrec * eye(dim), NaN, dim);
+                priorMu', eye(length(priorMu)), NaN, dim);
 
             % Verify object
             GaussianDistributionTest.verifyObject(testCase, obj, ...

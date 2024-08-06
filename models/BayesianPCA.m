@@ -87,11 +87,12 @@ classdef BayesianPCA < handle
             elboVals = -Inf(1, obj.maxIter);
         
             for it = 1:obj.maxIter
-                % obj.qWUpdate();
                 % obj.qZUpdate();
+                % obj.qMuUpdate();
+                % obj.qWUpdate();
                 obj.qTauUpdate();
                 obj.qAlphaUpdate();
-                % obj.qMuUpdate();
+                
                 
 
                 
