@@ -19,7 +19,39 @@ classdef GaussianDistribution < handle
         ExpectationXtX      % E[x^Tx]
         ExpectationXXt      % E[xx^T]
     end
-  
+
+    %% Options for the constructor
+    % SINGLE PARAMETER
+    % ()                                -> default GaussianDistribution object
+    %                                   (1-dim standard Gaussian distribution)
+    % (numeric: scalar or array)        -> value used for the mu; cov: spherical
+    % (GaussianDistribution)            -> GaussianDistribution object with the same prior
+
+    % 2 PARAMETERS: 'mu' and 'cov'
+    % 'dim' is inferred from 'mu' and 'cov' and they must agree!
+    % ([], scalar)                      -> spherical covariance
+    % ([], [])                          -> diagonal covariance
+    % ([], matrix)                      -> full covariance
+    % (scalar, matrix)                  -> full covariance
+    % (scalar, [])                      -> diag. covariance
+    % (scalar, scalar)                  -> 1-dim Gaussian distribution
+
+    % 3 PARAMETERS: 'mu' and 'cov', 'prior'
+    % Same as for the previous constructor, but with the addition of the
+    % 'prior', which can be set to:
+        
+    % 'dim' is inferred from 'mu' and 'cov' and they must agree!
+    % ([], scalar)                      -> spherical covariance
+    % ([], [])                          -> diagonal covariance
+    % ([], matrix)                      -> full covariance
+    
+
+    % 4 PARAMETERS
+    % (mu, cov, prior, dim)
+
+
+    
+    %% Static methods
     methods (Static, Access = private)
         function [mu, cov, prior, dim] = getDefaultDistributionParams()
             mu = Constants.DEFAULT_GAUSS_MU;
@@ -37,7 +69,6 @@ classdef GaussianDistribution < handle
                 % One dimensional Gaussian
                 case 0
                     [mu, cov, prior, dim] = GaussianDistribution.getDefaultDistributionParams();
-
 
                 case 1
                     mu = varargin{1};
@@ -59,9 +90,8 @@ classdef GaussianDistribution < handle
                         cov = eye(length(mu));
                         dim = length(mu);
                     else
-                        error(['Error in class ' class(obj) ': Invalid arguments passed.']);
+                        error(['##### ERROR IN THE CLASS ' class(obj) ': Invalid arguments passed.']);
                     end
-
 
                 case {2, 3}
                     mu = varargin{1};
@@ -72,14 +102,14 @@ classdef GaussianDistribution < handle
                     cov = varargin{2};
 
                     if Utility.isMatrix(cov) && ~Utility.isValidCovarianceMatrix(cov) 
-                        error(['Error in class ' mfilename ': Parameter is not a valid covariance matrix.']);
+                        error(['##### ERROR IN THE CLASS ' mfilename ': Parameter is not a valid covariance matrix.']);
                     end
     
                     % [NOTE]: For 'cov' it is okay to use 'length' because it is passed to the diag() in
                     % case it is an array!
                     if Utility.isArray(mu) && Utility.isArray(cov) && size(mu, 1) ~= length(cov) || ...
                             Utility.isArray(mu) && Utility.isMatrix(cov) && size(mu, 1) ~= size(cov, 1)
-                        error(['Error in ' mfilename ': Dimensions for mu and cov do not match.']);
+                        error(['##### ERROR IN THE CLASS ' mfilename ': Dimensions for mu and cov do not match.']);
                     end
 
                     % ------------------------------------------------------
@@ -117,12 +147,12 @@ classdef GaussianDistribution < handle
                     % I validate it here and not above with mu and cov
                     % because the 'dim' depends on which case we are in, so
                     % we can validate the dimensionality of the prior when
-                    % we get 'final' value for mu and cov
+                    % we get 'final' value for 'mu' and 'cov' and thus 'dim'
                     if nargin == 3
                         if ~Utility.isNaNOrInstanceOf(varargin{3}, 'GaussianDistribution')
-                            error(['Error in class ' mfilename ': Prior must be an instance of a class or NaN.']);
+                            error(['##### ERROR IN THE CLASS ' mfilename ': Prior must be an instance of a class or NaN.']);
                         elseif ~Utility.isNaN(varargin{3}) && varargin{3}.dim ~= size(mu, 1)
-                            error(['Error in class ' mfilename ': Dimension of the prior must match with mu and cov.']);
+                            error(['##### ERROR IN THE CLASS ' mfilename ': Dimension of the prior must match with mu and cov.']);
                         end
                     end 
 
@@ -131,7 +161,6 @@ classdef GaussianDistribution < handle
                         prior = varargin{3}.copy();
                     end
 
-                    
                 case 4
                     % [NOTE] 'NaN' can be passed for 'prior'
                     % This is the case where 'dim' is explicitly set, and it
@@ -150,11 +179,11 @@ classdef GaussianDistribution < handle
                     
                     if ~Utility.isSingleNumber(mu) || ~Utility.isSingleNumber(cov) || ~isscalar(prior) || ...
                             ~Utility.isNaNOrInstanceOf(prior, 'GaussianDistribution') || ~Utility.isSingleNumber(dim)
-                        error(['Error in class ' mfilename ': Method with four parameters can be used only with scalar values for mu, cov, and prior.']);
+                        error(['##### ERROR IN THE CLASS ' mfilename ': Method with four parameters can be used only with scalar values for mu, cov, and prior.']);
                     end
     
                     if ~Utility.isNaN(prior) && prior.dim ~= dim
-                        error(['Error in class ' mfilename ': dim parameter and dimension of the prior do not align']);
+                        error(['##### ERROR IN THE CLASS ' mfilename ': dim parameter and dimension of the prior do not align']);
                     end
 
                     % Spherical multivariate Gaussian distribution
@@ -162,7 +191,7 @@ classdef GaussianDistribution < handle
                     cov = diag(cov * ones(dim, 1));
     
                 otherwise
-                    error(['Error in class ' mfilename ': Too many arguments passed.']);
+                    error(['##### ERROR IN THE CLASS ' mfilename ': Too many arguments passed.']);
             end
         end
 
@@ -205,7 +234,8 @@ classdef GaussianDistribution < handle
             end
                 
             % Both are set - compare them!    
-            isEqual = obj1.mu == obj2.mu && obj1.cov == obj2.cov && obj1.dim == obj2.dim;
+            isEqual = all(obj1.mu == obj2.mu, 'all') && ...
+                all(obj1.cov == obj2.cov, 'all') && obj1.dim == obj2.dim;
 
             % If parameters mu, cov and dim are not equal, they are different objects
             % regardless of the prior!
@@ -252,7 +282,7 @@ classdef GaussianDistribution < handle
         % Updates both 'mu' and 'cov'
         function updateParameters(obj, varargin)
             if nargin ~= 3
-                error(['Error in class ' class(obj) ': Too few arguments passed.']);
+                error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
             end
             
             % We can ignore 'prior' returned, but not 'dim', because 'dim'
@@ -261,7 +291,7 @@ classdef GaussianDistribution < handle
             [m, c, ~, d] = GaussianDistribution.initParameters(varargin{:});
 
             if obj.dim ~= d
-                error(['Error in class ' class(obj) ': Dimension cannot be changed via update method.']);
+                error(['##### ERROR IN THE CLASS ' class(obj) ': Dimension cannot be changed via update method.']);
             end
 
             if size(m, 1) == 1
@@ -275,15 +305,15 @@ classdef GaussianDistribution < handle
 
         function obj = updateCovariance(obj, cov)
             if nargin < 2
-                error(['Error in class ' class(obj) ': Too few arguments passed.']);
+                error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
             end
 
             if ~Utility.isValidCovarianceMatrix(cov)
-                error(['Error in class ' class(obj) ': Argument is not a valid covariance matrix.']);
+                error(['##### ERROR IN THE CLASS ' class(obj) ': Argument is not a valid covariance matrix.']);
             end
 
             if  size(cov, 1) ~= obj.dim
-                error(['Error in class ' class(obj) ': The dimensionality of new covariance doesn' ...
+                error(['##### ERROR IN THE CLASS ' class(obj) ': The dimensionality of new covariance doesn' ...
                     't match the distribution dimensionality.']);
             end
             
@@ -293,11 +323,11 @@ classdef GaussianDistribution < handle
         
         function obj = updateMu(obj, mu)
             if nargin < 2
-                error(['Error in class ' class(obj) ': Too few arguments passed.']);
+                error(['##### ERROR IN THE THE CLASS ' class(obj) ': Too few arguments passed.']);
             end
 
             if length(mu) ~= obj.dim
-                error(['Error in class ' class(obj) ': Dimension cannot be changed via update method.']);
+                error(['##### ERROR IN THE THE CLASS ' class(obj) ': Dimension cannot be changed via update method.']);
             end
             
             % 'mu' is a column vector

@@ -22,9 +22,31 @@ classdef GaussianDistribution < handle
 
     %% Options for the constructor
     % SINGLE PARAMETER
+    % ()                                -> default GaussianDistribution object
+    %                                   (1-dim standard Gaussian distribution)
+    % (numeric: scalar or array)        -> value used for the mu; cov: spherical
+    % (GaussianDistribution)            -> GaussianDistribution object with the same prior
 
+    % 2 PARAMETERS: 'mu' and 'cov'
+    % 'dim' is inferred from 'mu' and 'cov' and they must agree!
+    % ([], scalar)                      -> spherical covariance
+    % ([], [])                          -> diagonal covariance
+    % ([], matrix)                      -> full covariance
+    % (scalar, matrix)                  -> full covariance
+    % (scalar, [])                      -> diag. covariance
+    % (scalar, scalar)                  -> 1-dim Gaussian distribution
+
+    % 3 PARAMETERS: 'mu' and 'cov', 'prior'
+    % Same as for the previous constructor, but with the addition of the
+    % 'prior', which can be set to:
+    %       - NaN
+    %       - a GaussianDistribution with the same 'dim' parameter as the one
+    %       inferred from the 'mu' and 'cov' params
+            
     % 4 PARAMETERS
-    % (mu, cov, prior, dim)
+    % (mu, cov, prior, dim)             -> spherical multivariate (dim)
+    %                                   GaussianDistribution object with 
+    %                                   mu = mu * ones(dim, 1) and set prior
 
 
     
@@ -46,7 +68,6 @@ classdef GaussianDistribution < handle
                 % One dimensional Gaussian
                 case 0
                     [mu, cov, prior, dim] = GaussianDistribution.getDefaultDistributionParams();
-
 
                 case 1
                     mu = varargin{1};
@@ -70,7 +91,6 @@ classdef GaussianDistribution < handle
                     else
                         error(['##### ERROR IN THE CLASS ' class(obj) ': Invalid arguments passed.']);
                     end
-
 
                 case {2, 3}
                     mu = varargin{1};
@@ -126,7 +146,7 @@ classdef GaussianDistribution < handle
                     % I validate it here and not above with mu and cov
                     % because the 'dim' depends on which case we are in, so
                     % we can validate the dimensionality of the prior when
-                    % we get 'final' value for mu and cov
+                    % we get 'final' value for 'mu' and 'cov' and thus 'dim'
                     if nargin == 3
                         if ~Utility.isNaNOrInstanceOf(varargin{3}, 'GaussianDistribution')
                             error(['##### ERROR IN THE CLASS ' mfilename ': Prior must be an instance of a class or NaN.']);
@@ -140,7 +160,6 @@ classdef GaussianDistribution < handle
                         prior = varargin{3}.copy();
                     end
 
-                    
                 case 4
                     % [NOTE] 'NaN' can be passed for 'prior'
                     % This is the case where 'dim' is explicitly set, and it
