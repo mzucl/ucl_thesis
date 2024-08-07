@@ -1,4 +1,4 @@
-function hintonDiagram(W)
+function hintonDiagram(W, figTitle)
     % TODO: Add title as an optional parameter
     % TODO: Limit y and change the background color -> Bishop!
     maxWeight = max(abs(W(:)));
@@ -19,5 +19,5 @@ function hintonDiagram(W)
     end
     hold off;
     set(gca, 'YDir', 'reverse', 'XAxisLocation', 'top');
-    title('Hinton Diagram of Principal Components');
+    title(figTitle);
 end

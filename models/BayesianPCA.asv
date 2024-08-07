@@ -37,7 +37,7 @@ classdef BayesianPCA < handle
             % Set obj.X right away, so it can be used below to set obj.K
             obj.X = ViewHandler(X);
 
-            % Set params to default values that will be updated if value is
+            % Set parameters to default values that will be updated if value is
             % provided
             obj.maxIter = Constants.DEFAULT_MAX_ITER;
             obj.tol = Constants.DEFAULT_TOL;
@@ -58,7 +58,9 @@ classdef BayesianPCA < handle
             end
    
             % Z
-            zPrior = GaussianDistribution(0, eye(obj.K));
+            % ------------------------------------------------------ %
+            % Initialize the model - set random values for the 'mu'
+            zPrior = GaussianDistribution(randn(K, 1), eye(obj.K));
             obj.Z = GaussianDistributionContainer(obj.N, zPrior, true);
 
             % mu
@@ -78,39 +80,11 @@ classdef BayesianPCA < handle
             tauPrior = GammaDistribution(Constants.DEFAULT_GAMMA_A, Constants.DEFAULT_GAMMA_B);
             obj.tau = GammaDistribution(tauPrior);
         end
-        
-        function obj = fit(obj)
-            % elboVals = -Inf(1, obj.maxIter);
-        
-            for it = 1:obj.maxIter
-                obj.qZUpdate();
-                obj.qMuUpdate();
-                obj.qWUpdate();
-                obj.qTauUpdate();
-                obj.qAlphaUpdate();
-                
-                
-                % ------------------------------------------------------------
-                % !!! ELBO is not implemented completely -> ignore the code
-                % below
-                % ------------------------------------------------------------
-                % currElbo = obj.computeELBO();
 
-                % CHECK: ELBO has to increase from iteration to iteration
-                % if it ~= 1 && currElbo < obj.elboVals(it - 1)
-                %     error(['ELBO decreased in iteration ' num2str(it)]);
-                % end
-                
-                % Check for convergence
-                % if it ~= 1 && abs(currElbo - obj.elboVals(it - 1)) < obj.tol
-                %     obj.elboVals = obj.elboVals(1:obj.convIter); % cut the -Inf values at the end
-                %     break;
-                % end
-            end
-        end
+
         
-        % obj.Z is GaussianDistributionContainer(cols = true)
         %% Update methods
+        % obj.Z is GaussianDistributionContainer(cols = true)
         function obj = qZUpdate(obj)
             % Update mu
             for n = 1:obj.N
@@ -120,23 +94,25 @@ classdef BayesianPCA < handle
                 obj.Z.updateDistributionMu(n, muNew);
             end
 
-            % Covariance update
+            % Update covariance
             covNew = Utility.matrixInverse(eye(obj.K) + obj.tau.Expectation * ... 
                 obj.W.ExpectationCtC);
             obj.Z.updateAllDistributionsCovariance(covNew);
-            
         end
         
         % obj.W is GaussianDistributionContainer(cols = false)
         function obj = qWUpdate(obj)
-            %% [NOTE] Initial distribution is defined per columns of W, but
+            % [NOTE] Initial distribution is defined per columns of W, but
             % update equations are defined per rows!
 
+            % % DEBUG
+            % if ~all(obj.W.ExpectationC(:) == 0)
+            %     disp('W is not zero!');
+            % end
+            % % DEBUG
+
             % Covariance update
-            covNew = zeros(obj.K);
-            for n = 1:obj.N
-                covNew = covNew + obj.Z.ExpectationXXt{n};
-            end
+            covNew = obj.Z.ExpectationCCt;
 
             covNew = Utility.matrixInverse((diag(obj.alpha.ExpectationC)) + obj.tau.Expectation * covNew);
 
@@ -150,8 +126,7 @@ classdef BayesianPCA < handle
                 end
                 muNew = obj.tau.Expectation * obj.W.distributions(k).cov * muNew;
                 obj.W.updateDistributionMu(k, muNew);
-            end
-            
+            end   
         end
 
         % obj.alpha is GammaDistributionContainer
@@ -196,7 +171,37 @@ classdef BayesianPCA < handle
         
         
 
-        %% ELBO
+        %% fit() and ELBO
+        function obj = fit(obj)
+            % elboVals = -Inf(1, obj.maxIter);
+        
+            for it = 1:obj.maxIter
+                obj.qWUpdate();
+                obj.qZUpdate();
+                obj.qAlphaUpdate();
+                obj.qMuUpdate();
+                obj.qTauUpdate();
+                
+                
+                
+                % ------------------------------------------------------------
+                % !!! ELBO is not implemented completely -> ignore the code
+                % below
+                % ------------------------------------------------------------
+                % currElbo = obj.computeELBO();
+
+                % CHECK: ELBO has to increase from iteration to iteration
+                % if it ~= 1 && currElbo < obj.elboVals(it - 1)
+                %     error(['ELBO decreased in iteration ' num2str(it)]);
+                % end
+                
+                % Check for convergence
+                % if it ~= 1 && abs(currElbo - obj.elboVals(it - 1)) < obj.tol
+                %     obj.elboVals = obj.elboVals(1:obj.convIter); % cut the -Inf values at the end
+                %     break;
+                % end
+            end
+        end
         function elbo = computeELBO(obj)
             % Compute the Evidence Lower Bound
             elbo = 0;

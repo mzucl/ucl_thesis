@@ -58,7 +58,9 @@ classdef BayesianPCA < handle
             end
    
             % Z
-            zPrior = GaussianDistribution(0, eye(obj.K));
+            % ------------------------------------------------------ %
+            % Initialize the model - set random values for the 'mu'
+            zPrior = GaussianDistribution(randn(K, 1), eye(obj.K));
             obj.Z = GaussianDistributionContainer(obj.N, zPrior, true);
 
             % mu
@@ -102,6 +104,12 @@ classdef BayesianPCA < handle
         function obj = qWUpdate(obj)
             % [NOTE] Initial distribution is defined per columns of W, but
             % update equations are defined per rows!
+
+            % % DEBUG
+            % if ~all(obj.W.ExpectationC(:) == 0)
+            %     disp('W is not zero!');
+            % end
+            % % DEBUG
 
             % Covariance update
             covNew = obj.Z.ExpectationCCt;
