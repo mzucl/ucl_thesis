@@ -37,7 +37,7 @@ classdef GammaDistributionContainer < handle
         end
     end
 
-    %% Options for the constructor
+    %% Options for the constructor GammaDistributionContainer
     % SINGLE PARAMETER
     % ()                        -> single default GammaDistribution object
     % (4)                       -> 4 default GammaDistribution objects
@@ -66,8 +66,6 @@ classdef GammaDistributionContainer < handle
     %                                       NaN, or an array of objects in
     %                                       which case all distributions
     %                                       have different priors
-
-    %%
 
     methods
         %% Constructor

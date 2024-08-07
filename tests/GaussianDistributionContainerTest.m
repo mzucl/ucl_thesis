@@ -19,7 +19,7 @@ classdef GaussianDistributionContainerTest < matlab.unittest.TestCase
 
 
 
-        %% Dependent properties
+        %% Dependent properties (dependent of the format)
         function testDependentPropertiesColumnFormat(testCase)
             dim = 2;
             cols = true;
@@ -35,13 +35,9 @@ classdef GaussianDistributionContainerTest < matlab.unittest.TestCase
             %   standard normal
             %   mu = 1, cov: diag(2)
             %   mu = [1; 2], cov: newCov
-
             obj.updateDistributionParams(2, ones(dim, 1), 2);
             newCov = [10, 1; 1, 2];
             obj.updateDistributionParams(3, [1; 2], newCov);
-
-            % Save value to workspace
-            % assignin('base', 'objT', obj);
 
             % Expectation, ExpectationXXt, ExpectationXtX
             for i = 1:numDistributions
@@ -51,6 +47,9 @@ classdef GaussianDistributionContainerTest < matlab.unittest.TestCase
             end
 
             % ExpectationC, ExpectationCt, ExpectationCtC
+            % ExpectationC in this format must have dimension (dim x numDistributions)
+            testCase.verifyEqual(size(obj.ExpectationC, 1), dim);
+            testCase.verifyEqual(size(obj.ExpectationC, 2), numDistributions);
 
             expectedVal = [obj.distributions(1).Expectation, obj.distributions(2).Expectation ...
                     obj.distributions(3).Expectation];
@@ -58,6 +57,17 @@ classdef GaussianDistributionContainerTest < matlab.unittest.TestCase
             testCase.verifyEqual(obj.ExpectationC, expectedVal);
             testCase.verifyEqual(obj.ExpectationCt, expectedVal');
             testCase.verifyEqual(obj.ExpectationCtC, [[2, 0, 0]; [0, 6, 3]; [0, 3, 17]]);
+
+            % [!!!]
+            colSqNorm = obj.getExpectationOfColumnsNormSq();
+            testCase.verifyEqual(colSqNorm, [2, 6, 17]);
+
+            % Test 2: Same test when none of the distributions are st. normal
+            obj.updateDistributionParams(1, [5; 7], [3, 4; 4, 7]);
+            testCase.verifyEqual(obj.ExpectationCtC, [[84, 12, 19]; [12, 6, 3]; [19, 3, 17]]);
+
+            colSqNorm = obj.getExpectationOfColumnsNormSq();
+            testCase.verifyEqual(colSqNorm, [84, 6, 17]);
         end
 
         function testDependentPropertiesRowFormat(testCase)
@@ -76,12 +86,9 @@ classdef GaussianDistributionContainerTest < matlab.unittest.TestCase
             %   standard normal
             %   mu = 1, cov: diag(2)
             %   mu = [1; 2], cov: newCov
-
             obj.updateDistributionParams(2, ones(dim, 1), 2);
             newCov = [10, 1; 1, 2];
             obj.updateDistributionParams(3, [1; 2], newCov);
-
-            % assignin('base', 'objT', obj);
 
             % Expectation, ExpectationXXt, ExpectationXtX
             for i = 1:numDistributions
@@ -89,6 +96,9 @@ classdef GaussianDistributionContainerTest < matlab.unittest.TestCase
                 testCase.verifyEqual(obj.ExpectationXXt{i}, obj.distributions(i).ExpectationXXt);
                 testCase.verifyEqual(obj.ExpectationXtX{i}, obj.distributions(i).ExpectationXtX);
             end
+
+            testCase.verifyEqual(size(obj.ExpectationC, 1), numDistributions);
+            testCase.verifyEqual(size(obj.ExpectationC, 2), dim);
 
             % ExpectationC, ExpectationCt, ExpectationCtC
             expectedVal = [obj.distributions(1).Expectation'; obj.distributions(2).Expectation'; ...
@@ -98,13 +108,21 @@ classdef GaussianDistributionContainerTest < matlab.unittest.TestCase
             testCase.verifyEqual(obj.ExpectationCt, expectedVal');
             testCase.verifyEqual(obj.ExpectationCtC, [[15, 4]; [4, 10]]);
 
-            col1SqNorm = obj.getExpectationOfColumnNormSq();
-            testCase.verifyEqual(col1SqNorm, [107 14]);
+            % [!!!]
+            colSqNorm = obj.getExpectationOfColumnsNormSq();
+            testCase.verifyEqual(colSqNorm, [15 10]);
+
+            % Test 2: Same test when none of the distributions are st. normal
+            obj.updateDistributionParams(1, [5; 7], [3, 4; 4, 7]);
+            testCase.verifyEqual(obj.ExpectationCtC, [[42, 43]; [43, 65]]);
+
+            colSqNorm = obj.getExpectationOfColumnsNormSq();
+            testCase.verifyEqual(colSqNorm, [42 65]);
         end
 
 
-        
-        % [NOTE] Entropy properties are independent of the format col/row
+
+        %% Dependent properties (independent of the format)
         function testEntropyProperties(testCase)
             dim = 2;
             numDistributions = 2;
@@ -121,7 +139,6 @@ classdef GaussianDistributionContainerTest < matlab.unittest.TestCase
             testCase.verifyEqual(obj.HC, numDistributions * (1 + 2 * log(2*pi)));
         end
         
-        % [NOTE] PriorPrecision property is independent of the format col/row
         function testPriorPrecisionProperty(testCase)
             % Test 1: spherical covariance
             dim = 10;
@@ -143,10 +160,22 @@ classdef GaussianDistributionContainerTest < matlab.unittest.TestCase
             for i = 1:numDistributions
                 testCase.verifyEqual(obj.PriorPrecision{i}, 1./precisions);
             end
+
+            % Test 3: full covariance
+            dim = 10;
+            numDistributions = 2;
+
+            prior = GaussianDistribution(zeros(dim, 1), Utility.generateRandomSPDMatrix(dim));
+            obj = GaussianDistributionContainer(numDistributions, prior, true);
+            
+            for i = 1:numDistributions
+                testCase.verifyEqual(obj.PriorPrecision{i}, NaN);
+            end
         end
         
 
-        %% Update/retrieve methods
+
+        %% Update and retrieve methods
         function testGetDistribution(testCase)
             dim = 10;
             numDistributions = 2;
@@ -155,33 +184,36 @@ classdef GaussianDistributionContainerTest < matlab.unittest.TestCase
             obj = GaussianDistributionContainer(numDistributions, prior, true);
 
             idx = 1;
-            % Update distribution on this index
-            obj.updateDistributionMu(idx, 1:dim);
+            % Update 'mu' of the distribution on this index
+            newMu = 1:dim;
+            obj.updateDistributionMu(idx, newMu);
 
             dist = obj.getDistribution(idx);
 
-            testCase.verifyEqual(dist.mu, (1:dim)');
+            testCase.verifyEqual(dist.mu, newMu');
+            testCase.verifyEqual(dist.cov, prior.cov); % 'cov' hasn't change
         end
 
         function testUpdateDistribution(testCase)
             dim = 10;
             numDistributions = 2;
-
             prior = GaussianDistribution(zeros(dim, 1));
             obj = GaussianDistributionContainer(numDistributions, prior, true);
 
+            % New distribution
             covNew = Utility.generateRandomSPDMatrix(dim);
-            newDist = GaussianDistribution(ones(dim, 1), covNew);
+            newDist = GaussianDistribution(ones(dim, 1), covNew); % prior: NaN
 
             idx = 2;
             obj.updateDistribution(idx, newDist);
 
-
             for i = 1:obj.Size
                 if i ~= idx
-                    GaussianDistributionTest.verifyObject(testCase, obj.distributions(i), zeros(dim, 1), eye(dim), dim);
+                    GaussianDistributionTest.verifyObject(testCase, obj.distributions(i), ...
+                        zeros(dim, 1), eye(dim), prior, dim);
                 else
-                    GaussianDistributionTest.verifyObject(testCase, obj.distributions(i), newDist.mu, newDist.cov, newDist.dim);
+                    GaussianDistributionTest.verifyObject(testCase, obj.distributions(i), ...
+                        newDist.mu, newDist.cov, NaN, newDist.dim); % After update prior should be NaN
                 end
             end
             
@@ -201,9 +233,11 @@ classdef GaussianDistributionContainerTest < matlab.unittest.TestCase
 
             for i = 1:obj.Size
                 if i ~= idx
-                    GaussianDistributionTest.verifyObject(testCase, obj.distributions(i), zeros(dim, 1), eye(dim), dim);
+                    GaussianDistributionTest.verifyObject(testCase, obj.distributions(i), ...
+                        zeros(dim, 1), eye(dim), prior, dim);
                 else
-                    GaussianDistributionTest.verifyObject(testCase, obj.distributions(i), ones(dim, 1), covNew, dim);
+                    GaussianDistributionTest.verifyObject(testCase, obj.distributions(i), ...
+                        ones(dim, 1), covNew, prior, dim);
                 end
             end
             
@@ -216,13 +250,16 @@ classdef GaussianDistributionContainerTest < matlab.unittest.TestCase
             obj = GaussianDistributionContainer(numDistributions, prior, true);
 
             idx = 1;
-            obj.updateDistributionMu(idx, 1:dim);
+            newMu = 1:dim;
+            obj.updateDistributionMu(idx, newMu);
 
             for i = 1:obj.Size
                 if i ~= idx
-                    GaussianDistributionTest.verifyObject(testCase, obj.distributions(i), zeros(dim, 1), eye(dim), dim);
+                    GaussianDistributionTest.verifyObject(testCase, obj.distributions(i), ...
+                        zeros(dim, 1), eye(dim), prior, dim);
                 else
-                    GaussianDistributionTest.verifyObject(testCase, obj.distributions(i), (1:dim)', eye(dim), dim);
+                    GaussianDistributionTest.verifyObject(testCase, obj.distributions(i), ...
+                        (newMu)', eye(dim), prior, dim);
                 end
             end
         end
@@ -241,7 +278,7 @@ classdef GaussianDistributionContainerTest < matlab.unittest.TestCase
             % but the value of 'cov' is set to 'newCov'
             for i = 1:obj.Size
                 GaussianDistributionTest.verifyObject(testCase, obj.distributions(i), ...
-                    obj.distributions(i).mu, newCov, dim);
+                    obj.distributions(i).mu, newCov, prior, dim);
             end
         end
     end

@@ -38,3 +38,14 @@
 % [NOTE] Not sure if it is a good idea to merge generation of the view data
 % (by e.g. calling 'generateSyntheticData' and 'handling'; probably better
 % to separate the two, but something to think about.
+
+
+
+
+% BayesianPCA.m
+% TODO (medimum): Read a bit on lambda functions
+% newAVals = arrayfun(@(d) d.prior.a, obj.alpha.distributions) + obj.D/2;
+% 
+% newBVals = arrayfun(@(d) d.prior.b, obj.alpha.distributions) + 1/2 * obj.W.getExpectationOfColumnsNormSq();
+% 
+% obj.alpha.updateAllDistributionsParams(newAVals, newBVals);

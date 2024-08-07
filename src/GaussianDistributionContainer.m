@@ -1,8 +1,8 @@
 classdef GaussianDistributionContainer < handle
     properties
         distributions       % A list of distributions inside the container
-        cols                % Boolean: true when distributions describe columns of a matrix
-                            % false when they are describe rows. This is important
+        cols                %   - 'true' when distributions describe columns of a matrix
+                            %   - 'false' when they describe rows. This is important
                             % when the dependent properties are calculated
     end
     
@@ -16,7 +16,7 @@ classdef GaussianDistributionContainer < handle
         ExpectationXtX      % Similar to above, each entry is E[XtX], which is equivalent to E[|X|^2]
         ExpectationC        % 'C' stands for container, and this is expectation of the whole container
         ExpectationCt 
-        ExpectationCtC
+        ExpectationCtC      % This corresponds to e.g. E[W^TW]
         H                   % Similar to above, each entry is entropy of a single component
         HC                  % Entropy of the collection
     end
@@ -25,23 +25,31 @@ classdef GaussianDistributionContainer < handle
         % Helper method that throws an error if index is not valid
         function validateIndex(obj, idx)
             if idx < 1 || idx > obj.Size 
-                error(['Error in ' class(obj) ': Index out of range.']); 
+                error(['##### ERROR IN THE CLASS ' class(obj) ': Index out of range.']); 
             end
         end
     end
 
+    %% Options for the constructor GaussianDistributionContainer
+    % 3 PARAMETERS
+    % (numDistributions, prior, cols)   -> Creates a container with
+    % the specified format ('cols') and specified number of components
+    % ('numDistributions') where each component is a GaussianDistribution
+    % instance defined by the prior (SINGLE prior used for all components)
+
     methods
+        %% Constructors
         function obj = GaussianDistributionContainer(numDistributions, prior, cols)
             % [NOTE] For now we have only three parameters constructor 
             if nargin < 3
-                error(['Error in class ' class(obj) ': Too few arguments passed.']);
+                error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
             else
                 validParams = isnumeric(numDistributions) && isscalar(prior) && ...
                     Utility.isNaNOrInstanceOf(prior, 'GaussianDistribution') && ...
                     ~Utility.isNaN(prior) && islogical(cols);
 
                 if ~validParams
-                    error(['Error in class ' class(obj) ': Invalid parameters.']);
+                    error(['##### ERROR IN THE CLASS ' class(obj) ': Invalid parameters.']);
                 end
 
                 obj.cols = cols;
@@ -53,10 +61,8 @@ classdef GaussianDistributionContainer < handle
         end
        
 
-
-
         
-        %% Methods
+        %% Update and retrieve methods
         function dist = getDistribution(obj, idx)
             % Returns the distribution at index 'idx'
             obj.validateIndex(idx);
@@ -64,14 +70,23 @@ classdef GaussianDistributionContainer < handle
             dist = obj.distributions(idx);
         end
 
-        % [NOTE] This is used in the scenario when W is stored in the rows
+        % [NOTE] This is used in the scenario when e.g. W is stored in the rows
         % format, but we need expectation of the squared norm of a column
-        function res = getExpectationOfColumnNormSq(obj)
-            numOfCols = obj.distributions(1).dim;
-            res = zeros(1, numOfCols);
-            for idx = 1:numOfCols
-                for i = 1:obj.Size
-                    res(idx) = res(idx) + obj.distributions(i).mu(idx) ^ 2 + obj.distributions(i).cov(idx, idx) ^ 2;
+        function res = getExpectationOfColumnsNormSq(obj)
+            if obj.cols == true
+                numOfCols = obj.Size;
+                res = zeros(1, numOfCols);
+                for idx = 1:numOfCols
+                    res(idx) = obj.ExpectationXtX{idx};
+                end
+            else
+                numOfCols = obj.distributions(1).dim;
+                res = zeros(1, numOfCols);
+                for idx = 1:numOfCols
+                    for i = 1:obj.Size
+                        res(idx) = res(idx) + obj.distributions(i).mu(idx) ^ 2 + ...
+                            obj.distributions(i).cov(idx, idx);
+                    end
                 end
             end
         end
@@ -80,12 +95,12 @@ classdef GaussianDistributionContainer < handle
             obj.validateIndex(idx);
 
             % Updates the distribution at index 'idx'
-            obj.distributions(idx) = dist;
+            obj.distributions(idx) = dist.copy();
         end
 
         function obj = updateDistributionParams(obj, idx, mu, cov)
             if nargin < 4
-                error(['Error in class ' class(obj) ': Too few arguments passed.']);
+                error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
             end
             obj.validateIndex(idx);
 
@@ -94,7 +109,7 @@ classdef GaussianDistributionContainer < handle
 
         function obj = updateDistributionMu(obj, idx, mu)
             if nargin < 3
-                error(['Error in class ' class(obj) ': Too few arguments passed.']);
+                error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
             end
             obj.validateIndex(idx);
 
@@ -108,7 +123,7 @@ classdef GaussianDistributionContainer < handle
         function obj = updateAllDistributionsCovariance(obj, cov)
             % Update covariance of all distributions
             if nargin < 2
-                error(['Error in class ' class(obj) ': Too few arguments passed.']);
+                error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
             end
             
             for i=1:obj.Size
@@ -124,8 +139,8 @@ classdef GaussianDistributionContainer < handle
         % [NOTE] The value for 'cols' is irrelevant for the properties that
         % are of type cell, because they are used with indexing to access
         % components values. And for each component (multivariate Gauss) we
-        % use columns for mean and expectations, this 'cols' parameter is
-        % not related to that.
+        % use columns for mean and expectations, 'cols' parameter is
+        % not related to that (to the single distr. inside)
         function value = get.Expectation(obj)
             value = cell(1, obj.Size);
             for i = 1:obj.Size
@@ -147,6 +162,7 @@ classdef GaussianDistributionContainer < handle
             end
         end
 
+        % [!!!] Dependent on 'cols'
         function value = get.ExpectationC(obj)
             value = Utility.ternary(obj.cols, cell2mat(obj.Expectation), cell2mat(obj.Expectation)');
         end
@@ -155,6 +171,7 @@ classdef GaussianDistributionContainer < handle
             value = obj.ExpectationC';
         end
 
+        % [!!!] Dependent on 'cols'
         function value = get.ExpectationCtC(obj)
             if obj.cols
                 value = zeros(obj.Size, obj.Size);
@@ -176,8 +193,8 @@ classdef GaussianDistributionContainer < handle
                     end
                 end
             else
-            dim = obj.distributions(1).dim; % They are all of the same dimension
-            value = zeros(dim, dim);
+                dim = obj.distributions(1).dim; % They are all of the same dimension
+                value = zeros(dim, dim);
                 for i = 1:obj.Size
                     value = value + obj.distributions(i).ExpectationXXt;
                 end

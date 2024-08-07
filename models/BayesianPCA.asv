@@ -37,7 +37,7 @@ classdef BayesianPCA < handle
             % Set obj.X right away, so it can be used below to set obj.K
             obj.X = ViewHandler(X);
 
-            % Set parameters to default values that will be updated if value is
+            % Set params to default values that will be updated if value is
             % provided
             obj.maxIter = Constants.DEFAULT_MAX_ITER;
             obj.tol = Constants.DEFAULT_TOL;
@@ -78,11 +78,39 @@ classdef BayesianPCA < handle
             tauPrior = GammaDistribution(Constants.DEFAULT_GAMMA_A, Constants.DEFAULT_GAMMA_B);
             obj.tau = GammaDistribution(tauPrior);
         end
-
-
         
-        %% Update methods
+        function obj = fit(obj)
+            % elboVals = -Inf(1, obj.maxIter);
+        
+            for it = 1:obj.maxIter
+                obj.qZUpdate();
+                obj.qMuUpdate();
+                obj.qWUpdate();
+                obj.qTauUpdate();
+                obj.qAlphaUpdate();
+                
+                
+                % ------------------------------------------------------------
+                % !!! ELBO is not implemented completely -> ignore the code
+                % below
+                % ------------------------------------------------------------
+                % currElbo = obj.computeELBO();
+
+                % CHECK: ELBO has to increase from iteration to iteration
+                % if it ~= 1 && currElbo < obj.elboVals(it - 1)
+                %     error(['ELBO decreased in iteration ' num2str(it)]);
+                % end
+                
+                % Check for convergence
+                % if it ~= 1 && abs(currElbo - obj.elboVals(it - 1)) < obj.tol
+                %     obj.elboVals = obj.elboVals(1:obj.convIter); % cut the -Inf values at the end
+                %     break;
+                % end
+            end
+        end
+        
         % obj.Z is GaussianDistributionContainer(cols = true)
+        %% Update methods
         function obj = qZUpdate(obj)
             % Update mu
             for n = 1:obj.N
@@ -92,21 +120,20 @@ classdef BayesianPCA < handle
                 obj.Z.updateDistributionMu(n, muNew);
             end
 
-            % Update covariance
+            % Covariance update
             covNew = Utility.matrixInverse(eye(obj.K) + obj.tau.Expectation * ... 
                 obj.W.ExpectationCtC);
             obj.Z.updateAllDistributionsCovariance(covNew);
+            
         end
         
         % obj.W is GaussianDistributionContainer(cols = false)
         function obj = qWUpdate(obj)
-            % [NOTE] Initial distribution is defined per columns of W, but
+            %% [NOTE] Initial distribution is defined per columns of W, but
             % update equations are defined per rows!
 
             % Covariance update
             covNew = zeros(obj.K);
-            % TODO (high): Add this summation as a dependent property in
-            % GaussianDistributionContainer class
             for n = 1:obj.N
                 covNew = covNew + obj.Z.ExpectationXXt{n};
             end
@@ -123,7 +150,8 @@ classdef BayesianPCA < handle
                 end
                 muNew = obj.tau.Expectation * obj.W.distributions(k).cov * muNew;
                 obj.W.updateDistributionMu(k, muNew);
-            end   
+            end
+            
         end
 
         % obj.alpha is GammaDistributionContainer
@@ -168,37 +196,7 @@ classdef BayesianPCA < handle
         
         
 
-        %% fit() and ELBO
-        function obj = fit(obj)
-            % elboVals = -Inf(1, obj.maxIter);
-        
-            for it = 1:obj.maxIter
-                obj.qZUpdate();
-                obj.qAlphaUpdate();
-                obj.qMuUpdate();
-                obj.qWUpdate();
-                obj.qTauUpdate();
-                
-                
-                
-                % ------------------------------------------------------------
-                % !!! ELBO is not implemented completely -> ignore the code
-                % below
-                % ------------------------------------------------------------
-                % currElbo = obj.computeELBO();
-
-                % CHECK: ELBO has to increase from iteration to iteration
-                % if it ~= 1 && currElbo < obj.elboVals(it - 1)
-                %     error(['ELBO decreased in iteration ' num2str(it)]);
-                % end
-                
-                % Check for convergence
-                % if it ~= 1 && abs(currElbo - obj.elboVals(it - 1)) < obj.tol
-                %     obj.elboVals = obj.elboVals(1:obj.convIter); % cut the -Inf values at the end
-                %     break;
-                % end
-            end
-        end
+        %% ELBO
         function elbo = computeELBO(obj)
             % Compute the Evidence Lower Bound
             elbo = 0;

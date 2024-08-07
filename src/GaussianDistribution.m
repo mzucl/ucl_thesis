@@ -20,7 +20,7 @@ classdef GaussianDistribution < handle
         ExpectationXXt      % E[xx^T]
     end
 
-    %% Options for the constructor
+    %% Options for the constructor GaussianDistribution
     % SINGLE PARAMETER
     % ()                                -> default GaussianDistribution object
     %                                   (1-dim standard Gaussian distribution)

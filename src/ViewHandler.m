@@ -1,3 +1,4 @@
+% Format of the view: [D x N], observations are columns of the matrix
 classdef ViewHandler
     properties
         data
@@ -9,7 +10,7 @@ classdef ViewHandler
     end
 
     methods(Access = private)
-        % Helper method that throws an error if index (of the sample) is not valid
+        % Helper method that throws an error if index (of the observation) is not valid
         function validateIndex(obj, idx)
             if idx < 1 || idx > obj.N 
                 error(['Error in ' class(obj) ': Index out of range.']); 
@@ -23,7 +24,7 @@ classdef ViewHandler
             % the columns of 'data', thus data is DxN matrix. Implement something to get rid of this
             % assumption. I could pass in number of samples as well and
             % check which dimension of 'data' corresponds to it, but this
-            % will make problems when we import views from external files.
+            % will make problems when we import views from external files (maybe).
             if nargin < 1
                 error(['Error in class ' class(obj) ': Too few arguments passed.']);
             else
@@ -31,7 +32,7 @@ classdef ViewHandler
             end
         end
         
-        function col = getObservation(obj, idx, tr)
+        function observation = getObservation(obj, idx, tr)
             if nargin < 2
                 error(['Error in class ' class(obj) ': Too few arguments passed.']);
             end
@@ -43,19 +44,19 @@ classdef ViewHandler
             validateIndex(obj, idx);
 
             observation = obj.data(:, idx);
-            col = Utility.ternary(tr, observation', observation);
+            observation = Utility.ternary(tr, observation', observation);
         end
 
         function normSq = getObservationNormSq(obj, idx)
-            col = obj.getObservation(idx);
-            normSq = norm(col) ^ 2;
+            observation = obj.getObservation(idx);
+            normSq = norm(observation) ^ 2;
         end
       
         function el = getObservationEntry(obj, idx, d)
             % 'd' is the dimension we are interested in
-            col = obj.getObservation(idx);
-            if d > 0 && d <= length(col)
-                el = col(d);
+            observation = obj.getObservation(idx);
+            if d > 0 && d <= length(observation)
+                el = observation(d);
             else
                 error(['Error in class ' class(obj) ': Index out of bounds.']);
             end
@@ -63,12 +64,12 @@ classdef ViewHandler
 
 
         %% Getters
-        function value = get.N(obj)
-            value = size(obj.data, 2);
-        end
-
         function value = get.D(obj)
             value = size(obj.data, 1);
+        end
+
+        function value = get.N(obj)
+            value = size(obj.data, 2);
         end
     end
 end
