@@ -13,6 +13,10 @@
 % matrix has a different parameters? Check GFA model. If so, I can still
 % implement it as 1D container and just define the access differently.
 
+% I never copy objects of type GammaDistributionContainer, so deep copy is
+% not implemented, but if that is needed don't forget to call the 'copy'
+% method of the inner - GammaDistribution class.
+
 
 
 

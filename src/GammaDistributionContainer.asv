@@ -70,7 +70,6 @@ classdef GammaDistributionContainer < handle
     %%
 
     methods
-        %% Constructor
         function obj = GammaDistributionContainer(a, b, priors, numDistributions)
             % Left 'numDistributions' as a last parameter because it can be
             % infered from other parameters in some cases. 
@@ -231,8 +230,6 @@ classdef GammaDistributionContainer < handle
             end
         end
 
-
-
         %% Single distibution methods
         function dist = getDistribution(obj, idx)
             % Returns the distribution at index 'idx'
@@ -262,8 +259,6 @@ classdef GammaDistributionContainer < handle
             obj.distributions(idx).updateParameters(a, b, inc);
         end
 
-
-        
         %% All distibutions methods
         function obj = updateAllDistributionsParams(obj, a, b, inc)
             if nargin < 3
@@ -330,7 +325,7 @@ classdef GammaDistributionContainer < handle
         end
 
         function value = get.ExpectationLnP(obj)
-            value = cell(1, obj.Size);
+        value = cell(1, obj.Size);
             for i = 1:obj.Size
                 value{i} = obj.distributions(i).ExpectationLnP;
             end

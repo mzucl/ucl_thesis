@@ -1,6 +1,6 @@
 % TODO(medium/high) If any of the priors passed in 'priors' array is NaN
-% then some of tests fail. If this is needed as a feature fix it!
-%% 
+% then some of tests fail. If this (some of distributions have prior and
+% some doesn't) is needed as a feature fix it!
 
 classdef GammaDistributionContainerTest < matlab.unittest.TestCase
     methods (Test)
@@ -191,10 +191,10 @@ classdef GammaDistributionContainerTest < matlab.unittest.TestCase
                 testCase.verifyEqual(obj.distributions(i).prior, priors(i));
             end
         end
-        %% 
 
 
 
+        %% Dependent properties
         function testDependentProperties(testCase)
             % Test 1
             a = 1; b = 2; size = 10;
@@ -226,6 +226,9 @@ classdef GammaDistributionContainerTest < matlab.unittest.TestCase
 
         end
 
+
+
+        %% Single distribution and update methods
         function testSingleDistributionMethods(testCase)
             bVals = ones(1, 5);
             aVals = 1:5;
