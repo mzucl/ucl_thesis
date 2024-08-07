@@ -96,7 +96,7 @@ classdef GammaDistribution < handle
                         obj.a = a;
                         obj.b = a;
                     else
-                        error(['##### ERROR IN CLASS ' class(obj) ': Invalid arguments passed.']);
+                        error(['##### ERROR IN THE CLASS ' class(obj) ': Invalid arguments passed.']);
                     end
             
                 case {2, 3}
@@ -106,7 +106,7 @@ classdef GammaDistribution < handle
                         obj.prior = prior.copy();
                     end
                 otherwise
-                    error(['##### ERROR IN CLASS ' class(obj) ': Too many arguments passed into the constructor.']);
+                    error(['##### ERROR IN THE CLASS ' class(obj) ': Too many arguments passed into the constructor.']);
             end
         end
 
@@ -117,12 +117,12 @@ classdef GammaDistribution < handle
         function obj = updateParameters(obj, a, b, inc)
             switch nargin
                 case {1, 2}
-                    error(['##### ERROR IN CLASS ' class(obj) ': Too few arguments passed.']);
+                    error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
                 case 3
                     inc = false;
             end
             if ~Utility.isSingleNumber(a) || ~Utility.isSingleNumber(b)
-                error(['##### ERROR IN CLASS ' class(obj) ': Parameters must be numerical values.']);
+                error(['##### ERROR IN THE CLASS ' class(obj) ': Parameters must be numerical values.']);
             end
 
             obj.a = Utility.ternary(inc, obj.a + a, a);
@@ -132,12 +132,12 @@ classdef GammaDistribution < handle
         function obj = updateA(obj, a, inc)
             switch nargin
                 case 1
-                    error(['##### ERROR IN CLASS ' class(obj) ': Too few arguments passed.']);
+                    error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
                 case 2
                     inc = false;
             end
             if ~Utility.isSingleNumber(a)
-                error(['##### ERROR IN CLASS ' class(obj) ': Parameter must be a numerical value.']);
+                error(['##### ERROR IN THE CLASS ' class(obj) ': Parameter must be a numerical value.']);
             end
 
             obj.a = Utility.ternary(inc, obj.a + a, a);
@@ -146,13 +146,13 @@ classdef GammaDistribution < handle
         function obj = updateB(obj, b, inc)
             switch nargin
                 case 1
-                    error(['##### ERROR IN CLASS ' class(obj) ': Too few arguments passed.']);
+                    error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
                 case 2
                     inc = false;
             end
 
             if ~Utility.isSingleNumber(b)
-                error(['##### ERROR IN CLASS ' class(obj) ': Parameter must be a numerical value.']);
+                error(['##### ERROR IN THE CLASS ' class(obj) ': Parameter must be a numerical value.']);
             end
 
             obj.b = Utility.ternary(inc, obj.b + b, b);
@@ -184,7 +184,7 @@ classdef GammaDistribution < handle
 
         function value = get.ExpectationLnP(obj)
             if ~isa(obj.prior, 'GammaDistribution')
-                error(['##### ERROR IN CLASS ' class(obj) ': Prior must be defined.']);
+                error(['##### ERROR IN THE CLASS ' class(obj) ': Prior must be defined.']);
             end
             value = -gammaln(obj.prior.a) + obj.prior.a * log(obj.prior.b) + ...
                 (obj.prior.a - 1) * obj.ExpectationLn - obj.prior.b * obj.Expectation;

@@ -32,7 +32,7 @@ classdef GammaDistributionContainer < handle
     methods(Access = private)
         function validateIndex(obj, idx)
             if idx < 1 || idx > obj.Size 
-                error(['##### ERROR IN CLASS ' class(obj) ': Index out of range.']); 
+                error(['##### ERROR IN THE CLASS ' class(obj) ': Index out of range.']); 
             end
         end
     end
@@ -120,7 +120,7 @@ classdef GammaDistributionContainer < handle
                             obj.distributions(i) = GammaDistribution(a(i));
                         end
                     else
-                        error(['##### ERROR IN CLASS ' class(obj) ': Invalid argument passed in.']);
+                        error(['##### ERROR IN THE CLASS ' class(obj) ': Invalid argument passed in.']);
                     end
 
                 case {2, 3}
@@ -134,7 +134,7 @@ classdef GammaDistributionContainer < handle
                     % b: []
                     if Utility.isArray(a) && Utility.isArray(b)
                         if length(a) ~= length(b)
-                            error(['##### ERROR IN CLASS ' class(obj) ': Arrays of values' ...
+                            error(['##### ERROR IN THE CLASS ' class(obj) ': Arrays of values' ...
                                 ' for a and b should be of the same size.']);
                         end
                         numDistributions = length(a);
@@ -159,14 +159,14 @@ classdef GammaDistributionContainer < handle
                     elseif Utility.isSingleNumber(a) && Utility.isSingleNumber(b)
                         numDistributions = 1;
                     else 
-                        error(['##### ERROR IN CLASS ' class(obj) ': Invalid argument passed in.']);
+                        error(['##### ERROR IN THE CLASS ' class(obj) ': Invalid argument passed in.']);
                     end
 
                     % Priors
                     hasPriors = nargin == 3 && ~Utility.isNaN(priors);
 
                     if hasPriors && length(priors) > 1 && length(priors) ~= length(a)
-                        error(['##### ERROR IN CLASS ' class(obj) ': Arrays of values' ...
+                        error(['##### ERROR IN THE CLASS ' class(obj) ': Arrays of values' ...
                             ' for a and priors should be of the same size.']);
                     end
 
@@ -212,7 +212,7 @@ classdef GammaDistributionContainer < handle
                     validParameters = validParameters && (~hasPriors || validPriors);
      
                     if ~validParameters
-                        error(['##### ERROR IN CLASS ' class(obj) ': Invalid input arguments.'])
+                        error(['##### ERROR IN THE CLASS ' class(obj) ': Invalid input arguments.'])
                     end
                     
                     obj.distributions = repmat(GammaDistribution(), numDistributions, 1); % Preallocate
@@ -227,7 +227,7 @@ classdef GammaDistributionContainer < handle
                     end
 
                 otherwise
-                    error(['##### ERROR IN CLASS ' class(obj) ': Invalid input arguments.']);
+                    error(['##### ERROR IN THE CLASS ' class(obj) ': Invalid input arguments.']);
             end
         end
 
@@ -250,7 +250,7 @@ classdef GammaDistributionContainer < handle
 
         function obj = updateDistributionParams(obj, idx, a, b, inc)
             if nargin < 4
-                error(['##### ERROR IN CLASS ' class(obj) ': Too few arguments passed.']);
+                error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
             end
             obj.validateIndex(idx);
 
@@ -267,7 +267,7 @@ classdef GammaDistributionContainer < handle
         %% All distibutions methods
         function obj = updateAllDistributionsParams(obj, a, b, inc)
             if nargin < 3
-                error(['##### ERROR IN CLASS ' class(obj) ': Too few arguments passed.']);
+                error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
             end
             % Default for 'inc' is false
             if nargin == 3
@@ -279,7 +279,7 @@ classdef GammaDistributionContainer < handle
                 a = a * ones(1, obj.Size);
             elseif Utility.isArray(a)
                 if length(a) ~= obj.Size
-                    error(['##### ERROR IN CLASS ' class(obj) ': Dimensions do not match.']);
+                    error(['##### ERROR IN THE CLASS ' class(obj) ': Dimensions do not match.']);
                 end
             end
 
@@ -288,7 +288,7 @@ classdef GammaDistributionContainer < handle
                 b = b * ones(1, obj.Size);
             elseif Utility.isArray(b)
                 if length(b) ~= obj.Size
-                    error(['##### ERROR IN CLASS ' class(obj) ': Dimensions do not match.']);
+                    error(['##### ERROR IN THE CLASS ' class(obj) ': Dimensions do not match.']);
                 end
             end
 

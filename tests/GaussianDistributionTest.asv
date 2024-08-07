@@ -1,5 +1,4 @@
 classdef GaussianDistributionTest < matlab.unittest.TestCase
-    %% Static methods
     methods (Static, Access = public)
         function verifyObject(testCase, obj, mu, cov, prior, dim)
             testCase.verifyEqual(obj.mu, mu);
@@ -43,73 +42,71 @@ classdef GaussianDistributionTest < matlab.unittest.TestCase
         end
 
         function testDeepCopy2(testCase)
-            mu = 1; cov = 2;
-            muNew = 5; covNew = 6;
+            a = 1; b = 2;
+            obj = GammaDistribution(a, b, GammaDistribution());
 
-            obj = GaussianDistribution(mu, cov, GaussianDistribution());
-            deepCopy = obj.copy();
-
-            testCase.verifyTrue(obj == deepCopy);
+            % Test 1: Deep copy
+            objCopy = obj.copy();
           
-            obj.updateParameters(muNew, covNew);
+            aNew = 5; bNew = 6;
+            objCopy.a = aNew;
+            objCopy.b = bNew;
 
-            testCase.verifyTrue(obj ~= deepCopy);
-
-            % They still should have the same prior 
-            %   (this will test if the prior is copied correctly)
-            testCase.verifyTrue(obj.prior == deepCopy.prior);
+            % Only 'objCopy' is updated
+            GammaDistributionTest.verifyObject(testCase, obj, a, b);
+            GammaDistributionTest.verifyObject(testCase, objCopy, aNew, bNew);
         end
-        
-        function testEq(testCase)
-            mu1 = 1; cov1 = 2; 
-            mu2 = 3; cov2 = 4;
-
-            % Test 1: Same objects; no priors;
-            obj1 = GaussianDistribution(mu1, cov1);
-            obj2 = GaussianDistribution(mu1, cov1);
-            testCase.verifyTrue(obj1 == obj2);
-
-            % Test 2: Same objects; same priors;
-            obj1 = GaussianDistribution(mu1, cov1, GaussianDistribution());
-            obj2 = GaussianDistribution(mu1, cov1, GaussianDistribution());
-            testCase.verifyTrue(obj1 == obj2);
-
-            % Test 3.1: Same objects; different priors (one in NaN);
-            obj1 = GaussianDistribution(mu1, cov1, GaussianDistribution());
-            obj2 = GaussianDistribution(mu1, cov1);
-            testCase.verifyTrue(obj1 ~= obj2);
-
-            % Test 3.2: Same objects; different priors (one in NaN);
-            obj1 = GaussianDistribution(mu1, cov1);
-            obj2 = GaussianDistribution(mu1, cov1, GaussianDistribution());
-            testCase.verifyTrue(obj1 ~= obj2);
-
-            % Test 3.3: Same objects; different priors;
-            obj1 = GaussianDistribution(mu1, cov1, GaussianDistribution());
-            obj2 = GaussianDistribution(mu1, cov1, GaussianDistribution(10, 20));
-            testCase.verifyTrue(obj1 ~= obj2);
-
-            % Test 4: Different objects; no priors;
-            obj1 = GaussianDistribution(mu1, cov1);
-            obj2 = GaussianDistribution(mu2, cov2);
-            testCase.verifyTrue(obj1 ~= obj2);
-
-            % Test 5: Different objects; same priors;
-            obj1 = GaussianDistribution(mu1, cov1, GaussianDistribution());
-            obj2 = GaussianDistribution(mu2, cov2, GaussianDistribution());
-            testCase.verifyTrue(obj1 ~= obj2);
-
-            % Test 6.1: Different objects; different priors (one is NaN);
-            obj1 = GaussianDistribution(mu1, cov1, GaussianDistribution());
-            obj2 = GaussianDistribution(mu2, cov2);
-            testCase.verifyTrue(obj1 ~= obj2);
-
-            % Test 6.2: Different objects; different priors;
-            obj1 = GaussianDistribution(mu1, cov1, GaussianDistribution(10, 20));
-            obj2 = GaussianDistribution(mu2, cov2, GaussianDistribution(30, 40));
-            testCase.verifyTrue(obj1 ~= obj2);
-        end
-
+        % 
+        % function testEq(testCase)
+        %     mu1 = 1; cov1 = 1;
+        %     mu2 = 1; cov2 = 1;
+        % 
+        %     % Test 1: Same objects; no priors;
+        %     obj1 = GaussianDistribution(mu1, cov1);
+        %     obj2 = GaussianDistribution(mu2, cov2);
+        %     testCase.verifyTrue(obj1 == obj2);
+        % 
+        %     % Test 2: Same objects; same priors;
+        %     obj1 = GaussianDistribution(a1, b1, GaussianDistribution(), 3);
+        %     obj2 = GaussianDistribution(a1, b1, GaussianDistribution(), 3;
+        %     testCase.verifyTrue(obj1 == obj2);
+        % 
+        %     % Test 3.1: Same objects; different priors (one in NaN);
+        %     obj1 = GammaDistribution(a1, b1, GammaDistribution());
+        %     obj2 = GammaDistribution(a1, b1);
+        %     testCase.verifyTrue(obj1 ~= obj2);
+        % 
+        %     % Test 3.2: Same objects; different priors (one in NaN);
+        %     obj1 = GammaDistribution(a1, b1);
+        %     obj2 = GammaDistribution(a1, b1, GammaDistribution());
+        %     testCase.verifyTrue(obj1 ~= obj2);
+        % 
+        %     % Test 3.3: Same objects; different priors;
+        %     obj1 = GammaDistribution(a1, b1, GammaDistribution());
+        %     obj2 = GammaDistribution(a1, b1, GammaDistribution(10, 20));
+        %     testCase.verifyTrue(obj1 ~= obj2);
+        % 
+        %     % Test 4: Different objects; no priors;
+        %     obj1 = GammaDistribution(a1, b1);
+        %     obj2 = GammaDistribution(a2, b2);
+        %     testCase.verifyTrue(obj1 ~= obj2);
+        % 
+        %     % Test 5: Different objects; same priors;
+        %     obj1 = GammaDistribution(a1, b1, GammaDistribution());
+        %     obj2 = GammaDistribution(a2, b2, GammaDistribution());
+        %     testCase.verifyTrue(obj1 ~= obj2);
+        % 
+        %     % Test 6.1: Different objects; different priors (one is NaN);
+        %     obj1 = GammaDistribution(a1, b1, GammaDistribution());
+        %     obj2 = GammaDistribution(a2, b2);
+        %     testCase.verifyTrue(obj1 ~= obj2);
+        % 
+        %     % Test 6.2: Different objects; different priors;
+        %     obj1 = GammaDistribution(a1, b1, GammaDistribution(10, 20));
+        %     obj2 = GammaDistribution(a2, b2, GammaDistribution(30, 40));
+        %     testCase.verifyTrue(obj1 ~= obj2);
+        % end
+        % 
 
 
         %% Constructors
