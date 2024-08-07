@@ -17,8 +17,9 @@ stdDevs = [0.5 2 0.5 2 0.5 2 0.5 0.5 2 0.5];
 data = generateSyntheticData(numPoints, dim, stdDevs);
 
 % PPCA
-W = PPCA(data, 9);
-hintonDiagram(W);
+% Uncomment to compare with PPCA
+% W = PPCA(data, 9);
+% hintonDiagram(W);
 
 % BPCA
 K = 2; % dim - 1, because BPCA can infer effective number of components
