@@ -1,8 +1,8 @@
 classdef Constants
     properties (Constant)
         % Gamma distribution
-        DEFAULT_GAMMA_A = 10^-3;
-        DEFAULT_GAMMA_B = 10^-3;
+        DEFAULT_GAMMA_A = 10^-1; % 10^-14;
+        DEFAULT_GAMMA_B = 10^-1; % 10^-14;
 
         % Gaussian distribution
         DEFAULT_GAUSS_MU = 0;

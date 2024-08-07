@@ -5,7 +5,7 @@ function data = generateSyntheticData(numPoints, d, stdDevs)
 
     covMatrix = diag(stdDevs.^2);
 
-    mu = zeros(1, d);
+    mu = ones(1, d);
 
     data = mvnrnd(mu, covMatrix, numPoints);
 end

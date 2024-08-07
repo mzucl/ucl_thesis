@@ -69,7 +69,7 @@ classdef BayesianPCA < handle
             
             % W; sample from obj.alpha for the prior
             disp(obj.alpha.Value)
-            wPrior = GaussianDistribution(0, diag(obj.alpha.Value));
+            wPrior = GaussianDistribution(0, diag(1./obj.alpha.Value));
             obj.W = GaussianDistributionContainer(obj.D, wPrior, false);
             
             % tau

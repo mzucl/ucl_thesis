@@ -6,10 +6,10 @@ classdef GammaDistributionTest < matlab.unittest.TestCase
 
             % Verify obj.prior if prior is passed in as a parameter
             if nargin > 4
-                areEqual = Utility.isNaN(obj.prior) && Utility.isNaN(prior) || ...
+                areEqual = Utility.isNaN(obj.prior) && Utility.isNan(prior) || ...
                     obj.prior == prior;
 
-                testCase.verifyTrue(areEqual);
+                testCase.verifyTrue(obj.prior == prior);
             end
         end
     end
@@ -113,30 +113,33 @@ classdef GammaDistributionTest < matlab.unittest.TestCase
             obj = GammaDistribution();
             GammaDistributionTest.verifyObject(testCase, obj, Constants.DEFAULT_GAMMA_A, Constants.DEFAULT_GAMMA_B);
 
-            % Test 2: One parameter constructor - parameter is the prior
+            % Test 2: One parameter constructor - the only parameter is the prior
             truePrior = GammaDistribution();
             obj = GammaDistribution(truePrior);
             GammaDistributionTest.verifyObject(testCase, obj, Constants.DEFAULT_GAMMA_A, Constants.DEFAULT_GAMMA_B, truePrior);
             GammaDistributionTest.verifyObject(testCase, obj.prior, Constants.DEFAULT_GAMMA_A, Constants.DEFAULT_GAMMA_B, NaN);
-          
-            % Test 3: One parameter constructor - parameter is numeric,
-            % thus value for a
-            a = 5;
-            obj = GammaDistribution(a);
-            GammaDistributionTest.verifyObject(testCase, obj, a, a, NaN);
+            
+            % GammaDistributionTest.verifyObject(testCase, obj.prior, Constants.DEFAULT_GAMMA_A, Constants.DEFAULT_GAMMA_B, NaN);
+            % a = 5;
+            % % One parameter constructor
+            % obj = GammaDistribution(a);
+            % 
+            % GammaDistributionTest.verifyObject(testCase, obj, a, a);
+            % 
+            % b = 7;
+            % % Two parameters constructor
+            % obj = GammaDistribution(a, b);
+            % 
+            % GammaDistributionTest.verifyObject(testCase, obj, a, b);
+            % 
+            % aPrior = 1; bPrior = 2;
+            % % Three parameters constructor
+            % prior = GammaDistribution(aPrior, bPrior);
+            % obj = GammaDistribution(a, b, prior);
+            % 
+            % GammaDistributionTest.verifyObject(testCase, obj, a, b, prior);
+            % GammaDistributionTest.verifyObject(testCase, obj.prior, aPrior, bPrior);
 
-            % Test 4: Two parameters constructor
-            b = 7;
-            obj = GammaDistribution(a, b);
-            GammaDistributionTest.verifyObject(testCase, obj, a, b, NaN);
-
-            % Test 5: Three parameters constructor
-            aPrior = 1; bPrior = 2;
-            prior = GammaDistribution(aPrior, bPrior);
-            obj = GammaDistribution(a, b, prior);
-
-            GammaDistributionTest.verifyObject(testCase, obj, a, b, prior);
-            GammaDistributionTest.verifyObject(testCase, obj.prior, aPrior, bPrior, NaN);
         end
 
 

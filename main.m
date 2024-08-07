@@ -18,7 +18,7 @@ stdDevs = [0.5 2 0.5 2 0.5 0.5 0.5 0.5 2 0.5];
 data = generateSyntheticData(numPoints, dim, stdDevs);
 
 K = 9; % dim - 1, because BPCA can infer the number of components
-obj = BayesianPCA(data', K, 1); % Expects data in DxN format
+obj = BayesianPCA(data', K, 5); % Expects data in DxN format
 obj.fit();
 
 
