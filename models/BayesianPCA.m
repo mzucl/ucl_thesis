@@ -104,12 +104,7 @@ classdef BayesianPCA < handle
             % update equations are defined per rows!
 
             % Covariance update
-            covNew = zeros(obj.K);
-            % TODO (high): Add this summation as a dependent property in
-            % GaussianDistributionContainer class
-            for n = 1:obj.N
-                covNew = covNew + obj.Z.ExpectationXXt{n};
-            end
+            covNew = obj.Z.ExpectationCCt;
 
             covNew = Utility.matrixInverse((diag(obj.alpha.ExpectationC)) + obj.tau.Expectation * covNew);
 
@@ -173,10 +168,10 @@ classdef BayesianPCA < handle
             % elboVals = -Inf(1, obj.maxIter);
         
             for it = 1:obj.maxIter
+                obj.qWUpdate();
                 obj.qZUpdate();
                 obj.qAlphaUpdate();
                 obj.qMuUpdate();
-                obj.qWUpdate();
                 obj.qTauUpdate();
                 
                 

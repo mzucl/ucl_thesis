@@ -17,6 +17,7 @@ classdef GaussianDistributionContainer < handle
         ExpectationC        % 'C' stands for container, and this is expectation of the whole container
         ExpectationCt 
         ExpectationCtC      % This corresponds to e.g. E[W^TW]
+        ExpectationCCt      % Sum of E[XXt] of each distribution
         H                   % Similar to above, each entry is entropy of a single component
         HC                  % Entropy of the collection
     end
@@ -169,6 +170,14 @@ classdef GaussianDistributionContainer < handle
 
         function value = get.ExpectationCt(obj)
             value = obj.ExpectationC';
+        end
+
+        function value = get.ExpectationCCt(obj)
+            dim = obj.distributions(1).dim; % All components have the same 'dim'
+            value = zeros(dim, dim);
+            for i = 1:obj.Size
+                value = value + obj.distributions(i).ExpectationXXt;
+            end
         end
 
         % [!!!] Dependent on 'cols'
