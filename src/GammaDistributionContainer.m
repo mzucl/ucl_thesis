@@ -15,7 +15,7 @@ classdef GammaDistributionContainer < handle
                             % expectation of one component. To access ith
                             % component expectation use obj.Expectation{i}
 
-        ExpectationC        % Array of expectations of all components
+        ExpectationC        % Array (column vector) of expectations of all components
 
         H                   % This is a cell array where each entry is an
                             % entropy of one component; 
@@ -263,7 +263,7 @@ classdef GammaDistributionContainer < handle
         end
 
 
-        
+
         %% All distibutions methods
         function obj = updateAllDistributionsParams(obj, a, b, inc)
             if nargin < 3
@@ -326,7 +326,7 @@ classdef GammaDistributionContainer < handle
         end
 
         function value = get.ExpectationC(obj)
-            value = cell2mat(obj.Expectation);
+            value = cell2mat(obj.Expectation)';
         end
 
         function value = get.ExpectationLnP(obj)

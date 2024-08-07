@@ -196,17 +196,17 @@ classdef GammaDistributionContainerTest < matlab.unittest.TestCase
 
         %% Dependent properties
         function testDependentProperties(testCase)
-            % Test 1
+            % Test 1.1: Expectation, ExpectationC
             a = 1; b = 2; size = 10;
             obj = GammaDistributionContainer(a, b, NaN, size);
 
             testCase.verifyEqual(obj.Size, size);
-            
             for i = 1:size
                 testCase.verifyEqual(obj.Expectation{i}, a / b);
             end
+            testCase.verifyEqual(obj.ExpectationC, a/b * ones(obj.Size, 1));
 
-            % Test 2
+            % Test 1.2: Expectation, ExpectationC
             size = 5;
             bVals = ones(1, size);
             aVals = 1:size;
@@ -216,14 +216,13 @@ classdef GammaDistributionContainerTest < matlab.unittest.TestCase
                 testCase.verifyEqual(obj.Expectation{i}, aVals(i) / bVals(i));
             end
             
+            % Test 2: H, HC
             a = 1; b = 1;
             obj = GammaDistributionContainer(a, b, NaN, size);
             for i = 1:size
                 testCase.verifyEqual(obj.H{i}, 1);
             end
             testCase.verifyEqual(obj.HC, obj.Size);
-
-
         end
 
 
