@@ -69,6 +69,8 @@ classdef GammaDistribution < handle
             isNotEqual = ~eq(obj1, obj2);
         end
 
+
+
         %% Constructors
         function obj = GammaDistribution(a, b, prior)
             % Optional parameters: a, b, prior
@@ -108,8 +110,10 @@ classdef GammaDistribution < handle
             end
         end
 
+
+
         %% Update methods
-        % 'inc' (increase) is an optional parameter with default value of false
+        % 'inc' (increment) is an optional parameter with default value of false
         function obj = updateParameters(obj, a, b, inc)
             switch nargin
                 case {1, 2}
@@ -154,6 +158,8 @@ classdef GammaDistribution < handle
             obj.b = Utility.ternary(inc, obj.b + b, b);
         end
 
+
+        
         %% Getters
         function value = get.Expectation(obj)
             value = obj.a / obj.b;
