@@ -18,17 +18,17 @@ data = generateSyntheticData(numPoints, dim, stdDevs);
 
 % PPCA
 % Uncomment to compare with PPCA
-W = PPCA(data, 9);
-hintonDiagram(W, "PPCA");
+% W = PPCA(data, 9);
+% hintonDiagram(W, "PPCA");
 % 
 % BPCA
 K = dim - 1; % dim - 1, because BPCA can infer effective number of components
 numIter = 10;
 obj = BayesianPCA(data', K, numIter); % BayesianPCA constructor expects data in DxN format
-obj.fit();
-
-figure
-hintonDiagram(obj.W.ExpectationC, "BPCA");
+[elboVals, convIter] = obj.fit();
+% 
+% figure
+% hintonDiagram(obj.W.ExpectationC, "BPCA");
 
 
 

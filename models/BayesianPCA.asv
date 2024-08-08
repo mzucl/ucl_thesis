@@ -172,8 +172,8 @@ classdef BayesianPCA < handle
         
 
         %% fit() and ELBO
-        function obj = fit(obj)
-            % elboVals = -Inf(1, obj.maxIter);
+        function [elboVals, it] = fit(obj)
+            elboVals = -Inf(1, obj.maxIter);
         
             for it = 1:obj.maxIter
                 obj.qWUpdate();
@@ -181,38 +181,52 @@ classdef BayesianPCA < handle
                 obj.qAlphaUpdate();
                 obj.qMuUpdate();
                 obj.qTauUpdate();
-                
-                
-                
-                % ------------------------------------------------------------
-                % !!! ELBO is not implemented completely -> ignore the code
-                % below
-                % ------------------------------------------------------------
-                % currElbo = obj.computeELBO();
+               
+                currElbo = obj.computeELBO();
 
                 % CHECK: ELBO has to increase from iteration to iteration
-                % if it ~= 1 && currElbo < obj.elboVals(it - 1)
-                %     error(['ELBO decreased in iteration ' num2str(it)]);
-                % end
-                
+                if it ~= 1 && currElbo < elboVals(it - 1)
+                    disp(['ELBO decreased in iteration ' num2str(it)]); % error
+                end 
+
+                elboVals(it) = currElbo;
+
                 % Check for convergence
-                % if it ~= 1 && abs(currElbo - obj.elboVals(it - 1)) < obj.tol
-                %     obj.elboVals = obj.elboVals(1:obj.convIter); % cut the -Inf values at the end
-                %     break;
-                % end
+                if it ~= 1 && abs(currElbo - elboVals(it - 1)) < obj.tol
+                    disp('Convergence!')
+                    elboVals = elboVals(1:it); % cut the -Inf values at the end
+                    break;
+                end
             end
         end
+        
         function elbo = computeELBO(obj)
-            % Compute the Evidence Lower Bound
             elbo = 0;
             % PART 1: p(.)
-            elbo = elbo + obj.tau.ExpectationLnP + obj.alpha.ExpectationLnPC;
+            elbo = elbo + obj.Z.ExpectationLnPC + getExpectationLnW(obj) + ...
+                obj.alpha.ExpectationLnPC + obj.mu.ExpectationLnP + obj.tau.ExpectationLnP + obj.getExpectationLnPX();
 
             % PART 2: q(.)
             elbo = elbo + obj.Z.HC + obj.W.HC + obj.alpha.HC + obj.mu.H + obj.tau.H;
         end
 
+        function value = getExpectationLnPX(obj)
+            value = obj.N * obj.D/2 * (obj.tau.ExpectationLn - log(2 * pi)) - obj.tau.Expectation/2 * ( ...
+                obj.X.TrXtX - 2 * trace(obj.W.ExpectationC * obj.Z.ExpectationC * obj.X.data') ...
+                - 2 * obj.mu.ExpectationXt * obj.X.data * ones(obj.N, 1) ...
+                + 2 * obj.mu.ExpectationXt * obj.W.ExpectationC * obj.Z.ExpectationC * ones(obj.N, 1) ...
+                + trace(obj.W.ExpectationCtC * obj.Z.ExpectationCCt) + obj.N * obj.mu.ExpectationXtX);
 
+        end
+
+        function value = getExpectationLnW(obj)
+            value = 0;
+            colsNormSq = obj.W.getExpectationOfColumnsNormSq();
+            for k = 1:obj.K
+                value = value + obj.alpha.Expectation{k} * colsNormSq(k);
+            end
+            value = -1/2 * value + obj.D/2 * (obj.alpha.ExpectationLnPC - obj.K * log(2*pi));
+        end
 
         %% Getters
         function value = get.N(obj)

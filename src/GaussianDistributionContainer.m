@@ -20,6 +20,10 @@ classdef GaussianDistributionContainer < handle
         ExpectationCCt      % Sum of E[XXt] of each distribution
         H                   % Similar to above, each entry is entropy of a single component
         HC                  % Entropy of the collection
+
+        ExpectationLnP      % Cell array where each entry is ExpectationLnP
+
+        ExpectationLnPC     % The sum of all entries in ExpectationLnP
     end
 
     methods(Access = private)
@@ -83,10 +87,10 @@ classdef GaussianDistributionContainer < handle
             else
                 numOfCols = obj.distributions(1).dim;
                 res = zeros(1, numOfCols);
-                for idx = 1:numOfCols
-                    for i = 1:obj.Size
-                        res(idx) = res(idx) + obj.distributions(i).mu(idx) ^ 2 + ...
-                            obj.distributions(i).cov(idx, idx);
+                for k = 1:numOfCols
+                    for d = 1:obj.Size
+                        res(k) = res(k) + obj.distributions(d).mu(k) ^ 2 + ...
+                            obj.distributions(d).cov(k, k);
                     end
                 end
             end
@@ -172,11 +176,34 @@ classdef GaussianDistributionContainer < handle
             value = obj.ExpectationC';
         end
 
+        % TODO (high): Refactor this and the one below this - the code is
+        % the same!
         function value = get.ExpectationCCt(obj)
-            dim = obj.distributions(1).dim; % All components have the same 'dim'
-            value = zeros(dim, dim);
-            for i = 1:obj.Size
-                value = value + obj.distributions(i).ExpectationXXt;
+            if obj.cols
+                dim = obj.distributions(1).dim; % They are all of the same dimension
+                value = zeros(dim, dim);
+                for i = 1:obj.Size
+                    value = value + obj.distributions(i).ExpectationXXt;
+                end
+            else
+                value = zeros(obj.Size, obj.Size);
+                for i = 1:obj.Size
+                    for j = 1:obj.Size
+                        % [NOTE] E[Wt * W] is a matrix where each entry is e.g. E[w1^T *
+                        % w2] (w1 and w2 are columns of the matrix W and there
+                        % are independent random variable). Given the
+                        % independence this is E[w1^T]E[w2], but when i == j
+                        % then the independence doesn't hold and in that case
+                        % we should use ExpectationXtX from the
+                        % GaussianDistribution class.
+                        if i ~= j
+                            value(i, j) = obj.distributions(i).ExpectationXt * ...
+                            obj.distributions(j).Expectation;
+                        else 
+                            value(i, j) = obj.distributions(i).ExpectationXtX;
+                        end
+                    end
+                end
             end
         end
 
@@ -228,6 +255,20 @@ classdef GaussianDistributionContainer < handle
             value = 0;
             for i = 1:obj.Size
                 value = value + obj.distributions(i).H;
+            end
+        end
+
+        function value = get.ExpectationLnP(obj)
+            value = cell(1, obj.Size);
+            for i = 1:obj.Size
+                value{i} = obj.distributions(i).ExpectationLnP;
+            end
+        end
+
+        function value = get.ExpectationLnPC(obj)
+            value = 0;
+            for i = 1:obj.Size
+                value = value + obj.distributions(i).ExpectationLnP;
             end
         end
     end

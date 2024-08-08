@@ -22,6 +22,10 @@ classdef GammaDistributionContainer < handle
 
         HC                  % This is the entropy of the collection (sum of entries in H)
 
+        ExpectationLn       % Cell array where each entry is ExpectationLn
+
+        ExpectationLnC      % Sum of all entries in ExpectationLn
+
         ExpectationLnP      % Cell array where each entry is ExpectationLnP
 
         ExpectationLnPC     % The sum of all entries in ExpectationLnP
@@ -338,6 +342,20 @@ classdef GammaDistributionContainer < handle
             value = 0;
             for i = 1:obj.Size
                 value = value + obj.distributions(i).ExpectationLnP;
+            end
+        end
+
+        function value = get.ExpectationLn(obj)
+            value = cell(1, obj.Size);
+            for i = 1:obj.Size
+                value{i} = obj.distributions(i).ExpectationLn;
+            end
+        end
+
+        function value = get.ExpectationLnC(obj)
+            value = 0;
+            for i = 1:obj.Size
+                value = value + obj.distributions(i).ExpectationLn;
             end
         end
 

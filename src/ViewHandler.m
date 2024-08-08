@@ -7,6 +7,7 @@ classdef ViewHandler
     properties (Dependent)
         N       % Number of samples
         D       % Dimensionality
+        TrXtX   % Tr(X^TX)
     end
 
     methods(Access = private)
@@ -70,6 +71,10 @@ classdef ViewHandler
 
         function value = get.N(obj)
             value = size(obj.data, 2);
+        end
+
+        function value = get.TrXtX(obj)
+            value = trace(obj.data' * obj.data);
         end
     end
 end

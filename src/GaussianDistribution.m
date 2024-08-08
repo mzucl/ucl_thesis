@@ -18,6 +18,7 @@ classdef GaussianDistribution < handle
         ExpectationXt       % E[x^T]
         ExpectationXtX      % E[x^Tx]
         ExpectationXXt      % E[xx^T]
+        ExpectationLnP      % E[ln(p(x))] wrt to the q(x)
     end
 
     %% Options for the constructor GaussianDistribution
@@ -375,6 +376,11 @@ classdef GaussianDistribution < handle
 
         function value = get.ExpectationXXt(obj)
             value = obj.mu * obj.mu' + obj.cov;
+        end
+
+        function value = get.ExpectationLnP(obj)
+            value = obj.dim/2 * log(obj.PriorPrecision) - ...
+                obj.PriorPrecision/2 * obj.ExpectationXtX;
         end
     end
 end
