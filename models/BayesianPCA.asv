@@ -56,32 +56,44 @@ classdef BayesianPCA < handle
                     obj.maxIter = maxIter;
                     obj.tol = tol;
             end
-   
+
+            %% Model setup and initialization
             % Z
             % ------------------------------------------------------ %
             % Initialize the model - set random values for the 'mu'
-            initMuZ = randn(obj.K, 1);
-            zPrior = GaussianDistribution(initMuZ, eye(obj.K));
+            initZMu = randn(obj.K, 1);
+            zPrior = GaussianDistribution(initZMu, eye(obj.K));
             obj.Z = GaussianDistributionContainer(obj.N, zPrior, true);
+
 
             % mu
             muPrior = GaussianDistribution(0, 1/Constants.DEFAULT_GAUSS_PRECISION * eye(obj.D));
             obj.mu = GaussianDistribution(muPrior);
 
+
             % alpha
+            % initAlphaA = Constants.DEFAULT_GAMMA_A + obj.D/2;
+            % initAlphaB = ones(K, 1);
             alphaPrior = GammaDistribution(Constants.DEFAULT_GAMMA_A, Constants.DEFAULT_GAMMA_B);
+            % obj.alpha = GammaDistributionContainer(initAlphaA, initAlphaB, repmat(alphaPrior, K, 1));
             obj.alpha = GammaDistributionContainer(repmat(alphaPrior, K, 1));
             
-            % W; sample from obj.alpha for the prior
 
-            % Should we do this? The values for alpha a
+            % W; sample from obj.alpha for the prior
+            %       Should we do this? The values for alpha are so small!
             % wPrior = GaussianDistribution(0, diag(1./obj.alpha.Value));
             wPrior = GaussianDistribution(0, eye(K));
             obj.W = GaussianDistributionContainer(obj.D, wPrior, false);
             
+
             % tau
+            % Initialization
+            % initTauA = Constants.DEFAULT_GAMMA_A + obj.N * obj.D/2;
+            % initTauB = 0;
             tauPrior = GammaDistribution(Constants.DEFAULT_GAMMA_A, Constants.DEFAULT_GAMMA_B);
+            % obj.tau = GammaDistribution(initTauA, initTauB, tauPrior);
             obj.tau = GammaDistribution(tauPrior);
+            
         end
 
 
@@ -106,29 +118,22 @@ classdef BayesianPCA < handle
         % obj.W is GaussianDistributionContainer(cols = false)
         function obj = qWUpdate(obj)
             % [NOTE] Initial distribution is defined per columns of W, but
-            % update equations are defined per rows!
-
-            % % DEBUG
-            % if ~all(obj.W.ExpectationC(:) == 0)
-            %     disp('W is not zero!');
-            % end
-            % % DEBUG
+            % update equations are defined per rows
 
             % Covariance update
-            covNew = obj.Z.ExpectationCCt;
-
-            covNew = Utility.matrixInverse((diag(obj.alpha.ExpectationC)) + obj.tau.Expectation * covNew);
+            covNew = Utility.matrixInverse((diag(obj.alpha.ExpectationC)) + ...
+                obj.tau.Expectation * obj.Z.ExpectationCCt);
 
             obj.W.updateAllDistributionsCovariance(covNew);
 
             % Mean update
-            for k = 1:obj.K
+            for d = 1:obj.D
                 muNew = zeros(obj.K, 1);
                 for n = 1:obj.N
-                    muNew = muNew + obj.Z.Expectation{n} * (obj.X.getObservationEntry(n, k) - obj.mu.Expectation(k));
+                    muNew = muNew + obj.Z.Expectation{n} * (obj.X.getObservationEntry(n, d) - obj.mu.Expectation(d));
                 end
-                muNew = obj.tau.Expectation * obj.W.distributions(k).cov * muNew;
-                obj.W.updateDistributionMu(k, muNew);
+                muNew = obj.tau.Expectation * obj.W.distributions(d).cov * muNew;
+                obj.W.updateDistributionMu(d, muNew);
             end   
         end
 
@@ -148,7 +153,7 @@ classdef BayesianPCA < handle
                 newMu = newMu + obj.X.getObservation(n) - obj.W.ExpectationC * obj.Z.Expectation{n};
             end
             newMu = obj.tau.Expectation * obj.mu.cov * newMu;
-            newCov = 1./(obj.mu.PriorPrecision + obj.N * obj.tau.Expectation) * eye(obj.D);
+            newCov = 1/(obj.mu.PriorPrecision + obj.N * obj.tau.Expectation) * eye(obj.D);
 
             obj.mu.updateParameters(newMu, newCov);
         end
@@ -180,10 +185,10 @@ classdef BayesianPCA < handle
             resArr = cell(1, obj.maxIter);
         
             for it = 1:obj.maxIter
+                obj.qAlphaUpdate();
                 obj.qWUpdate();
                 obj.qZUpdate();
                 obj.qMuUpdate();
-                obj.qAlphaUpdate();
                 obj.qTauUpdate();
 
                 [currElbo, res] = obj.computeELBO();
@@ -192,7 +197,7 @@ classdef BayesianPCA < handle
 
                 % CHECK: ELBO has to increase from iteration to iteration
                 if it ~= 1 && currElbo < elboVals(it - 1)
-                    disp(['ELBO decreased in iteration ' num2str(it)]); % error
+                    disp(['ELBO decreased in iteration ' num2str(it)]); % ERROR
                 end 
 
                 elboVals(it) = currElbo;
@@ -209,13 +214,13 @@ classdef BayesianPCA < handle
         function [elbo, res] = computeELBO(obj)
             % DEBUG
             res = {};
+            res.pX = obj.getExpectationLnPX();
             res.pZ = obj.Z.ExpectationLnPC;
             res.pW = obj.getExpectationLnW();
             res.pAlpha = obj.alpha.ExpectationLnPC;
             res.pMu = obj.mu.ExpectationLnP;
             res.pTau = obj.tau.ExpectationLnP;
-            res.pX = obj.getExpectationLnPX();
-
+            
             res.qZ = obj.Z.HC;
             res.qW = obj.W.HC;
             res.qAlpha = obj.alpha.HC;
@@ -223,14 +228,13 @@ classdef BayesianPCA < handle
             res.qTau = obj.tau.H;
             % DEBUG
 
-            elbo = 0;
-            % PART 1: p(.)
-            elbo = elbo + obj.Z.ExpectationLnPC + obj.getExpectationLnW() + ...
-                obj.alpha.ExpectationLnPC + obj.mu.ExpectationLnP + obj.tau.ExpectationLnP + obj.getExpectationLnPX();
+            elbo = obj.getExpectationLnPX() + obj.Z.ExpectationLnPC + obj.getExpectationLnW() + ... % p(.)
+                obj.alpha.ExpectationLnPC + obj.mu.ExpectationLnP + obj.tau.ExpectationLnP + ... % p(.)
+                obj.Z.HC + obj.W.HC + obj.alpha.HC + obj.mu.H + obj.tau.H; % q(.)
 
-            % PART 2: q(.)
-            elbo = elbo + obj.Z.HC + obj.W.HC + obj.alpha.HC + obj.mu.H + obj.tau.H;
-            elboQ = elbo;
+            % DEBUG
+            res.elbo = elbo;
+            % DEBUG
         end
 
         function value = getExpectationLnPX(obj)

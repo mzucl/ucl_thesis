@@ -1,8 +1,8 @@
-function W = PPCA(X, k)
-    [~, d] = size(X);
+function W = PPCA(X, K)
+    [~, D] = size(X);
 
     if nargin < 2
-        k = d - 1; % Maximum value for k
+        K = D - 1; % Maximum value for k
     end
 
     % Center the data
@@ -17,9 +17,9 @@ function W = PPCA(X, k)
     [sortedEigValues, idx] = sort(eigValues, 'descend');
     
     % ML solution for sigma^2 (Bishop: 12.46)
-    sigmaSq = 1./(d - k) * sum(sortedEigValues(k + 1:end));
+    sigmaSq = 1./(D - K) * sum(sortedEigValues(K + 1:end));
 
     % ML solution for W (Bishop: 12.45); R = I;
-    W = eigVectors(:, idx(1:k)) * ( diag(sortedEigValues(1:k)) - ...
-        sigmaSq * eye(k) )^(1./2);
+    W = eigVectors(:, idx(1:K)) * ( diag(sortedEigValues(1:K)) - ...
+        sigmaSq * eye(K) )^(1./2);
 end

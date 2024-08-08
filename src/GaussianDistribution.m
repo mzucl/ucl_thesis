@@ -379,7 +379,7 @@ classdef GaussianDistribution < handle
         end
 
         function value = get.ExpectationLnP(obj)
-            value = obj.dim/2 * log(obj.PriorPrecision) - ...
+            value = obj.dim/2 * log(obj.PriorPrecision / (2 * pi)) - ...
                 obj.PriorPrecision/2 * obj.ExpectationXtX;
         end
     end

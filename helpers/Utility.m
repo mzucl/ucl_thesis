@@ -102,7 +102,7 @@ classdef Utility
 
         function res = isSemiPositiveDefinite(matrix)
             if ~Utility.isSquareMatrix(matrix)
-                error(['##### ERROR IN THE CLASS' class(obj) ': Input must be a square matrix.']);
+                error(['##### ERROR IN THE CLASS Utility' ': Input must be a square matrix.']);
             end
   
             eigenvalues = eig(matrix);
@@ -131,14 +131,14 @@ classdef Utility
 
         function invA = choleskyInverse(A)
             if ~Utility.isSquareMatrix(A)
-                error(['##### ERROR IN THE CLASS' class(obj) ': Matrix must be square for inversion.']);
+                error(['##### ERROR IN THE CLASS : Matrix must be square for inversion.']);
             end
             
             % Perform Cholesky decomposition
             try
                 L = chol(A, 'lower');
             catch
-                error(['##### ERROR IN THE CLASS' class(obj) ': Matrix is not positive definite.']);
+                error(['##### ERROR IN THE CLASS Utility' ': Matrix is not positive definite.']);
             end
             
             invL = inv(L);
@@ -148,7 +148,7 @@ classdef Utility
         function invA = matrixInverse(A)
             % Compute the inverse of matrix A using LU decomposition
             if ~Utility.isSquareMatrix(A)
-                error(['##### ERROR IN THE CLASS' class(obj) ': Matrix must be square for inversion.']);
+                error(['##### ERROR IN THE CLASS Utility' ': Matrix must be square for inversion.']);
             end
             
             % Compute the inverse using LU decomposition
@@ -181,7 +181,7 @@ classdef Utility
             isIncreasing = all(diff(arr) > 0);
         end
 
-        function plotStructVariables(resArr)
+        function plotStructVariables(resArr, offset)
             numIterations = length(resArr);
             
             % Check the first struct to get the field names
@@ -198,15 +198,15 @@ classdef Utility
             for i = 1:numFields
                 subplot(numRows, 2, i);
                 
-                data = zeros(1, numIterations);
+                data = zeros(1, numIterations - (offset - 1));
                 
                 % Collect data across all iterations
-                for j = 1:numIterations
-                    data(j) = resArr{j}.(fieldNames{i});
+                for j = offset:numIterations
+                    data(j - (offset - 1)) = resArr{j}.(fieldNames{i});
                 end
                 
                 % Plot the data
-                plot(1:numIterations, data, 'LineWidth', 1.5);
+                plot(offset:numIterations, data, 'LineWidth', 1.5);
                 
                 % Set the title and labels
                 title(['Variable: ', fieldNames{i}]);
