@@ -10,41 +10,90 @@ addpath('tests');
 % Uncomment to run tests
 % testResults = runtests('tests');
 
-% Generate data
-numPoints = 300;
-dim = 10;
-stdDevs = [0.5, 2, 0.5, 2, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5];
-data = generateSyntheticData(numPoints, dim, stdDevs);
+% Generate toy dataset
+N = 100;
+D = 10;
+K = 3;
+noiseVariance = 0.1;
 
-% PPCA
-% Uncomment to compare with PPCA
-% W = PPCA(data, 9);
-% hintonDiagram(W, "PPCA");
-% 
+% Generate the toy dataset
+[X, Z, W] = Utility.generateToyDataset(N, D, K, noiseVariance);
+
+W_PPCA = PPCA(X', 9); % PPCA expects X in NxD format
+% -------------------------------------------------------- %
+
 % BPCA
-K = dim - 1; % dim - 1, because BPCA can infer effective number of components
-numIter = 10;
-obj = BayesianPCA(data', K, numIter); % BayesianPCA constructor expects data in DxN format
-[elboVals, convIter] = obj.fit();
+K = D - 1; % dim - 1, because BPCA can infer effective number of components
+numIter = 20;
+obj = BayesianPCA(X, K, numIter); % BayesianPCA constructor expects data in DxN format
+[elboVals, it, resArr] = obj.fit();
+
+figure;
+subplot(1, 3, 1);
+hintonDiagram(W, 'Ground truth');
+disp(size(W));
+hold on
+
+subplot(1, 3, 2);
+hintonDiagram(W_PPCA, 'PPCA');
+hold on;
+disp(size(W_PPCA));
+
+subplot(1, 3, 3);
+hintonDiagram(obj.W.ExpectationC, 'BPCA');
+hold on;
+
+disp(size(obj.W.ExpectationC));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+% % Generate data
+% numPoints = 300;
+% dim = 10;
+% stdDevs = [0.5, 2, 0.5, 2, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5];
+% data = generateSyntheticData(numPoints, dim, stdDevs);
+% 
+% % PPCA
+% % Uncomment to compare with PPCA
+% % W = PPCA(data, 9);
+% % hintonDiagram(W, "PPCA");
+% % 
+% % BPCA
+% K = dim - 1; % dim - 1, because BPCA can infer effective number of components
+% numIter = 10;
+% obj = BayesianPCA(data', K, numIter); % BayesianPCA constructor expects data in DxN format
+% [elboVals, it, resArr] = obj.fit();
+% 
+% % Create a figure
+% Utility.plotStructVariables(resArr);
+% 
+% 
+% 
+
+
+
+
+
+
+
+
+
+
 % 
 % figure
 % hintonDiagram(obj.W.ExpectationC, "BPCA");
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 % X = randn(100, 5);
 % K = 2;

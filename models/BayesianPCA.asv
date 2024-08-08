@@ -60,7 +60,8 @@ classdef BayesianPCA < handle
             % Z
             % ------------------------------------------------------ %
             % Initialize the model - set random values for the 'mu'
-            zPrior = GaussianDistribution(randn(K, 1), eye(obj.K));
+            initMuZ = randn(obj.K, 1);
+            zPrior = GaussianDistribution(initMuZ, eye(obj.K));
             obj.Z = GaussianDistributionContainer(obj.N, zPrior, true);
 
             % mu
@@ -72,8 +73,10 @@ classdef BayesianPCA < handle
             obj.alpha = GammaDistributionContainer(repmat(alphaPrior, K, 1));
             
             % W; sample from obj.alpha for the prior
-            % disp(obj.alpha.Value)
-            wPrior = GaussianDistribution(0, diag(1./obj.alpha.Value));
+
+            % Should we do this? The values for alpha a
+            % wPrior = GaussianDistribution(0, diag(1./obj.alpha.Value));
+            wPrior = GaussianDistribution(0, eye(K));
             obj.W = GaussianDistributionContainer(obj.D, wPrior, false);
             
             % tau
@@ -172,17 +175,20 @@ classdef BayesianPCA < handle
         
 
         %% fit() and ELBO
-        function [elboVals, it] = fit(obj)
+        function [elboVals, it, resArr] = fit(obj)
             elboVals = -Inf(1, obj.maxIter);
+            resArr = cell(1, obj.maxIter);
         
             for it = 1:obj.maxIter
                 obj.qWUpdate();
                 obj.qZUpdate();
-                obj.qAlphaUpdate();
                 obj.qMuUpdate();
+                obj.qAlphaUpdate();
                 obj.qTauUpdate();
-               
-                currElbo = obj.computeELBO();
+
+                [currElbo, res] = obj.computeELBO();
+
+                resArr{it} = res;
 
                 % CHECK: ELBO has to increase from iteration to iteration
                 if it ~= 1 && currElbo < elboVals(it - 1)
@@ -191,23 +197,40 @@ classdef BayesianPCA < handle
 
                 elboVals(it) = currElbo;
 
-                % Check for convergence
-                if it ~= 1 && abs(currElbo - elboVals(it - 1)) < obj.tol
-                    disp('Convergence!')
-                    elboVals = elboVals(1:it); % cut the -Inf values at the end
-                    break;
-                end
+                % % Check for convergence
+                % if it ~= 1 && abs(currElbo - elboVals(it - 1)) < obj.tol
+                %     disp('Convergence!')
+                %     elboVals = elboVals(1:it); % cut the -Inf values at the end
+                %     break;
+                % end
             end
         end
         
-        function elbo = computeELBO(obj)
+        function [elbo, res] = computeELBO(obj)
+            % DEBUG
+            res = {};
+            res.pZ = obj.Z.ExpectationLnPC;
+            res.pW = obj.getExpectationLnW();
+            res.pAlpha = obj.alpha.ExpectationLnPC;
+            res.pMu = obj.mu.ExpectationLnP;
+            res.pTau = obj.tau.ExpectationLnP;
+            res.pX = obj.getExpectationLnPX();
+
+            res.qZ = obj.Z.HC;
+            res.qW = obj.W.HC;
+            res.qAlpha = obj.alpha.HC;
+            res.qMu = obj.mu.H;
+            res.qTau = obj.tau.H;
+            % DEBUG
+
             elbo = 0;
             % PART 1: p(.)
-            elbo = elbo + obj.Z.ExpectationLnPC + getExpectationLnW(obj) + ...
+            elbo = elbo + obj.Z.ExpectationLnPC + obj.getExpectationLnW() + ...
                 obj.alpha.ExpectationLnPC + obj.mu.ExpectationLnP + obj.tau.ExpectationLnP + obj.getExpectationLnPX();
 
             % PART 2: q(.)
             elbo = elbo + obj.Z.HC + obj.W.HC + obj.alpha.HC + obj.mu.H + obj.tau.H;
+            elboQ = elbo;
         end
 
         function value = getExpectationLnPX(obj)
@@ -222,10 +245,10 @@ classdef BayesianPCA < handle
         function value = getExpectationLnW(obj)
             value = 0;
             colsNormSq = obj.W.getExpectationOfColumnsNormSq();
-            for k = 1:obj.K
+            for k = 1:obj.K % TODO (high): This can be implemented as a dot product
                 value = value + obj.alpha.Expectation{k} * colsNormSq(k);
             end
-            value = -1/2 * value + obj.D/2 * (obj.alpha.ExpectationLnPC - obj.K * log(2*pi));
+            value = -1/2 * value + obj.D/2 * (obj.alpha.ExpectationLnC - obj.K * log(2*pi));
         end
 
         %% Getters

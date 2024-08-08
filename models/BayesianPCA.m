@@ -60,7 +60,8 @@ classdef BayesianPCA < handle
             % Z
             % ------------------------------------------------------ %
             % Initialize the model - set random values for the 'mu'
-            zPrior = GaussianDistribution(randn(K, 1), eye(obj.K));
+            initMuZ = randn(obj.K, 1);
+            zPrior = GaussianDistribution(initMuZ, eye(obj.K));
             obj.Z = GaussianDistributionContainer(obj.N, zPrior, true);
 
             % mu
@@ -72,8 +73,9 @@ classdef BayesianPCA < handle
             obj.alpha = GammaDistributionContainer(repmat(alphaPrior, K, 1));
             
             % W; sample from obj.alpha for the prior
-            % disp(obj.alpha.Value)
-            wPrior = GaussianDistribution(0, diag(1./obj.alpha.Value));
+            %       Should we do this? The values for alpha are so small!
+            % wPrior = GaussianDistribution(0, diag(1./obj.alpha.Value));
+            wPrior = GaussianDistribution(0, eye(K));
             obj.W = GaussianDistributionContainer(obj.D, wPrior, false);
             
             % tau
@@ -95,7 +97,7 @@ classdef BayesianPCA < handle
             end
 
             % Update covariance
-            covNew = Utility.matrixInverse(eye(obj.K) + obj.tau.Expectation * ... 
+            covNew = Utility.choleskyInverse(eye(obj.K) + obj.tau.Expectation * ... 
                 obj.W.ExpectationCtC);
             obj.Z.updateAllDistributionsCovariance(covNew);
         end
@@ -114,7 +116,7 @@ classdef BayesianPCA < handle
             % Covariance update
             covNew = obj.Z.ExpectationCCt;
 
-            covNew = Utility.matrixInverse((diag(obj.alpha.ExpectationC)) + obj.tau.Expectation * covNew);
+            covNew = Utility.choleskyInverse((diag(obj.alpha.ExpectationC)) + obj.tau.Expectation * covNew);
 
             obj.W.updateAllDistributionsCovariance(covNew);
 
@@ -172,17 +174,20 @@ classdef BayesianPCA < handle
         
 
         %% fit() and ELBO
-        function [elboVals, it] = fit(obj)
+        function [elboVals, it, resArr] = fit(obj)
             elboVals = -Inf(1, obj.maxIter);
+            resArr = cell(1, obj.maxIter);
         
             for it = 1:obj.maxIter
                 obj.qWUpdate();
                 obj.qZUpdate();
-                obj.qAlphaUpdate();
                 obj.qMuUpdate();
+                obj.qAlphaUpdate();
                 obj.qTauUpdate();
-               
-                currElbo = obj.computeELBO();
+
+                [currElbo, res] = obj.computeELBO();
+
+                resArr{it} = res;
 
                 % CHECK: ELBO has to increase from iteration to iteration
                 if it ~= 1 && currElbo < elboVals(it - 1)
@@ -191,16 +196,32 @@ classdef BayesianPCA < handle
 
                 elboVals(it) = currElbo;
 
-                % Check for convergence
-                if it ~= 1 && abs(currElbo - elboVals(it - 1)) < obj.tol
-                    disp('Convergence!')
-                    elboVals = elboVals(1:it); % cut the -Inf values at the end
-                    break;
-                end
+                % % Check for convergence
+                % if it ~= 1 && abs(currElbo - elboVals(it - 1)) < obj.tol
+                %     disp('Convergence!')
+                %     elboVals = elboVals(1:it); % cut the -Inf values at the end
+                %     break;
+                % end
             end
         end
         
-        function elbo = computeELBO(obj)
+        function [elbo, res] = computeELBO(obj)
+            % DEBUG
+            res = {};
+            res.pZ = obj.Z.ExpectationLnPC;
+            res.pW = obj.getExpectationLnW();
+            res.pAlpha = obj.alpha.ExpectationLnPC;
+            res.pMu = obj.mu.ExpectationLnP;
+            res.pTau = obj.tau.ExpectationLnP;
+            res.pX = obj.getExpectationLnPX();
+
+            res.qZ = obj.Z.HC;
+            res.qW = obj.W.HC;
+            res.qAlpha = obj.alpha.HC;
+            res.qMu = obj.mu.H;
+            res.qTau = obj.tau.H;
+            % DEBUG
+
             elbo = 0;
             % PART 1: p(.)
             elbo = elbo + obj.Z.ExpectationLnPC + obj.getExpectationLnW() + ...
@@ -208,6 +229,7 @@ classdef BayesianPCA < handle
 
             % PART 2: q(.)
             elbo = elbo + obj.Z.HC + obj.W.HC + obj.alpha.HC + obj.mu.H + obj.tau.H;
+            elboQ = elbo;
         end
 
         function value = getExpectationLnPX(obj)

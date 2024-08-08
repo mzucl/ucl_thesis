@@ -102,7 +102,7 @@ classdef Utility
 
         function res = isSemiPositiveDefinite(matrix)
             if ~Utility.isSquareMatrix(matrix)
-                error(['Error in class ' class(obj) ': Input must be a square matrix.']);
+                error(['##### ERROR IN THE CLASS' class(obj) ': Input must be a square matrix.']);
             end
   
             eigenvalues = eig(matrix);
@@ -112,8 +112,8 @@ classdef Utility
         end
 
         function res = isValidCovarianceMatrix(matrix)
-            res = true;
             % res = Utility.isSymmetricMatrix(matrix) && Utility.isSemiPositiveDefinite(matrix);
+            res = Utility.isSemiPositiveDefinite(matrix);
         end
 
         function [isDiagonal, diagElementsOrValue] = checkAndExtractDiagonal(A)
@@ -129,10 +129,26 @@ classdef Utility
             end
         end
 
+        function invA = choleskyInverse(A)
+            if ~Utility.isSquareMatrix(A)
+                error(['##### ERROR IN THE CLASS' class(obj) ': Matrix must be square for inversion.']);
+            end
+            
+            % Perform Cholesky decomposition
+            try
+                L = chol(A, 'lower');
+            catch
+                error(['##### ERROR IN THE CLASS' class(obj) ': Matrix is not positive definite.']);
+            end
+            
+            invL = inv(L);
+            invA = invL' * invL;
+        end
+
         function invA = matrixInverse(A)
             % Compute the inverse of matrix A using LU decomposition
             if ~Utility.isSquareMatrix(A)
-                error(['Error in class ' class(obj) ': Matrix must be square for inversion.']);
+                error(['##### ERROR IN THE CLASS' class(obj) ': Matrix must be square for inversion.']);
             end
             
             % Compute the inverse using LU decomposition
@@ -155,6 +171,65 @@ classdef Utility
             maxValue = 10;
             
             A = randi([minValue, maxValue], m, n);
+        end
+
+
+
+        %% Visualization and debugging
+        function isIncreasing = isMonotonicIncreasing(arr)
+            % Check if the array is monotonically increasing
+            isIncreasing = all(diff(arr) > 0);
+        end
+
+        function plotStructVariables(resArr)
+            numIterations = length(resArr);
+            
+            % Check the first struct to get the field names
+            firstRes = resArr{1};
+            fieldNames = fieldnames(firstRes);
+            
+            numFields = length(fieldNames);
+            
+            % Determine the number of rows needed for subplots with 2 columns
+            numRows = ceil(numFields / 2);
+            
+            figure;
+            
+            for i = 1:numFields
+                subplot(numRows, 2, i);
+                
+                data = zeros(1, numIterations);
+                
+                % Collect data across all iterations
+                for j = 1:numIterations
+                    data(j) = resArr{j}.(fieldNames{i});
+                end
+                
+                % Plot the data
+                plot(1:numIterations, data, 'LineWidth', 1.5);
+                
+                % Set the title and labels
+                title(['Variable: ', fieldNames{i}]);
+                xlabel('Iteration');
+                ylabel(fieldNames{i});
+                grid on;
+            end
+            
+            % Adjust layout for better visibility
+            sgtitle('Evolution of ELBO variables over iteration');
+        end
+
+        % X is in DxN format
+        function [X, Z, W] = generateToyDataset(N, D, K, noiseVariance) % noiseVariance - Variance of the Gaussian noise
+            Z = randn(K, N);
+            W = randn(D, K); 
+        
+            % Generate the data matrix X without noise
+            X = W * Z;
+        
+            % Add Gaussian noise
+            noise = sqrt(noiseVariance) * randn(D, N);
+            X = X + noise;
         end
     end
 end
