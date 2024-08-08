@@ -23,27 +23,28 @@ W_PPCA = PPCA(X', 9); % PPCA expects X in NxD format
 % -------------------------------------------------------- %
 
 % BPCA
-K = D - 1; % dim - 1, because BPCA can infer effective number of components
-numIter = 20;
-obj = BayesianPCA(X, K, numIter); % BayesianPCA constructor expects data in DxN format
-[elboVals, it, resArr] = obj.fit();
+% K = D - 1; % dim - 1, because BPCA can infer effective number of components
+% numIter = 20;
+% obj = BayesianPCA(X, K, numIter); % BayesianPCA constructor expects data in DxN format
+% [elboVals, it, resArr] = obj.fit();
 
-figure;
-subplot(1, 3, 1);
-hintonDiagram(W, 'Ground truth');
-disp(size(W));
-hold on
+% figure;
+% subplot(1, 3, 1);
+% hintonDiagram(W, 'Ground truth');
+% disp(size(W));
+% hold on
 
-subplot(1, 3, 2);
-hintonDiagram(W_PPCA, 'PPCA');
-hold on;
-disp(size(W_PPCA));
-
-subplot(1, 3, 3);
-hintonDiagram(obj.W.ExpectationC, 'BPCA');
-hold on;
-
-disp(size(obj.W.ExpectationC));
+figure
+% subplot(1, 3, 2);
+Utility.hintonDiagram(W_PPCA, "PPCA");
+% hold on;
+% disp(size(W_PPCA));
+% 
+% subplot(1, 3, 3);
+% hintonDiagram(obj.W.ExpectationC, 'BPCA');
+% hold on;
+% 
+% disp(size(obj.W.ExpectationC));
 
 
 

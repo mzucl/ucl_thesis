@@ -231,5 +231,25 @@ classdef Utility
             noise = sqrt(noiseVariance) * randn(D, N);
             X = X + noise;
         end
+    
+        function hintonDiagram(matrix, t)
+            maxWeight = max(abs(matrix(:)));
+
+            for i = 1:size(matrix, 1)
+                for j = 1:size(matrix, 2)
+                    % Determine the size of the square
+                    weight = matrix(i, j);
+                    height = sqrt(abs(weight) / maxWeight);
+                    width = height;
+        
+                    % White for positive, black for negative
+                    color = [1 1 1] * (weight >= 0);
+        
+                    rectangle('Position', [j - width / 2, i - height / 2, width, height], 'FaceColor', color, 'EdgeColor', 'none');
+                end
+            end
+            set(gca, 'YDir', 'reverse', 'XAxisLocation', 'top');
+            title(t);
+        end
     end
 end
