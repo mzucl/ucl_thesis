@@ -60,14 +60,14 @@ classdef GaussianDistributionContainerTest < matlab.unittest.TestCase
 
             % [!!!]
             colSqNorm = obj.getExpectationOfColumnsNormSq();
-            testCase.verifyEqual(colSqNorm, [2, 6, 17]);
+            testCase.verifyEqual(colSqNorm, [2; 6; 17]);
 
             % Test 2: Same test when none of the distributions are st. normal
             obj.updateDistributionParams(1, [5; 7], [3, 4; 4, 7]);
             testCase.verifyEqual(obj.ExpectationCtC, [[84, 12, 19]; [12, 6, 3]; [19, 3, 17]]);
 
             colSqNorm = obj.getExpectationOfColumnsNormSq();
-            testCase.verifyEqual(colSqNorm, [84, 6, 17]);
+            testCase.verifyEqual(colSqNorm, [84; 6; 17]);
         end
 
         function testDependentPropertiesRowFormat(testCase)
@@ -110,14 +110,14 @@ classdef GaussianDistributionContainerTest < matlab.unittest.TestCase
 
             % [!!!]
             colSqNorm = obj.getExpectationOfColumnsNormSq();
-            testCase.verifyEqual(colSqNorm, [15 10]);
+            testCase.verifyEqual(colSqNorm, [15; 10]);
 
             % Test 2: Same test when none of the distributions are st. normal
             obj.updateDistributionParams(1, [5; 7], [3, 4; 4, 7]);
             testCase.verifyEqual(obj.ExpectationCtC, [[42, 43]; [43, 65]]);
 
             colSqNorm = obj.getExpectationOfColumnsNormSq();
-            testCase.verifyEqual(colSqNorm, [42 65]);
+            testCase.verifyEqual(colSqNorm, [42; 65]);
         end
 
 

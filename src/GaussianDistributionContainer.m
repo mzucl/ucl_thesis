@@ -80,13 +80,13 @@ classdef GaussianDistributionContainer < handle
         function res = getExpectationOfColumnsNormSq(obj)
             if obj.cols == true
                 numOfCols = obj.Size;
-                res = zeros(1, numOfCols);
+                res = zeros(numOfCols, 1);
                 for idx = 1:numOfCols
                     res(idx) = obj.ExpectationXtX{idx};
                 end
             else
                 numOfCols = obj.distributions(1).dim;
-                res = zeros(1, numOfCols);
+                res = zeros(numOfCols, 1);
                 for k = 1:numOfCols
                     for d = 1:obj.Size
                         res(k) = res(k) + obj.distributions(d).mu(k) ^ 2 + ...

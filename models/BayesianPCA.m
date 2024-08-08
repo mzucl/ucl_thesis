@@ -203,7 +203,7 @@ classdef BayesianPCA < handle
         function elbo = computeELBO(obj)
             elbo = 0;
             % PART 1: p(.)
-            elbo = elbo + obj.Z.ExpectationLnPC + getExpectationLnW(obj) + ...
+            elbo = elbo + obj.Z.ExpectationLnPC + obj.getExpectationLnW() + ...
                 obj.alpha.ExpectationLnPC + obj.mu.ExpectationLnP + obj.tau.ExpectationLnP + obj.getExpectationLnPX();
 
             % PART 2: q(.)
@@ -222,7 +222,7 @@ classdef BayesianPCA < handle
         function value = getExpectationLnW(obj)
             value = 0;
             colsNormSq = obj.W.getExpectationOfColumnsNormSq();
-            for k = 1:obj.K % TODO (high): This can be implemented as dot product
+            for k = 1:obj.K % TODO (high): This can be implemented as a dot product
                 value = value + obj.alpha.Expectation{k} * colsNormSq(k);
             end
             value = -1/2 * value + obj.D/2 * (obj.alpha.ExpectationLnC - obj.K * log(2*pi));
