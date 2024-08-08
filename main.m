@@ -27,7 +27,7 @@ W_PPCA = PPCA(X', 9); % PPCA expects X in NxD format
 
 % BPCA
 K = D - 1; % dim - 1, because BPCA can infer effective number of components
-numIter = 50;
+numIter = 100;
 obj = BayesianPCA(X, K, numIter); % BayesianPCA constructor expects data in DxN format
 [elboVals, convIt, resArr] = obj.fit();
 
@@ -44,7 +44,8 @@ subplot(1, 3, 3);
 Utility.hintonDiagram(obj.W.ExpectationC, 'BPCA');
 hold on;
 
-
+figure
+Utility.plotStructVariables(resArr, 3);
 
 %% Code optimization TODOs
 % memory allocation (e.g. preallocating arrays)

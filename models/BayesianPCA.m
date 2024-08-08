@@ -82,7 +82,9 @@ classdef BayesianPCA < handle
             % W; sample from obj.alpha for the prior
             %       Should we do this? The values for alpha are so small!!!
             % wPrior = GaussianDistribution(0, diag(1./obj.alpha.Value));
-            wPrior = GaussianDistribution(0, eye(K));
+            % wPrior = GaussianDistribution(0, eye(K));
+            alpha = repmat(Constants.DEFAULT_GAMMA_A + obj.D/2, K, 1);
+            x = GaussianDistribution(0, diag(1./alpha));
             obj.W = GaussianDistributionContainer(obj.D, wPrior, false);
             
 
