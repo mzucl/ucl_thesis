@@ -7,7 +7,7 @@ classdef Constants
         % Gaussian distribution
         DEFAULT_GAUSS_MU = 0;
         DEFAULT_GAUSS_DIM = 1;
-        DEFAULT_GAUSS_PRECISION = 10^-3;
+        DEFAULT_GAUSS_PRECISION = 10^-1;
 
         % Default optimization parameters
         DEFAULT_MAX_ITER = 1;

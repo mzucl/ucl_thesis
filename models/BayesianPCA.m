@@ -61,40 +61,52 @@ classdef BayesianPCA < handle
             % Z
             % ------------------------------------------------------ %
             % Initialize the model - set random values for the 'mu'
+            % This means we will run the update equation for W first and
+            % that we should set some values for all the moments that are
+            % in those update equations.
             initZMu = randn(obj.K, 1);
             zPrior = GaussianDistribution(initZMu, eye(obj.K));
             obj.Z = GaussianDistributionContainer(obj.N, zPrior, true);
-
 
             % mu
             muPrior = GaussianDistribution(0, 1/Constants.DEFAULT_GAUSS_PRECISION * eye(obj.D));
             obj.mu = GaussianDistribution(muPrior);
 
-
             % alpha
             % initAlphaA = Constants.DEFAULT_GAMMA_A + obj.D/2;
             % initAlphaB = ones(K, 1);
-            alphaPrior = GammaDistribution(Constants.DEFAULT_GAMMA_A, Constants.DEFAULT_GAMMA_B);
             % obj.alpha = GammaDistributionContainer(initAlphaA, initAlphaB, repmat(alphaPrior, K, 1));
+            alphaPrior = GammaDistribution(Constants.DEFAULT_GAMMA_A, Constants.DEFAULT_GAMMA_B);
             obj.alpha = GammaDistributionContainer(repmat(alphaPrior, K, 1));
             
 
             % W; sample from obj.alpha for the prior
             %       Should we do this? The values for alpha are so small!!!
             % wPrior = GaussianDistribution(0, diag(1./obj.alpha.Value));
-            % wPrior = GaussianDistribution(0, eye(K));
-            alpha = repmat(Constants.DEFAULT_GAMMA_A + obj.D/2, K, 1);
-            x = GaussianDistribution(0, diag(1./alpha));
+            wPrior = GaussianDistribution(0, eye(K));
             obj.W = GaussianDistributionContainer(obj.D, wPrior, false);
             
-
+            
             % tau
-            % Initialization
-            % initTauA = Constants.DEFAULT_GAMMA_A + obj.N * obj.D/2;
-            % initTauB = 0;
             tauPrior = GammaDistribution(Constants.DEFAULT_GAMMA_A, Constants.DEFAULT_GAMMA_B);
-            % obj.tau = GammaDistribution(initTauA, initTauB, tauPrior);
             obj.tau = GammaDistribution(tauPrior);
+
+            % Model initialization - second part
+            % The first update equation is for W, so we need to initialize
+            % everything that is used in those two equations and those
+            % initilizations are given below.
+            %   obj.tau.expInit
+            %   obj.alpha.expCInit
+            %   obj.mu.expInit
+            % ----------------------------------------------------------------
+            obj.tau.updateA(obj.tau.prior.a + obj.N * obj.D/2); % Update tau.a
+
+            obj.alpha.updateAllDistributionsA(obj.alpha.distributions(1).prior.a + obj.D/2); % Update alpha.a
+            obj.alpha.updateAllDistributionsB(1); % Update alpha.b
+
+            obj.tau.setExpInit(1000);
+            obj.alpha.setExpCInit(obj.alpha.A./obj.alpha.B);
+            obj.mu.setExpInit(randn(obj.D, 1));
         end
 
 
@@ -117,25 +129,56 @@ classdef BayesianPCA < handle
         end
         
         % obj.W is GaussianDistributionContainer(cols = false)
-        function obj = qWUpdate(obj)
-            % [NOTE] Initial distribution is defined per columns of W, but
+        % [NOTE] Initial distribution is defined per columns of W, but
             % update equations are defined per rows
+        function obj = qWUpdate(obj, it)
+            disp(obj.W.ExpectationC);
+            
+            % In the first iteration we perform the update based on the
+            % initialized moments of tau, mu and alpha, and in every
+            % subsequent iteration we use the 'normal' update equations
 
-            % Covariance update
-            covNew = Utility.matrixInverse((diag(obj.alpha.ExpectationC)) + ...
-                obj.tau.Expectation * obj.Z.ExpectationCCt);
-
-            obj.W.updateAllDistributionsCovariance(covNew);
-
-            % Mean update
-            for d = 1:obj.D
-                muNew = zeros(obj.K, 1);
-                for n = 1:obj.N
-                    muNew = muNew + obj.Z.Expectation{n} * (obj.X.getObservationEntry(n, d) - obj.mu.Expectation(d));
-                end
-                muNew = obj.tau.Expectation * obj.W.distributions(d).cov * muNew;
-                obj.W.updateDistributionMu(d, muNew);
-            end   
+            % TODO (medium): DRY this code: define the vars for the values
+            % that are different based on the value of 'it' before the
+            % update equations. Use Utility.ternary(it == 1, ...)
+            %   obj.alpha.expCInit
+            %   obj.tau.expInit
+            %   obj.mu.expInit
+            if it > 1
+                % Covariance update
+                covNew = Utility.matrixInverse((diag(obj.alpha.ExpectationC)) + ...
+                    obj.tau.Expectation * obj.Z.ExpectationCCt);
+    
+                obj.W.updateAllDistributionsCovariance(covNew);
+    
+                % Mean update
+                for d = 1:obj.D
+                    muNew = zeros(obj.K, 1);
+                    for n = 1:obj.N
+                        muNew = muNew + obj.Z.Expectation{n} * (obj.X.getObservationEntry(n, d) - obj.mu.Expectation(d));
+                    end
+                    muNew = obj.tau.Expectation * obj.W.distributions(d).cov * muNew;
+                    obj.W.updateDistributionMu(d, muNew);
+                end   
+            % First iteration - use 'expInit' instead of read expectations
+            else
+                % Covariance update
+                covNew = Utility.matrixInverse((diag(obj.alpha.getExpCInit())) + ...
+                    obj.tau.getExpInit() * obj.Z.ExpectationCCt);
+    
+                obj.W.updateAllDistributionsCovariance(covNew);
+    
+                % Mean update
+                for d = 1:obj.D
+                    muNew = zeros(obj.K, 1);
+                    for n = 1:obj.N
+                        muExpInit = obj.mu.getExpInit();
+                        muNew = muNew + obj.Z.Expectation{n} * (obj.X.getObservationEntry(n, d) - muExpInit(d));
+                    end
+                    muNew = obj.tau.getExpInit() * obj.W.distributions(d).cov * muNew;
+                    obj.W.updateDistributionMu(d, muNew);
+                end   
+            end
         end
 
         % obj.alpha is GammaDistributionContainer
@@ -186,10 +229,10 @@ classdef BayesianPCA < handle
             resArr = cell(1, obj.maxIter);
         
             for it = 1:obj.maxIter
-                obj.qAlphaUpdate();
-                obj.qWUpdate();
+                obj.qWUpdate(it);
                 obj.qZUpdate();
                 obj.qMuUpdate();
+                obj.qAlphaUpdate();
                 obj.qTauUpdate();
 
                 [currElbo, res] = obj.computeELBO();
