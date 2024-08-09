@@ -1,3 +1,9 @@
+% %% Code optimization TODOs
+% % memory allocation (e.g. preallocating arrays)
+% % matrix inverses (Choleskey)
+% Value vs Handle classes (avoid copying)
+
+
 % Test error cases in all classes!
 
 # GammaDistributionContrainer.m 

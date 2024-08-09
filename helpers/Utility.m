@@ -182,6 +182,13 @@ classdef Utility
         end
 
         function plotStructVariables(resArr, offset)
+            if nargin < 2
+                offset = 1;
+            end
+            if offset < 1
+                error(['##### ERROR IN THE CLASS Utility' ': Offset is the starting iteration, it can not be ' ...
+                    'less than 1']);
+            end
             numIterations = length(resArr);
             
             % Check the first struct to get the field names

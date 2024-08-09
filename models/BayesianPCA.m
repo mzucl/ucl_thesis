@@ -73,9 +73,6 @@ classdef BayesianPCA < handle
             obj.mu = GaussianDistribution(muPrior);
 
             % alpha
-            % initAlphaA = Constants.DEFAULT_GAMMA_A + obj.D/2;
-            % initAlphaB = ones(K, 1);
-            % obj.alpha = GammaDistributionContainer(initAlphaA, initAlphaB, repmat(alphaPrior, K, 1));
             alphaPrior = GammaDistribution(Constants.DEFAULT_GAMMA_A, Constants.DEFAULT_GAMMA_B);
             obj.alpha = GammaDistributionContainer(repmat(alphaPrior, K, 1));
             
@@ -127,7 +124,8 @@ classdef BayesianPCA < handle
         % [NOTE] Initial distribution is defined per columns of W, but
             % update equations are defined per rows
         function obj = qWUpdate(obj, it)
-            disp(obj.W.ExpectationC);
+            disp(['Min W value: ', num2str(min(obj.W.ExpectationC, [], 'all'))]);
+            disp(['Max W value: ', num2str(max(obj.W.ExpectationC, [], 'all'))]);
             
             % In the first iteration we perform the update based on the
             % initialized moments of tau, mu and alpha, and in every
@@ -225,9 +223,9 @@ classdef BayesianPCA < handle
         
             for it = 1:obj.maxIter
                 obj.qWUpdate(it);
+                obj.qAlphaUpdate();
                 obj.qZUpdate();
                 obj.qMuUpdate();
-                obj.qAlphaUpdate();
                 obj.qTauUpdate();
 
                 [currElbo, res] = obj.computeELBO();
@@ -236,17 +234,22 @@ classdef BayesianPCA < handle
 
                 % CHECK: ELBO has to increase from iteration to iteration
                 if it ~= 1 && currElbo < elboVals(it - 1)
-                    disp(['ELBO decreased in iteration ' num2str(it)]); % ERROR
+                    fprintf(2, 'ELBO decreased in iteration %d\n', it);
                 end 
 
                 elboVals(it) = currElbo;
 
-                % % Check for convergence
-                % if it ~= 1 && abs(currElbo - elboVals(it - 1)) < obj.tol
-                %     disp('Convergence!')
-                %     elboVals = elboVals(1:it); % cut the -Inf values at the end
-                %     break;
-                % end
+                if it ~= 1
+                    disp(['======= ELBO increased by: ', num2str(currElbo - elboVals(it - 1))]);
+                end
+
+                % Check for convergence
+                if it ~= 1 && abs(currElbo - elboVals(it - 1)) / abs(currElbo) < obj.tol
+                    disp(['Convergence at iteration: ', num2str(it)]);
+                    elboVals = elboVals(1:it); % cut the -Inf values at the end
+                    resArr = resArr(1:it);
+                    break;
+                end
             end
         end
         
