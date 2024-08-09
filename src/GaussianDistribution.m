@@ -5,6 +5,10 @@ classdef GaussianDistribution < handle
         dim
         prior
     end
+
+    properties(Access = private)
+        expInit
+    end
     
     properties (Dependent)
         Expectation
@@ -266,6 +270,9 @@ classdef GaussianDistribution < handle
             obj.cov = cov;
             obj.prior = prior;
             obj.dim = dim;
+
+            % Set initial expectation to the real expectation
+            obj.setExpInit(obj.Expectation);
         end
 
 
@@ -340,7 +347,19 @@ classdef GaussianDistribution < handle
 
 
 
+        %% Setters
+        function obj = setExpInit(obj, value)
+            obj.expInit = value;
+        end
+
+
+
         %% Getters
+        % 'expInit' is a private property -> needs a getter for the access
+        function value = getExpInit(obj)
+            value = obj.expInit;
+        end
+
         function value = get.Expectation(obj)
             value = obj.mu;
         end
