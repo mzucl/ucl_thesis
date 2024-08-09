@@ -12,5 +12,8 @@ classdef Constants
         % Default optimization parameters
         DEFAULT_MAX_ITER = 1;
         DEFAULT_TOL = 1e-6;
+
+        % Tau
+        DEFAULT_NOISE_VAL = 1e2;
     end
 end

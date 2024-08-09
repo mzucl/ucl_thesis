@@ -36,6 +36,7 @@ classdef BayesianPCA < handle
             
             % Set obj.X right away, so it can be used below to set obj.K
             obj.X = ViewHandler(X);
+            totalVar = sum(diag(cov(X')));
 
             % Set parameters to default values that will be updated if value is
             % provided
@@ -97,7 +98,10 @@ classdef BayesianPCA < handle
             %   obj.mu.expInit
             % ----------------------------------------------------------------
             obj.tau.setExpInit(1e-4);
-            obj.alpha.setExpCInit(repmat(1e-4, obj.K, 1));
+                        
+            obj.alpha.setExpCInit(repmat(1e-1, obj.K, 1));
+            % The line below is from GFA code
+            % obj.alpha.setExpCInit(repmat(obj.K * obj.D / (totalVar - 1 / obj.tau.getExpInit()), obj.K, 1));
             obj.mu.setExpInit(randn(obj.D, 1));
         end
 
