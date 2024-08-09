@@ -176,7 +176,7 @@ classdef GammaDistributionContainerTest < matlab.unittest.TestCase
 
             testCase.verifyEqual(obj.Size, size);
             for i = 1:obj.Size
-                testCase.verifyEqual(obj.distributions(i).prior, priors);
+                testCase.verifyTrue(obj.distributions(i).prior == priors);
             end
 
             % Test 3: 'priors' is set to an array of GammaDistribution
@@ -188,8 +188,24 @@ classdef GammaDistributionContainerTest < matlab.unittest.TestCase
 
             testCase.verifyEqual(obj.Size, length(priors));
             for i = 1:obj.Size
-                testCase.verifyEqual(obj.distributions(i).prior, priors(i));
+                testCase.verifyTrue(obj.distributions(i).prior == priors(i));
             end
+        end
+
+
+
+        %% Private properties
+        function testSetters(testCase)
+            a = 1; b = 2; size = 10;
+            obj = GammaDistributionContainer(a, b, NaN, size);
+
+            testCase.verifyTrue(all(isequal(obj.getExpCInit(), obj.ExpectationC)));
+            
+            % randomArray = minValue + (maxValue - minValue) * rand(1, n);
+            newExpC = 0.1 + (5 - 0.1) * rand(1, obj.Size);
+            obj.setExpCInit(newExpC);
+
+            testCase.verifyTrue(isequal(obj.getExpCInit(), newExpC));
         end
 
 

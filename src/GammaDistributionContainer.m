@@ -33,6 +33,10 @@ classdef GammaDistributionContainer < handle
         Value           
     end
 
+    properties(Access = private)
+        expCInit
+    end
+
     methods(Access = private)
         function validateIndex(obj, idx)
             if idx < 1 || idx > obj.Size 
@@ -231,6 +235,8 @@ classdef GammaDistributionContainer < handle
                 otherwise
                     error(['##### ERROR IN THE CLASS ' class(obj) ': Invalid input arguments.']);
             end
+            % Set initial expectation to the real expectation
+            obj.setExpCInit(obj.ExpectationC);
         end
 
 
@@ -301,7 +307,26 @@ classdef GammaDistributionContainer < handle
 
 
 
+        %% Setters
+        function obj = setExpCInit(obj, value)
+            if ~all(value > 0)
+                error(['##### ERROR IN THE CLASS ' class(obj) ': Expectation is a strictly positive number.']);
+            end
+            if length(value) ~= obj.Size
+                error(['##### ERROR IN THE CLASS ' class(obj) ': Number of elements in the expectation must be equal to the number of ' ...
+                    'components. ']);
+            end
+            obj.expCInit = value;
+        end
+
+
+
         %% Getters
+        % 'expInit' is a private property -> needs a getter for the access
+        function value = getExpCInit(obj)
+            value = obj.expCInit;
+        end
+
         function value = get.Size(obj)
             value = length(obj.distributions);
         end
