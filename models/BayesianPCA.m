@@ -99,13 +99,8 @@ classdef BayesianPCA < handle
             %   obj.alpha.expCInit
             %   obj.mu.expInit
             % ----------------------------------------------------------------
-            obj.tau.updateA(obj.tau.prior.a + obj.N * obj.D/2); % Update tau.a
-
-            obj.alpha.updateAllDistributionsA(obj.alpha.distributions(1).prior.a + obj.D/2); % Update alpha.a
-            obj.alpha.updateAllDistributionsB(1); % Update alpha.b
-
-            obj.tau.setExpInit(1000);
-            obj.alpha.setExpCInit(obj.alpha.A./obj.alpha.B);
+            obj.tau.setExpInit(1e-4);
+            obj.alpha.setExpCInit(repmat(1e-4, obj.K, 1));
             obj.mu.setExpInit(randn(obj.D, 1));
         end
 
