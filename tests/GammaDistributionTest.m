@@ -171,6 +171,19 @@ classdef GammaDistributionTest < matlab.unittest.TestCase
         
 
 
+        %% Private properties
+        function testSetters(testCase)
+            a = 2; b = 1;
+            obj = GammaDistribution(a, b);
+            testCase.verifyTrue(obj.getExpInit() == obj.Expectation);
+
+            expInit = 34;
+            obj.setExpInit(expInit);
+            testCase.verifyTrue(obj.getExpInit() == expInit);
+        end
+
+
+
         %% Update methods
         function testUpdateMethods(testCase)
             a = 1; b = 2;

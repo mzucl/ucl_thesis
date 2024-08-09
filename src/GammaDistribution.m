@@ -1,8 +1,18 @@
+% The Gamma distribution is defined as the distribution of a sum of 
+% independent exponential random variables, where the shape parameter a
+% corresponds to the number of such variables and the rate parameter b 
+% (or the inverse scale parameter) controls the rate of the exponential decay.
+%   -> a, b must always be strictly positive 
+%%
 classdef GammaDistribution < handle
     properties
         a  
         b
         prior
+    end
+
+    properties(Access = private)
+        expInit
     end
     
     % TODO (medium): Naming for 'ExpectationLn' and 'ExpectationLnP' don't follow
@@ -72,6 +82,8 @@ classdef GammaDistribution < handle
 
 
         %% Constructors
+        % TODO (high): Use update methods to set the parameters, because in
+        % those methods parameter values are validated unlike here
         function obj = GammaDistribution(a, b, prior)
             % Optional parameters: a, b, prior
             % -------------------------------------------------------------
@@ -108,6 +120,8 @@ classdef GammaDistribution < handle
                 otherwise
                     error(['##### ERROR IN THE CLASS ' class(obj) ': Too many arguments passed into the constructor.']);
             end
+            % Set initial expectation to the real expectation
+            obj.setExpInit(obj.Expectation);
         end
 
 
@@ -125,8 +139,11 @@ classdef GammaDistribution < handle
                 error(['##### ERROR IN THE CLASS ' class(obj) ': Parameters must be numerical values.']);
             end
 
-            obj.a = Utility.ternary(inc, obj.a + a, a);
-            obj.b = Utility.ternary(inc, obj.b + b, b);  
+            % TODO (high): All these update methods implemented like this
+            % will leave the object in half-updated state in the case of an
+            % error (e.g. 'a' will be updated and b will throw an error).
+            obj.updateA(a, inc);
+            obj.updateB(b, inc);
         end
         
         function obj = updateA(obj, a, inc)
@@ -138,6 +155,9 @@ classdef GammaDistribution < handle
             end
             if ~Utility.isSingleNumber(a)
                 error(['##### ERROR IN THE CLASS ' class(obj) ': Parameter must be a numerical value.']);
+            end
+            if (inc == true && obj.a + a <= 0 || inc == false && a <= 0)
+                error(['##### ERROR IN THE CLASS ' class(obj) ': Parameter a is a strictly positive number.']);
             end
 
             obj.a = Utility.ternary(inc, obj.a + a, a);
@@ -155,12 +175,31 @@ classdef GammaDistribution < handle
                 error(['##### ERROR IN THE CLASS ' class(obj) ': Parameter must be a numerical value.']);
             end
 
+            if (inc == true && obj.b + b <= 0 || inc == false && b <= 0)
+                error(['##### ERROR IN THE CLASS ' class(obj) ': Parameter b is a strictly positive number.']);
+            end
+
             obj.b = Utility.ternary(inc, obj.b + b, b);
         end
 
 
         
+        %% Setters
+        function obj = setExpInit(obj, value)
+            if value <= 0
+                error(['##### ERROR IN THE CLASS ' class(obj) ': Expectation is a strictly positive number.']);
+            end
+            obj.expInit = value;
+        end
+
+
+
         %% Getters
+        % 'expInit' is a private property -> needs a getter for the access
+        function value = getExpInit(obj)
+            value = obj.expInit;
+        end
+
         function value = get.Expectation(obj)
             value = obj.a / obj.b;
         end
