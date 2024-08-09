@@ -175,6 +175,37 @@ classdef GaussianDistributionContainerTest < matlab.unittest.TestCase
         
 
 
+         %% Private properties
+        function testSetters(testCase)
+            % Test 1: cols = true
+            dim = 10;
+            numDistributions = 2;
+
+            prior = GaussianDistribution(zeros(dim, 1), 5 * eye(dim));
+            obj = GaussianDistributionContainer(numDistributions, prior, true);
+
+            testCase.verifyTrue(all(isequal(obj.getExpCInit(), obj.ExpectationC)));
+
+            % Set init expectation
+            newExpC = Utility.generateRandomIntMatrix(dim, numDistributions);
+            obj.setExpCInit(newExpC);
+
+            testCase.verifyTrue(isequal(obj.getExpCInit(), newExpC));
+
+            % Test 2: cols = false
+            obj = GaussianDistributionContainer(numDistributions, prior, false);
+
+            testCase.verifyTrue(all(isequal(obj.getExpCInit(), obj.ExpectationC)));
+
+            % Set init expectation
+            newExpC = Utility.generateRandomIntMatrix(numDistributions, dim);
+            obj.setExpCInit(newExpC);
+
+            testCase.verifyTrue(isequal(obj.getExpCInit(), newExpC));
+        end
+
+
+
         %% Update and retrieve methods
         function testGetDistribution(testCase)
             dim = 10;

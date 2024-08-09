@@ -26,6 +26,10 @@ classdef GaussianDistributionContainer < handle
         ExpectationLnPC     % The sum of all entries in ExpectationLnP
     end
 
+    properties(Access = private)
+        expCInit
+    end
+
     methods(Access = private)
         % Helper method that throws an error if index is not valid
         function validateIndex(obj, idx)
@@ -63,6 +67,9 @@ classdef GaussianDistributionContainer < handle
                     obj.distributions(i) = GaussianDistribution(prior);
                 end
             end
+
+            % Set initial expectation to the real expectation
+            obj.setExpCInit(obj.ExpectationC);
         end
        
 
@@ -136,7 +143,28 @@ classdef GaussianDistributionContainer < handle
             end
         end
 
+
+
+        %% Setters
+        function obj = setExpCInit(obj, value)
+            validValue = obj.cols == true && isequal(size(value), [obj.distributions(1).dim, obj.Size]) || ...
+                obj.cols == false && isequal(size(value), [obj.Size, obj.distributions(1).dim]);
+
+            if ~validValue
+                error(['##### ERROR IN THE CLASS ' class(obj) ': Number of elements in the expectation must be equal to the number of ' ...
+                    'components. ']);
+            end
+            obj.expCInit = value;
+        end
+
+
+
         %% Getters
+        % 'expInit' is a private property -> needs a getter for the access
+        function value = getExpCInit(obj)
+            value = obj.expCInit;
+        end
+
         function value = get.Size(obj)
             value = length(obj.distributions);
         end
