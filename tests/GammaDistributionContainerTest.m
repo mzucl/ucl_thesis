@@ -275,6 +275,40 @@ classdef GammaDistributionContainerTest < matlab.unittest.TestCase
             end
         end
 
+        function testUpdateAllDistributionsA(testCase)
+            % Test 1: 
+            % deltaA: scalar
+            % inc: false
+            numOfDistr = 5;
+            aVals = 1:numOfDistr;
+            bVals = ones(1, numOfDistr);
+            deltaA = 0.1;
+
+            obj = GammaDistributionContainer(aVals, bVals);
+            obj.updateAllDistributionsA(deltaA);
+
+            % Add test for priors - update shouldn't affect priors
+            for i = 1:obj.Size
+                testCase.verifyTrue(isnan(obj.distributions(i).prior), 'All priors are not NaN');
+                testCase.verifyEqual(obj.distributions(i).a, deltaA);
+                testCase.verifyEqual(obj.distributions(i).b, bVals(i)); % Not changed
+            end
+
+            % Test 2: 
+            % deltaA: array
+            % inc: true
+            obj = GammaDistributionContainer(aVals, bVals);
+            deltaA = 0.25 * 1:numOfDistr;
+            obj.updateAllDistributionsA(deltaA, true);
+
+            % Add test for priors - update shouldn't affect priors
+            for i = 1:obj.Size
+                testCase.verifyTrue(isnan(obj.distributions(i).prior), 'All priors are not NaN');
+                testCase.verifyEqual(obj.distributions(i).a, aVals(i) + deltaA(i));
+                testCase.verifyEqual(obj.distributions(i).b, bVals(i)); % Not changed
+            end
+        end
+
         function testUpdateAllDistributionsParams(testCase)
             % Test 1: 
             % deltaA: scalar
@@ -282,9 +316,9 @@ classdef GammaDistributionContainerTest < matlab.unittest.TestCase
             % inc: true
 
             numOfDistr = 5;
-            bVals = ones(1, numOfDistr);
             aVals = 1:numOfDistr;
-
+            bVals = ones(1, numOfDistr);
+          
             obj = GammaDistributionContainer(aVals, bVals);
     
             deltaA = 0.1; deltaB = 0.01;

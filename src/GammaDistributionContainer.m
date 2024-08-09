@@ -305,6 +305,28 @@ classdef GammaDistributionContainer < handle
             end
         end
 
+        function obj = updateAllDistributionsA(obj, a, inc)
+            if nargin < 2
+                error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
+            end
+            % Default for 'inc' is false
+            if nargin == 2
+                inc = false;
+            end
+
+            if isscalar(a)
+                a = a * ones(1, obj.Size);
+            elseif Utility.isArray(a)
+                if length(a) ~= obj.Size
+                    error(['##### ERROR IN THE CLASS ' class(obj) ': Dimensions do not match.']);
+                end
+            end
+
+            for i=1:obj.Size
+                obj.distributions(i).updateA(a(i), inc);
+            end
+        end
+
 
 
         %% Setters
