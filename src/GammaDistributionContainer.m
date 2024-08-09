@@ -30,6 +30,10 @@ classdef GammaDistributionContainer < handle
 
         ExpectationLnPC     % The sum of all entries in ExpectationLnP
 
+        A                   % Array of all 'a' values
+
+        B                   % Array of all 'b' values
+
         Value           
     end
 
@@ -403,6 +407,20 @@ classdef GammaDistributionContainer < handle
             value = 0;
             for i = 1:obj.Size
                 value = value + obj.distributions(i).ExpectationLn;
+            end
+        end
+
+        function value = get.A(obj)
+            value = zeros(obj.Size, 1);
+            for i = 1:obj.Size
+                value(i) = obj.distributions(i).a;
+            end
+        end
+
+        function value = get.B(obj)
+            value = zeros(obj.Size, 1);
+            for i = 1:obj.Size
+                value(i) = obj.distributions(i).b;
             end
         end
 
