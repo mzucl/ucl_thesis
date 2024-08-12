@@ -18,7 +18,7 @@ noiseVariance = 0.05;
 
 [X, Z, W] = Utility.generateToyDataset(N, D, K, noiseVariance); % X is DxN
 
-
+% X = X - mean(X, 2);
 
 %% PPCA
 W_PPCA = PPCA(X', D - 1); % PPCA expects X in NxD format

@@ -90,5 +90,23 @@ classdef MatrixIdentityTest < matlab.unittest.TestCase
                 testCase.verifyEqual(sum, o' * A' * W * v);
             end 
         end
+
+
+
+        function testIdentity5(testCase)
+            %% sum(an * an^T) = AA^T
+            % Test matrices of different shapes and sizes
+            mVals = [5, 5, 2, 10];
+            nVals = [5, 3, 7, 10];
+            for i = 1:length(mVals)
+                A = Utility.generateRandomIntMatrix(mVals(i), nVals(i));
+
+                sum = 0;
+                for col = 1:nVals(i)
+                    sum = sum + A(:, col) * A(:, col)';
+                end
+                testCase.verifyEqual(sum, A*A');
+            end 
+        end
     end
 end
