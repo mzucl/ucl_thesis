@@ -17,6 +17,8 @@ classdef GammaDistributionContainer < handle
 
         ExpectationC        % Array (column vector) of expectations of all components
 
+        ExpectationDiag     % Diagonal matrix of expectations of all components
+
         H                   % This is a cell array where each entry is an
                             % entropy of one component; 
 
@@ -410,7 +412,11 @@ classdef GammaDistributionContainer < handle
                 value{i} = obj.distributions(i).ExpectationLnP;
             end
         end
-
+        
+        function value = get.ExpectationDiag(obj)
+            value = diag(cell2mat(obj.Expectation)');
+        end
+        
         function value = get.ExpectationLnPC(obj)
             value = 0;
             for i = 1:obj.Size
