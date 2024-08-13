@@ -19,7 +19,9 @@ classdef GFAGroup < handle
     end
 
     properties (Dependent, SetAccess = private)
-        K               % Initialized in the contstructor and can't be changed
+        K               % Initialized in the constructor and can't be changed
+        Z               % Initialized in the constructor and can't be changed
+                        % (not sure how this works with references in MATLAB, check this!)
     end
 
     
@@ -30,15 +32,16 @@ classdef GFAGroup < handle
 
     methods
         %% Constructors
-        function obj = GFAGroup(data, K, featuresInCols)
-            if nargin < 2
+        function obj = GFAGroup(data, Z, K, featuresInCols)
+            if nargin < 3
                 error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
-            elseif nargin < 3
+            elseif nargin < 4
                 featuresInCols = true;
             end
 
             obj.view = ViewHandler(data, featuresInCols);
             obj.K = K;
+            obj.Z = Z; % TODO(low): This can be a reference to avoid copying
 
 
             %% Model setup and initialization
@@ -62,7 +65,18 @@ classdef GFAGroup < handle
             obj.alpha.updateAllDistributionsParams(newAVal, newBVals);
         end
 
+        % obj.tau is GammaDistributionContainer
+        function obj = qTauUpdate(obj)
+            newAVal = obj.tau.distributions(1).prior.a + obj.N/2; % All 'a' values are the same
+            newBVals = 1/2 * diag( ...
+                obj.view.XXt ...
+                - 2 * obj.W.ExpectationC * obj.Z.ExpectationC * obj.view.X' ...
+                + obj.W.ExpectationC * obj.Z.ExpectationCCt * obj.W.ExpectationC');
 
+            obj.tau.updateAllDistributionsParams(newAVal, newBVals);
+        end
+
+        
 
         %% Getters
         function value = get.D(obj)

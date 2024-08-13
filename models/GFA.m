@@ -4,8 +4,11 @@ classdef GFA < handle
     properties
         K               % Number of latent dimensions/principal components
     
+        N               % Number of observations
+
         Z               % [K x N] GaussianDistributionContainer [size: N; for each latent variable zn]
-        Groups          % An array of GFAGroup instances
+        
+        views           % An array of GFAGroup instances
 
         % Optimization parameters
         maxIter
@@ -19,110 +22,145 @@ classdef GFA < handle
         M       % Number of groups
     end
     
+    % TODO (high): Implement
+    % methods(Access = private)
+    %     function [M, N] = validateSources(obj, idx)
+    % 
+    %     end
+    % end
+
     methods
-        %% Deep copy and operators overloading
-        function newObj = copy(obj)
-            newObj = GammaDistribution();
-            
-            newObj.a = obj.a;
-            newObj.b = obj.b;
-            
-            % Copy the prior (manually)
-            if ~Utility.isNaN(obj.prior)
-                newObj.prior = GammaDistribution();
-                newObj.prior.a = obj.prior.a;
-                newObj.prior.b = obj.prior.b;
-            end
-        end
-
-        function isEqual = eq(obj1, obj2)
-            if ~Utility.isNaNOrInstanceOf(obj1, 'GammaDistribution') || ~Utility.isNaNOrInstanceOf(obj2, 'GammaDistribution')
-                isEqual = false;
-                return;
-            end
-
-            % Both are NaN
-            if Utility.isNaN(obj1) && Utility.isNaN(obj2)
-                isEqual = true;
-                return;
-            % Only one is NaN
-            elseif xor(Utility.isNaN(obj1), Utility.isNaN(obj2))
-                isEqual = false;
-                return;
-            end
-                
-            % Both are set - compare them!    
-            isEqual = obj1.a == obj2.a && obj1.b == obj2.b;
-
-            % If parameters a and b are not equal, they are different objects
-            % regardless of the prior!
-            %   Second part of the condition is added because obj1.prior ==
-            %   obj2.prior won't call 'isEqual' if both are NaN, and we are
-            %   relaying on that call for comparing priors.
-            if ~isEqual || Utility.isNaN(obj1.prior) && Utility.isNaN(obj2.prior)
-                return;
-            end
-
-            isEqual = obj1.prior == obj2.prior;
-        end
-
-        function isNotEqual = ne(obj1, obj2)
-            isNotEqual = ~eq(obj1, obj2);
-        end
-
-
-
         % [NOTE] We need to deal with the form of the datasets here (e.g.
-        % is it a table (for now it is), or it is file path so we need to
-        % import the data. Also, we should check if all datasets have the
+        % are they in table format, or we need to import
+        % data from .csv files. Also, we should check if all datasets have the
         % same number of observations.
+        %
+        % [path, featureInCols: true/false, data] triplet can be used to
+        % describe sources, where if path is None data is in 'data' and
+        % viceversa
+
+        % [NOTE] For now we have 2 datasets passed in as matrices
         %% Constructors
-        function obj = GFA(X)
-            
-            switch nargin
-                case 0
-                    obj.a = Constants.DEFAULT_GAMMA_A;
-                    obj.b = Constants.DEFAULT_GAMMA_B;
-
-                case 1
-                    % If the ONLY parameter is of a type GammaDistribution that is
-                    % the prior and we initialize the obj and its prior
-                    % using that value
-                    if Utility.areAllInstancesOf(a, 'GammaDistribution')
-                        obj = a.copy();
-                        obj.prior = a.copy();
-
-                    % The one parameter passed in is the value for 'a', set
-                    % both 'a' and 'b' to that value
-                    elseif Utility.isSingleNumber(a)
-                        obj.a = a;
-                        obj.b = a;
-                    else
-                        error(['##### ERROR IN THE CLASS ' class(obj) ': Invalid arguments passed.']);
-                    end
-            
-                case {2, 3}
-                    obj.a = a;
-                    obj.b = b;
-                    if nargin == 3 && ~Utility.isNaN(prior) % 'prior' is passed in
-                        obj.prior = prior.copy();
-                    end
-                otherwise
-                    error(['##### ERROR IN THE CLASS ' class(obj) ': Too many arguments passed into the constructor.']);
+        function obj = GFA(data, K, maxIter, tol)
+            if nargin < 2
+                error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
             end
-            % Set initial expectation to the real expectation
-            obj.setExpInit(obj.Expectation);
+
+            % [obj.M, obj.N] = obj.validateSources(...)
+            obj.M = length(data);
+            obj.N = 12;
+
+            obj.K = K;
+
+            % Set parameters to default values that will be updated if value is
+            % provided
+            obj.maxIter = Constants.DEFAULT_MAX_ITER;
+            obj.tol = Constants.DEFAULT_TOL;
+
+            % Optional parameters: maxIter, tol
+            switch nargin
+                case 3
+                    obj.maxIter = maxIter;
+                case 4
+                    obj.maxIter = maxIter;
+                    obj.tol = tol;
+            end
+
+            %% Model setup and initialization
+            % Z
+            % ------------------------------------------------------ %
+            % Initialize the model - set random values for the 'mu'
+            % This means we will run the update equation for W first and
+            % that we should set some values for all the moments that are
+            % in those update equations.
+            initZMu = randn(obj.K, 1);
+            zPrior = GaussianDistribution(initZMu, eye(obj.K));
+            obj.Z = GaussianDistributionContainer(obj.N, zPrior, true);
+
+            obj.views = repmat(GFAGroup(), obj.M, 1); % Preallocate
+
+            for i = 1:obj.M
+                obj.views(i) = GFAGroup(data{i}, Z, K, true);
+            end
         end
 
 
 
         %% Update methods
+        % obj.Z is GaussianDistributionContainer(cols = true)
+        function obj = qZUpdate(obj)
+            % Update covariance
+            covNew = Utility.matrixInverse(eye(obj.K) + obj.tau.Expectation * ... 
+                obj.W.ExpectationCtC);
+            obj.Z.updateAllDistributionsCovariance(covNew);
 
+            % Update mu
+            for n = 1:obj.N
+                % All latent variables have the same covariance
+                muNew = obj.tau.Expectation * obj.Z.distributions(n).cov * obj.W.ExpectationCt * ...
+                    (obj.view.getObservation(n) - obj.mu.Expectation);
+                obj.Z.updateDistributionMu(n, muNew);
+            end
+        end
 
+        function obj = qWUpdate(obj)
+            for i = 1:obj.M
+                obj.views(i).qWUpdate();
+            end
+        end
 
-        %% Getters
-        function value = get.D(obj)
-            value = gamrnd(obj.view.D);
+        function obj = qAlphaUpdate(obj)
+            for i = 1:obj.M
+                obj.views(i).qWUpdate();
+            end
+        end
+
+        function obj = qTauUpdate(obj)
+            for i = 1:obj.M
+                obj.views(i).qTauUpdate();
+            end
+        end
+
+        %% fit() and ELBO
+        function [elboVals, it, resArr] = fit(obj)
+            elboVals = -Inf(1, obj.maxIter);
+            resArr = cell(1, obj.maxIter);
+        
+            for it = 1:obj.maxIter
+                for i = 1:obj.M
+                    obj.views(i).qWUpdate();
+                end
+                 for i = 1:obj.M
+                    obj.views(i).qWUpdate();
+                end
+                obj.qWUpdate(it);
+                obj.qZUpdate();
+                obj.qAlphaUpdate();
+                obj.qTauUpdate();
+
+                % [currElbo, res] = obj.computeELBO();
+                % 
+                % resArr{it} = res;
+                % 
+                % % CHECK: ELBO has to increase from iteration to iteration
+                % if it ~= 1 && currElbo < elboVals(it - 1)
+                %     fprintf(2, 'ELBO decreased in iteration %d\n', it);
+                % end 
+                % 
+                % elboVals(it) = currElbo;
+                % 
+                % if it ~= 1
+                %     disp(['======= ELBO increased by: ', num2str(currElbo - elboVals(it - 1))]);
+                % end
+                % 
+                % % Check for convergence
+                % if it ~= 1 && abs(currElbo - elboVals(it - 1)) / abs(currElbo) < obj.tol
+                %     disp(['Convergence at iteration: ', num2str(it)]);
+                %     elboVals = elboVals(1:it); % cut the -Inf values at the end
+                %     resArr = resArr(1:it);
+                %     break;
+                % end
+            end
         end
     end
 end

@@ -31,12 +31,11 @@ classdef BayesianPCA < handle
     methods
         function obj = BayesianPCA(X, K, maxIter, tol)
             if nargin < 1
-                error(['Error in class ' class(obj) ': Too few arguments passed.']);
+                error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
             end
             
             % Set obj.X right away, so it can be used below to set obj.K
             obj.view = ViewHandler(X, false);
-            % totalVar = sum(diag(cov(X')));
 
             % Set parameters to default values that will be updated if value is
             % provided
@@ -100,8 +99,6 @@ classdef BayesianPCA < handle
             obj.tau.setExpInit(1e-3);
                         
             obj.alpha.setExpCInit(repmat(1e-1, obj.K, 1));
-            % The line below is from GFA code
-            % obj.alpha.setExpCInit(repmat(obj.K * obj.D / (totalVar - 1 / obj.tau.getExpInit()), obj.K, 1));
             obj.mu.setExpInit(randn(obj.D, 1));
         end
 
@@ -110,6 +107,11 @@ classdef BayesianPCA < handle
         %% Update methods
         % obj.Z is GaussianDistributionContainer(cols = true)
         function obj = qZUpdate(obj)
+            % Update covariance
+            covNew = Utility.matrixInverse(eye(obj.K) + obj.tau.Expectation * ... 
+                obj.W.ExpectationCtC);
+            obj.Z.updateAllDistributionsCovariance(covNew);
+
             % Update mu
             for n = 1:obj.N
                 % All latent variables have the same covariance
@@ -117,11 +119,6 @@ classdef BayesianPCA < handle
                     (obj.view.getObservation(n) - obj.mu.Expectation);
                 obj.Z.updateDistributionMu(n, muNew);
             end
-
-            % Update covariance
-            covNew = Utility.matrixInverse(eye(obj.K) + obj.tau.Expectation * ... 
-                obj.W.ExpectationCtC);
-            obj.Z.updateAllDistributionsCovariance(covNew);
         end
         
         % obj.W is GaussianDistributionContainer(cols = false)

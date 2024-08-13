@@ -7,6 +7,7 @@ classdef ViewHandler
         N       % Number of samples
         D       % Dimensionality/number of features
         TrXtX   % Tr(X^TX)
+        XXt     % XX^T
     end
 
     methods(Access = private)
@@ -84,6 +85,10 @@ classdef ViewHandler
 
         function value = get.TrXtX(obj)
             value = trace(obj.X' * obj.X);
+        end
+
+        function value = get.XXt(obj)
+            value = obj.X * obj.X';
         end
     end
 end
