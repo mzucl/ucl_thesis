@@ -1,6 +1,6 @@
 classdef BayesianPCA < handle
     properties 
-        X               % ViewHandler
+        view            % ViewHandler
         K               % Number of latent dimensions/principal components
 
         % Model parameters with prior distributions
@@ -35,7 +35,7 @@ classdef BayesianPCA < handle
             end
             
             % Set obj.X right away, so it can be used below to set obj.K
-            obj.X = ViewHandler(X);
+            obj.view = ViewHandler(X, false);
             % totalVar = sum(diag(cov(X')));
 
             % Set parameters to default values that will be updated if value is
@@ -114,7 +114,7 @@ classdef BayesianPCA < handle
             for n = 1:obj.N
                 % All latent variables have the same covariance
                 muNew = obj.tau.Expectation * obj.Z.distributions(n).cov * obj.W.ExpectationCt * ...
-                    (obj.X.getObservation(n) - obj.mu.Expectation);
+                    (obj.view.getObservation(n) - obj.mu.Expectation);
                 obj.Z.updateDistributionMu(n, muNew);
             end
 
@@ -152,7 +152,7 @@ classdef BayesianPCA < handle
                 for d = 1:obj.D
                     muNew = zeros(obj.K, 1);
                     for n = 1:obj.N
-                        muNew = muNew + obj.Z.Expectation{n} * (obj.X.getObservationEntry(n, d) - obj.mu.Expectation(d));
+                        muNew = muNew + obj.Z.Expectation{n} * (obj.view.getObservationEntry(n, d) - obj.mu.Expectation(d));
                     end
                     muNew = obj.tau.Expectation * obj.W.distributions(d).cov * muNew;
                     obj.W.updateDistributionMu(d, muNew);
@@ -170,7 +170,7 @@ classdef BayesianPCA < handle
                     muNew = zeros(obj.K, 1);
                     for n = 1:obj.N
                         muExpInit = obj.mu.getExpInit();
-                        muNew = muNew + obj.Z.Expectation{n} * (obj.X.getObservationEntry(n, d) - muExpInit(d));
+                        muNew = muNew + obj.Z.Expectation{n} * (obj.view.getObservationEntry(n, d) - muExpInit(d));
                     end
                     muNew = obj.tau.getExpInit() * obj.W.distributions(d).cov * muNew;
                     obj.W.updateDistributionMu(d, muNew);
@@ -191,7 +191,7 @@ classdef BayesianPCA < handle
             newMu = zeros(obj.D, 1);
            
             for n = 1:obj.N
-                newMu = newMu + obj.X.getObservation(n) - obj.W.ExpectationC * obj.Z.Expectation{n};
+                newMu = newMu + obj.view.getObservation(n) - obj.W.ExpectationC * obj.Z.Expectation{n};
             end
             newMu = obj.tau.Expectation * obj.mu.cov * newMu;
             newCov = 1/(obj.mu.PriorPrecision + obj.N * obj.tau.Expectation) * eye(obj.D);
@@ -205,12 +205,12 @@ classdef BayesianPCA < handle
             deltaB = 0;
 
             for n = 1:obj.N
-                deltaB = deltaB + obj.X.getObservationNormSq(n) ...
+                deltaB = deltaB + obj.view.getObservationNormSq(n) ...
                     + obj.mu.ExpectationXtX ...
                     + trace(obj.W.ExpectationCtC * obj.Z.ExpectationXXt{n}) ...
                     + 2 * obj.mu.ExpectationXt * obj.W.ExpectationC * obj.Z.Expectation{n} ...
-                    - 2 * obj.X.getObservation(n, true) * obj.W.ExpectationC * obj.Z.Expectation{n} ...
-                    - 2 * obj.X.getObservation(n, true) * obj.mu.Expectation;
+                    - 2 * obj.view.getObservation(n, true) * obj.W.ExpectationC * obj.Z.Expectation{n} ...
+                    - 2 * obj.view.getObservation(n, true) * obj.mu.Expectation;
             end
 
             deltaB = 1/2 * deltaB;
@@ -286,8 +286,8 @@ classdef BayesianPCA < handle
 
         function value = getExpectationLnPX(obj)
             value = obj.N * obj.D/2 * (obj.tau.ExpectationLn - log(2 * pi)) - obj.tau.Expectation/2 * ( ...
-                obj.X.TrXtX - 2 * trace(obj.W.ExpectationC * obj.Z.ExpectationC * obj.X.data') ...
-                - 2 * obj.mu.ExpectationXt * obj.X.data * ones(obj.N, 1) ...
+                obj.view.TrXtX - 2 * trace(obj.W.ExpectationC * obj.Z.ExpectationC * obj.view.X') ...
+                - 2 * obj.mu.ExpectationXt * obj.view.X * ones(obj.N, 1) ...
                 + 2 * obj.mu.ExpectationXt * obj.W.ExpectationC * obj.Z.ExpectationC * ones(obj.N, 1) ...
                 + trace(obj.W.ExpectationCtC * obj.Z.ExpectationCCt) + obj.N * obj.mu.ExpectationXtX);
 
@@ -304,11 +304,11 @@ classdef BayesianPCA < handle
 
         %% Getters
         function value = get.N(obj)
-            value = obj.X.N;
+            value = obj.view.N;
         end
         
         function value = get.D(obj)
-            value = obj.X.D;
+            value = obj.view.D;
         end
     end
 end
