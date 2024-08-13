@@ -11,18 +11,18 @@ classdef GaussianDistribution < handle
     end
     
     properties (Dependent)
-        Expectation
-        Variance
-        PriorPrecision      % Set only if the prior covariance matrix is spherical or diagonal, otherwise NaN
+        E
+        Var
+        PPrec               % Set only if the prior covariance matrix is spherical or diagonal, otherwise NaN
                             %   if precision matrix of the full prior
                             %   covariance matrix is needed ->
                             %   (obj.prior.cov)^-1
-        Value               % Sample from the distribution
+        Val                 % Sample from the distribution
         H                   % Entropy
-        ExpectationXt       % E[x^T]
-        ExpectationXtX      % E[x^Tx]
-        ExpectationXXt      % E[xx^T]
-        ExpectationLnP      % E[ln(p(x))] wrt to the q(x)
+        E_Xt                % E[x^T]
+        E_XtX               % E[x^Tx]
+        E_XXt               % E[xx^T]
+        E_LnP               % E[ln(p(x))] wrt to the q(x)
     end
 
     %% Options for the constructor GaussianDistribution
@@ -272,7 +272,7 @@ classdef GaussianDistribution < handle
             obj.dim = dim;
 
             % Set initial expectation to the real expectation
-            obj.setExpInit(obj.Expectation);
+            obj.setExpInit(obj.E);
         end
 
 
@@ -360,15 +360,15 @@ classdef GaussianDistribution < handle
             value = obj.expInit;
         end
 
-        function value = get.Expectation(obj)
+        function value = get.E(obj)
             value = obj.mu;
         end
 
-        function value = get.ExpectationXt(obj)
+        function value = get.E_Xt(obj)
             value = obj.mu';
         end
         
-        function value = get.Variance(obj)
+        function value = get.Var(obj)
             value = obj.cov;
         end
 
@@ -376,7 +376,7 @@ classdef GaussianDistribution < handle
             value = 1/2 * log(det(obj.cov)) + obj.dim/2 * (1 + log(2 * pi)); 
         end
         
-        function value = get.PriorPrecision(obj)
+        function value = get.PPrec(obj)
             if Utility.isNaN(obj.prior)
                 value = NaN;
             else
@@ -385,21 +385,21 @@ classdef GaussianDistribution < handle
             end
         end
 
-        function value = get.Value(obj)
+        function value = get.Val(obj)
             value = mvnrnd(obj.mu, obj.cov)'; % Transpose to get a column vector
         end
 
-        function value = get.ExpectationXtX(obj)
+        function value = get.E_XtX(obj)
             value = obj.mu' * obj.mu + trace(obj.cov);
         end
 
-        function value = get.ExpectationXXt(obj)
+        function value = get.E_XXt(obj)
             value = obj.mu * obj.mu' + obj.cov;
         end
 
-        function value = get.ExpectationLnP(obj)
-            value = obj.dim/2 * log(obj.PriorPrecision / (2 * pi)) - ...
-                obj.PriorPrecision/2 * obj.ExpectationXtX;
+        function value = get.E_LnP(obj)
+            value = obj.dim/2 * log(obj.PPrec / (2 * pi)) - ...
+                obj.PPrec/2 * obj.E_XtX;
         end
     end
 end

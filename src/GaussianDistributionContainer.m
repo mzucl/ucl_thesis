@@ -1,6 +1,6 @@
 classdef GaussianDistributionContainer < handle
     properties
-        distributions       % A list of distributions inside the container
+        ds                  % A list of distributions inside the container
         cols                %   - 'true' when distributions describe columns of a matrix
                             %   - 'false' when they describe rows. This is important
                             % when the dependent properties are calculated
@@ -8,22 +8,20 @@ classdef GaussianDistributionContainer < handle
     
     properties (Dependent)
         Size                % Number of distributions in the container
-        Expectation         % Under the assumption of independence of each component; 
+        E                   % Under the assumption of independence of each component; 
                             % This is a cell array where each entry is an
                             % expectation of one component;
-        PriorPrecision      % Similar to above, each entry is precision of the prior of one component
-        ExpectationXXt      % Similar to above, each entry is E[XXt]
-        ExpectationXtX      % Similar to above, each entry is E[XtX], which is equivalent to E[|X|^2]
-        ExpectationC        % 'C' stands for container, and this is expectation of the whole container
-        ExpectationCt 
-        ExpectationCtC      % This corresponds to e.g. E[W^TW]
-        ExpectationCCt      % Sum of E[XXt] of each distribution
+        PPrec               % Similar to above, each entry is precision of the prior of one component
+        E_XXt               % Similar to above, each entry is E[XXt]
+        E_XtX               % Similar to above, each entry is E[XtX], which is equivalent to E[|X|^2]
+        EC                  % 'C' stands for container, and this is expectation of the whole container
+        E_Ct 
+        E_CtC               % This corresponds to e.g. E[W^TW]
+        E_CCt               % Sum of E[XXt] of each distribution
         H                   % Similar to above, each entry is entropy of a single component
         HC                  % Entropy of the collection
-
-        ExpectationLnP      % Cell array where each entry is ExpectationLnP
-
-        ExpectationLnPC     % The sum of all entries in ExpectationLnP
+        E_LnP               % Cell array where each entry is E_LnP
+        E_LnPC              % The sum of all entries in E_LnP
     end
 
     properties(Access = private)
@@ -62,14 +60,14 @@ classdef GaussianDistributionContainer < handle
                 end
 
                 obj.cols = cols;
-                obj.distributions = repmat(GaussianDistribution(), numDistributions, 1); % Preallocate
+                obj.ds = repmat(GaussianDistribution(), numDistributions, 1); % Preallocate
                 for i = 1:numDistributions
-                    obj.distributions(i) = GaussianDistribution(prior);
+                    obj.ds(i) = GaussianDistribution(prior);
                 end
             end
 
             % Set initial expectation to the real expectation
-            obj.setExpCInit(obj.ExpectationC);
+            obj.setExpCInit(obj.EC);
         end
        
 
@@ -79,7 +77,7 @@ classdef GaussianDistributionContainer < handle
             % Returns the distribution at index 'idx'
             obj.validateIndex(idx);
 
-            dist = obj.distributions(idx);
+            dist = obj.ds(idx);
         end
 
         % [NOTE] This is used in the scenario when e.g. W is stored in the rows
@@ -89,15 +87,15 @@ classdef GaussianDistributionContainer < handle
                 numOfCols = obj.Size;
                 res = zeros(numOfCols, 1);
                 for idx = 1:numOfCols
-                    res(idx) = obj.ExpectationXtX{idx};
+                    res(idx) = obj.E_XtX{idx};
                 end
             else
-                numOfCols = obj.distributions(1).dim;
+                numOfCols = obj.ds(1).dim;
                 res = zeros(numOfCols, 1);
                 for k = 1:numOfCols
                     for d = 1:obj.Size
-                        res(k) = res(k) + obj.distributions(d).mu(k) ^ 2 + ...
-                            obj.distributions(d).cov(k, k);
+                        res(k) = res(k) + obj.ds(d).mu(k) ^ 2 + ...
+                            obj.ds(d).cov(k, k);
                     end
                 end
             end
@@ -107,7 +105,7 @@ classdef GaussianDistributionContainer < handle
             obj.validateIndex(idx);
 
             % Updates the distribution at index 'idx'
-            obj.distributions(idx) = dist.copy();
+            obj.ds(idx) = dist.copy();
         end
 
         function obj = updateDistributionParams(obj, idx, mu, cov)
@@ -116,7 +114,7 @@ classdef GaussianDistributionContainer < handle
             end
             obj.validateIndex(idx);
 
-            obj.distributions(idx).updateParameters(mu, cov);
+            obj.ds(idx).updateParameters(mu, cov);
         end
 
         function obj = updateDistributionMu(obj, idx, mu)
@@ -125,7 +123,7 @@ classdef GaussianDistributionContainer < handle
             end
             obj.validateIndex(idx);
 
-            obj.distributions(idx).updateMu(mu); % Will raise an exception if we try to change dimension
+            obj.ds(idx).updateMu(mu); % Will raise an exception if we try to change dimension
         end
 
         % [NOTE] The type of these update methods depends on the current
@@ -139,7 +137,7 @@ classdef GaussianDistributionContainer < handle
             end
             
             for i=1:obj.Size
-                obj.distributions(i).updateCovariance(cov);
+                obj.ds(i).updateCovariance(cov);
             end
         end
 
@@ -147,8 +145,8 @@ classdef GaussianDistributionContainer < handle
 
         %% Setters
         function obj = setExpCInit(obj, value)
-            validValue = obj.cols == true && isequal(size(value), [obj.distributions(1).dim, obj.Size]) || ...
-                obj.cols == false && isequal(size(value), [obj.Size, obj.distributions(1).dim]);
+            validValue = obj.cols == true && isequal(size(value), [obj.ds(1).dim, obj.Size]) || ...
+                obj.cols == false && isequal(size(value), [obj.Size, obj.ds(1).dim]);
 
             if ~validValue
                 error(['##### ERROR IN THE CLASS ' class(obj) ': Number of elements in the expectation must be equal to the number of ' ...
@@ -166,7 +164,7 @@ classdef GaussianDistributionContainer < handle
         end
 
         function value = get.Size(obj)
-            value = length(obj.distributions);
+            value = length(obj.ds);
         end
 
         % [NOTE] The value for 'cols' is irrelevant for the properties that
@@ -174,44 +172,44 @@ classdef GaussianDistributionContainer < handle
         % components values. And for each component (multivariate Gauss) we
         % use columns for mean and expectations, 'cols' parameter is
         % not related to that (to the single distr. inside)
-        function value = get.Expectation(obj)
+        function value = get.E(obj)
             value = cell(1, obj.Size);
             for i = 1:obj.Size
-                value{i} = obj.distributions(i).Expectation;
+                value{i} = obj.ds(i).E;
             end
         end
 
-        function value = get.ExpectationXXt(obj)
+        function value = get.E_XXt(obj)
             value = cell(1, obj.Size);
             for i = 1:obj.Size
-                value{i} = obj.distributions(i).ExpectationXXt;
+                value{i} = obj.ds(i).E_XXt;
             end
         end
         
-        function value = get.ExpectationXtX(obj)
+        function value = get.E_XtX(obj)
             value = cell(1, obj.Size);
             for i = 1:obj.Size
-                value{i} = obj.distributions(i).ExpectationXtX;
+                value{i} = obj.ds(i).E_XtX;
             end
         end
 
         % [!!!] Dependent on 'cols'
-        function value = get.ExpectationC(obj)
-            value = Utility.ternary(obj.cols, cell2mat(obj.Expectation), cell2mat(obj.Expectation)');
+        function value = get.EC(obj)
+            value = Utility.ternary(obj.cols, cell2mat(obj.E), cell2mat(obj.E)');
         end
 
-        function value = get.ExpectationCt(obj)
-            value = obj.ExpectationC';
+        function value = get.E_Ct(obj)
+            value = obj.EC';
         end
 
         % TODO (high): Refactor this and the one below this - the code is
         % the same!
-        function value = get.ExpectationCCt(obj)
+        function value = get.E_CCt(obj)
             if obj.cols
-                dim = obj.distributions(1).dim; % They are all of the same dimension
+                dim = obj.ds(1).dim; % They are all of the same dimension
                 value = zeros(dim, dim);
                 for i = 1:obj.Size
-                    value = value + obj.distributions(i).ExpectationXXt;
+                    value = value + obj.ds(i).E_XXt;
                 end
             else
                 value = zeros(obj.Size, obj.Size);
@@ -222,13 +220,13 @@ classdef GaussianDistributionContainer < handle
                         % are independent random variable). Given the
                         % independence this is E[w1^T]E[w2], but when i == j
                         % then the independence doesn't hold and in that case
-                        % we should use ExpectationXtX from the
+                        % we should use E_XtX from the
                         % GaussianDistribution class.
                         if i ~= j
-                            value(i, j) = obj.distributions(i).ExpectationXt * ...
-                            obj.distributions(j).Expectation;
+                            value(i, j) = obj.ds(i).E_Xt * ...
+                            obj.ds(j).E;
                         else 
-                            value(i, j) = obj.distributions(i).ExpectationXtX;
+                            value(i, j) = obj.ds(i).E_XtX;
                         end
                     end
                 end
@@ -236,7 +234,7 @@ classdef GaussianDistributionContainer < handle
         end
 
         % [!!!] Dependent on 'cols'
-        function value = get.ExpectationCtC(obj)
+        function value = get.E_CtC(obj)
             if obj.cols
                 value = zeros(obj.Size, obj.Size);
                 for i = 1:obj.Size
@@ -246,57 +244,57 @@ classdef GaussianDistributionContainer < handle
                         % are independent random variable). Given the
                         % independence this is E[w1^T]E[w2], but when i == j
                         % then the independence doesn't hold and in that case
-                        % we should use ExpectationXtX from the
+                        % we should use E_XtX from the
                         % GaussianDistribution class.
                         if i ~= j
-                            value(i, j) = obj.distributions(i).ExpectationXt * ...
-                            obj.distributions(j).Expectation;
+                            value(i, j) = obj.ds(i).E_Xt * ...
+                            obj.ds(j).E;
                         else 
-                            value(i, j) = obj.distributions(i).ExpectationXtX;
+                            value(i, j) = obj.ds(i).E_XtX;
                         end
                     end
                 end
             else
-                dim = obj.distributions(1).dim; % They are all of the same dimension
+                dim = obj.ds(1).dim; % They are all of the same dimension
                 value = zeros(dim, dim);
                 for i = 1:obj.Size
-                    value = value + obj.distributions(i).ExpectationXXt;
+                    value = value + obj.ds(i).E_XXt;
                 end
             end
         end
 
-        function value = get.PriorPrecision(obj)
+        function value = get.PPrec(obj)
             value = cell(1, obj.Size);
             for i = 1:obj.Size
-                value{i} = obj.distributions(i).PriorPrecision;
+                value{i} = obj.ds(i).PPrec;
             end
         end
 
         function value = get.H(obj)
             value = cell(1, obj.Size);
             for i = 1:obj.Size
-                value{i} = obj.distributions(i).H;
+                value{i} = obj.ds(i).H;
             end
         end
 
         function value = get.HC(obj)
             value = 0;
             for i = 1:obj.Size
-                value = value + obj.distributions(i).H;
+                value = value + obj.ds(i).H;
             end
         end
 
-        function value = get.ExpectationLnP(obj)
+        function value = get.E_LnP(obj)
             value = cell(1, obj.Size);
             for i = 1:obj.Size
-                value{i} = obj.distributions(i).ExpectationLnP;
+                value{i} = obj.ds(i).E_LnP;
             end
         end
 
-        function value = get.ExpectationLnPC(obj)
+        function value = get.E_LnPC(obj)
             value = 0;
             for i = 1:obj.Size
-                value = value + obj.distributions(i).ExpectationLnP;
+                value = value + obj.ds(i).E_LnP;
             end
         end
     end

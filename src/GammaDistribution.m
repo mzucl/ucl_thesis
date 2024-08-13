@@ -20,12 +20,12 @@ classdef GammaDistribution < handle
     % GaussianDistribution. But given that I am not too happy with those
     % names either, let's leave it like this for now.
     properties (Dependent)
-        Expectation
-        Variance
-        H                   % Entropy
-        ExpectationLn       % E[ln(x)]
-        Value               % Sample from the distribution
-        ExpectationLnP      % E[ln(p(x))] wrt to the q(x)
+        E
+        Var
+        H          % Entropy
+        E_Ln       % E[ln(x)]
+        Val        % Sample from the distribution
+        E_LnP      % E[ln(p(x))] wrt to the q(x)
     end
     
     methods
@@ -121,7 +121,7 @@ classdef GammaDistribution < handle
                     error(['##### ERROR IN THE CLASS ' class(obj) ': Too many arguments passed into the constructor.']);
             end
             % Set initial expectation to the real expectation
-            obj.setExpInit(obj.Expectation);
+            obj.setExpInit(obj.E);
         end
 
 
@@ -200,11 +200,11 @@ classdef GammaDistribution < handle
             value = obj.expInit;
         end
 
-        function value = get.Expectation(obj)
+        function value = get.E(obj)
             value = obj.a / obj.b;
         end
         
-        function value = get.Variance(obj)
+        function value = get.Var(obj)
             value = obj.a / obj.b^2;
         end
 
@@ -217,19 +217,19 @@ classdef GammaDistribution < handle
             value = gammaln(obj.a) - (obj.a - 1) * psi(obj.a) - log(obj.b) + obj.a;
         end
 
-        function value = get.ExpectationLn(obj)
+        function value = get.E_Ln(obj)
             value = psi(obj.a) - log(obj.b);
         end
 
-        function value = get.ExpectationLnP(obj)
+        function value = get.E_LnP(obj)
             if ~isa(obj.prior, 'GammaDistribution')
                 error(['##### ERROR IN THE CLASS ' class(obj) ': Prior must be defined.']);
             end
             value = -gammaln(obj.prior.a) + obj.prior.a * log(obj.prior.b) + ...
-                (obj.prior.a - 1) * obj.ExpectationLn - obj.prior.b * obj.Expectation;
+                (obj.prior.a - 1) * obj.E_Ln - obj.prior.b * obj.E;
         end
 
-        function value = get.Value(obj)
+        function value = get.Val(obj)
             value = gamrnd(obj.a, obj.b);
         end
     end

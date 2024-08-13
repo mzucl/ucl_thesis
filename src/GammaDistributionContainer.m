@@ -5,37 +5,25 @@
 %%
 classdef GammaDistributionContainer < handle
     properties
-        distributions
+        ds                  % Distributions
     end
     
     properties (Dependent)
         Size                % Number of distributions in the container
-
-        Expectation         % This is a cell array where each entry is an
+        E                   % This is a cell array where each entry is an
                             % expectation of one component. To access ith
-                            % component expectation use obj.Expectation{i}
-
-        ExpectationC        % Array (column vector) of expectations of all components
-
-        ExpectationDiag     % Diagonal matrix of expectations of all components
-
+                            % component expectation use obj.E{i}
+        EC                  % Array (column vector) of expectations of all components
+        E_Diag              % Diagonal matrix of expectations of all components
         H                   % This is a cell array where each entry is an
                             % entropy of one component; 
-
         HC                  % This is the entropy of the collection (sum of entries in H)
-
-        ExpectationLn       % Cell array where each entry is ExpectationLn
-
-        ExpectationLnC      % Sum of all entries in ExpectationLn
-
-        ExpectationLnP      % Cell array where each entry is ExpectationLnP
-
-        ExpectationLnPC     % The sum of all entries in ExpectationLnP
-
+        E_Ln                % Cell array where each entry is E_Ln
+        E_LnC               % Sum of all entries in E_Ln
+        E_LnP               % Cell array where each entry is E_LnP
+        E_LnPC              % The sum of all entries in E_LnP
         A                   % Array of all 'a' values
-
         B                   % Array of all 'b' values
-
         Value           
     end
 
@@ -103,8 +91,8 @@ classdef GammaDistributionContainer < handle
                 case 0
                     numDistributions = 1;
 
-                    obj.distributions = repmat(GammaDistribution(), numDistributions, 1); % Preallocate
-                    obj.distributions(1) = GammaDistribution();
+                    obj.ds = repmat(GammaDistribution(), numDistributions, 1); % Preallocate
+                    obj.ds(1) = GammaDistribution();
 
 
                 % If it is a scalar then we create a container that has
@@ -117,19 +105,19 @@ classdef GammaDistributionContainer < handle
                     % 'a' is a number
                     if Utility.isSingleNumber(a)
                         numDistributions = a;
-                        obj.distributions = repmat(GammaDistribution(), numDistributions, 1); % Preallocate
+                        obj.ds = repmat(GammaDistribution(), numDistributions, 1); % Preallocate
 
                         for i=1:numDistributions
-                            obj.distributions(i) = GammaDistribution();
+                            obj.ds(i) = GammaDistribution();
                         end
                     % 'a' is a list of GammaDistribution objects or a
                     % single instance of it
                     elseif Utility.areAllInstancesOf(a, 'GammaDistribution')
                         numDistributions = length(a);
-                        obj.distributions = repmat(GammaDistribution(), numDistributions, 1); % Preallocate
+                        obj.ds = repmat(GammaDistribution(), numDistributions, 1); % Preallocate
 
                         for i=1:numDistributions
-                            obj.distributions(i) = GammaDistribution(a(i));
+                            obj.ds(i) = GammaDistribution(a(i));
                         end
                     else
                         error(['##### ERROR IN THE CLASS ' class(obj) ': Invalid argument passed in.']);
@@ -182,7 +170,7 @@ classdef GammaDistributionContainer < handle
                             ' for a and priors should be of the same size.']);
                     end
 
-                    obj.distributions = repmat(GammaDistribution(), numDistributions, 1); % Preallocate
+                    obj.ds = repmat(GammaDistribution(), numDistributions, 1); % Preallocate
 
                     if nargin == 2 % This is necessary because when nargin == 2 then 'priors' is not defined
                         priors = NaN;
@@ -190,9 +178,9 @@ classdef GammaDistributionContainer < handle
 
                     for i = 1:numDistributions
                         if ~hasPriors
-                            obj.distributions(i) = GammaDistribution(a(i), b(i));
+                            obj.ds(i) = GammaDistribution(a(i), b(i));
                         else
-                            obj.distributions(i) = Utility.ternaryOpt(isscalar(priors), ...
+                            obj.ds(i) = Utility.ternaryOpt(isscalar(priors), ...
                             @() GammaDistribution(a(i), b(i), priors), @() GammaDistribution(a(i), b(i), priors(i)));
     
                         end
@@ -227,13 +215,13 @@ classdef GammaDistributionContainer < handle
                         error(['##### ERROR IN THE CLASS ' class(obj) ': Invalid input arguments.'])
                     end
                     
-                    obj.distributions = repmat(GammaDistribution(), numDistributions, 1); % Preallocate
+                    obj.ds = repmat(GammaDistribution(), numDistributions, 1); % Preallocate
                     
                     for i = 1:numDistributions
                         if ~hasPriors
-                            obj.distributions(i) = GammaDistribution(a, b);
+                            obj.ds(i) = GammaDistribution(a, b);
                         else
-                            obj.distributions(i) = Utility.ternaryOpt(isscalar(priors), @() GammaDistribution(a, b, priors), ...
+                            obj.ds(i) = Utility.ternaryOpt(isscalar(priors), @() GammaDistribution(a, b, priors), ...
                             @() GammaDistribution(a, b, priors(i)));
                         end
                     end
@@ -242,7 +230,7 @@ classdef GammaDistributionContainer < handle
                     error(['##### ERROR IN THE CLASS ' class(obj) ': Invalid input arguments.']);
             end
             % Set initial expectation to the real expectation
-            obj.setExpCInit(obj.ExpectationC);
+            obj.setExpCInit(obj.EC);
         end
 
 
@@ -252,14 +240,14 @@ classdef GammaDistributionContainer < handle
             % Returns the distribution at index 'idx'
             obj.validateIndex(idx);
 
-            dist = obj.distributions(idx);
+            dist = obj.ds(idx);
         end
 
         function obj = updateDistribution(obj, idx, dist)
             % Updates the distribution at index 'idx'
             obj.validateIndex(idx);
 
-            obj.distributions(idx) = dist;
+            obj.ds(idx) = dist;
         end
 
         function obj = updateDistributionParams(obj, idx, a, b, inc)
@@ -273,7 +261,7 @@ classdef GammaDistributionContainer < handle
                 inc = false;
             end
 
-            obj.distributions(idx).updateParameters(a, b, inc);
+            obj.ds(idx).updateParameters(a, b, inc);
         end
 
 
@@ -307,7 +295,7 @@ classdef GammaDistributionContainer < handle
             end
 
             for i=1:obj.Size
-                obj.distributions(i).updateParameters(a(i), b(i), inc);
+                obj.ds(i).updateParameters(a(i), b(i), inc);
             end
         end
 
@@ -329,7 +317,7 @@ classdef GammaDistributionContainer < handle
             end
 
             for i=1:obj.Size
-                obj.distributions(i).updateA(a(i), inc);
+                obj.ds(i).updateA(a(i), inc);
             end
         end
 
@@ -351,7 +339,7 @@ classdef GammaDistributionContainer < handle
             end
 
             for i=1:obj.Size
-                obj.distributions(i).updateB(b(i), inc);
+                obj.ds(i).updateB(b(i), inc);
             end
         end
 
@@ -378,84 +366,84 @@ classdef GammaDistributionContainer < handle
         end
 
         function value = get.Size(obj)
-            value = length(obj.distributions);
+            value = length(obj.ds);
         end
 
-        function value = get.Expectation(obj)
+        function value = get.E(obj)
             value = cell(1, obj.Size);
             for i = 1:obj.Size
-                value{i} = obj.distributions(i).Expectation;
+                value{i} = obj.ds(i).E;
             end
         end
 
         function value = get.H(obj)
             value = cell(1, obj.Size);
             for i = 1:obj.Size
-                value{i} = obj.distributions(i).H;
+                value{i} = obj.ds(i).H;
             end
         end
 
         function value = get.HC(obj)
             value = 0;
             for i = 1:obj.Size
-                value = value + obj.distributions(i).H;
+                value = value + obj.ds(i).H;
             end
         end
 
-        function value = get.ExpectationC(obj)
-            value = cell2mat(obj.Expectation)';
+        function value = get.EC(obj)
+            value = cell2mat(obj.E)';
         end
 
-        function value = get.ExpectationLnP(obj)
+        function value = get.E_LnP(obj)
             value = cell(1, obj.Size);
             for i = 1:obj.Size
-                value{i} = obj.distributions(i).ExpectationLnP;
+                value{i} = obj.ds(i).E_LnP;
             end
         end
         
-        function value = get.ExpectationDiag(obj)
-            value = diag(cell2mat(obj.Expectation)');
+        function value = get.E_Diag(obj)
+            value = diag(cell2mat(obj.E)');
         end
         
-        function value = get.ExpectationLnPC(obj)
+        function value = get.E_LnPC(obj)
             value = 0;
             for i = 1:obj.Size
-                value = value + obj.distributions(i).ExpectationLnP;
+                value = value + obj.ds(i).E_LnP;
             end
         end
 
-        function value = get.ExpectationLn(obj)
+        function value = get.E_Ln(obj)
             value = cell(1, obj.Size);
             for i = 1:obj.Size
-                value{i} = obj.distributions(i).ExpectationLn;
+                value{i} = obj.ds(i).E_Ln;
             end
         end
 
-        function value = get.ExpectationLnC(obj)
+        function value = get.E_LnC(obj)
             value = 0;
             for i = 1:obj.Size
-                value = value + obj.distributions(i).ExpectationLn;
+                value = value + obj.ds(i).E_Ln;
             end
         end
 
         function value = get.A(obj)
             value = zeros(obj.Size, 1);
             for i = 1:obj.Size
-                value(i) = obj.distributions(i).a;
+                value(i) = obj.ds(i).a;
             end
         end
 
         function value = get.B(obj)
             value = zeros(obj.Size, 1);
             for i = 1:obj.Size
-                value(i) = obj.distributions(i).b;
+                value(i) = obj.ds(i).b;
             end
         end
 
         function value = get.Value(obj)
             value = zeros(obj.Size, 1);
             for i = 1:obj.Size
-                value(i) = obj.distributions(i).Value;
+                value(i) = obj.ds(i).Value;
             end
         end
     end

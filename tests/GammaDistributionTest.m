@@ -145,28 +145,28 @@ classdef GammaDistributionTest < matlab.unittest.TestCase
         function testDependentProperties(testCase)
             a = 1; b = 2;
             obj = GammaDistribution(a, b);
-            testCase.verifyEqual(obj.Expectation, 0.5);
-            testCase.verifyEqual(obj.Variance, 0.25);
+            testCase.verifyEqual(obj.E, 0.5);
+            testCase.verifyEqual(obj.Var, 0.25);
 
             a = 1; b = 1;
             obj = GammaDistribution(a, b);
-            testCase.verifyEqual(obj.Expectation, 1);
-            testCase.verifyEqual(obj.Variance, 1);
+            testCase.verifyEqual(obj.E, 1);
+            testCase.verifyEqual(obj.Var, 1);
             testCase.verifyEqual(obj.H, 1);
 
             a = 1; b = exp(1);
             obj = GammaDistribution(a, b);
-            testCase.verifyEqual(obj.Expectation, exp(-1));
-            testCase.verifyEqual(obj.Variance, exp(-2));
+            testCase.verifyEqual(obj.E, exp(-1));
+            testCase.verifyEqual(obj.Var, exp(-2));
             testCase.verifyEqual(obj.H, 0);
-            testCase.verifyEqual(obj.ExpectationLn, psi(obj.a) - log(obj.b));
+            testCase.verifyEqual(obj.E_Ln, psi(obj.a) - log(obj.b));
 
             a = 14; b = 7;
             aPrior = 1; bPrior = 1;
             prior = GammaDistribution(aPrior, bPrior);
             obj = GammaDistribution(a, b, prior);
 
-            testCase.verifyEqual(obj.ExpectationLnP, -2);
+            testCase.verifyEqual(obj.E_LnP, -2);
         end
         
 
@@ -175,7 +175,7 @@ classdef GammaDistributionTest < matlab.unittest.TestCase
         function testSetters(testCase)
             a = 2; b = 1;
             obj = GammaDistribution(a, b);
-            testCase.verifyTrue(obj.getExpInit() == obj.Expectation);
+            testCase.verifyTrue(obj.getExpInit() == obj.E);
 
             expInit = 34;
             obj.setExpInit(expInit);

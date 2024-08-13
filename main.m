@@ -44,7 +44,7 @@ Utility.hintonDiagram(W_PPCA, "PPCA");
 hold on;
 
 subplot(1, 3, 3);
-Utility.hintonDiagram(obj.W.ExpectationC, 'BPCA');
+Utility.hintonDiagram(obj.W.EC, 'BPCA');
 hold on;
 
 

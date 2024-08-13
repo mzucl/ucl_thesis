@@ -56,13 +56,13 @@ classdef ViewHandlerTest < matlab.unittest.TestCase
             vh = ViewHandler(data);
             testCase.verifyEqual(vh.N, 3);
             testCase.verifyEqual(vh.D, 5);
-            testCase.verifyEqual(vh.TrXtX, trace(data * data'));
+            testCase.verifyEqual(vh.Tr_XtX, trace(data * data'));
 
             % Test 2: featuresInCols = false
             vh = ViewHandler(data, false);
             testCase.verifyEqual(vh.N, 5);
             testCase.verifyEqual(vh.D, 3);
-            testCase.verifyEqual(vh.TrXtX, trace(data' * data));
+            testCase.verifyEqual(vh.Tr_XtX, trace(data' * data));
         end
     end
 end

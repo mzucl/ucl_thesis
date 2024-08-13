@@ -277,12 +277,12 @@ classdef GaussianDistributionTest < matlab.unittest.TestCase
             dim = 10;
             obj = GaussianDistribution(0, 1, NaN, dim);
             
-            testCase.verifyEqual(obj.Expectation, zeros(dim, 1));
-            testCase.verifyEqual(obj.Variance, eye ...
+            testCase.verifyEqual(obj.E, zeros(dim, 1));
+            testCase.verifyEqual(obj.Var, eye ...
                 (dim));
-            testCase.verifyEqual(obj.ExpectationXt, zeros(1, dim));
-            testCase.verifyEqual(obj.ExpectationXtX, dim);
-            testCase.verifyEqual(obj.ExpectationXXt, eye(dim));
+            testCase.verifyEqual(obj.E_Xt, zeros(1, dim));
+            testCase.verifyEqual(obj.E_XtX, dim);
+            testCase.verifyEqual(obj.E_XXt, eye(dim));
 
             % Test 1.2: Expectations and Variance
             dim = 10;
@@ -290,11 +290,11 @@ classdef GaussianDistributionTest < matlab.unittest.TestCase
             mu = ones(dim, 1);
             obj = GaussianDistribution(mu, cov);
             
-            testCase.verifyEqual(obj.Expectation, mu);
-            testCase.verifyEqual(obj.Variance, cov);
-            testCase.verifyEqual(obj.ExpectationXt, mu');
-            testCase.verifyEqual(obj.ExpectationXtX, mu' * mu + trace(cov));
-            testCase.verifyEqual(obj.ExpectationXXt, mu * mu' + cov);
+            testCase.verifyEqual(obj.E, mu);
+            testCase.verifyEqual(obj.Var, cov);
+            testCase.verifyEqual(obj.E_Xt, mu');
+            testCase.verifyEqual(obj.E_XtX, mu' * mu + trace(cov));
+            testCase.verifyEqual(obj.E_XXt, mu * mu' + cov);
 
             % Test 2: H
             dim = 2;
@@ -306,24 +306,24 @@ classdef GaussianDistributionTest < matlab.unittest.TestCase
             % Test 1: covariance is identity matrix
             prior = GaussianDistribution();
             obj = GaussianDistribution(2, 4, prior);
-            testCase.verifyEqual(obj.PriorPrecision, Constants.DEFAULT_GAUSS_PRECISION);
+            testCase.verifyEqual(obj.PPrec, Constants.DEFAULT_GAUSS_PRECISION);
 
             % Test 2: covariance is full matrix
             %   this test can fail if generateRandomSPDMatrix returns
             %   a diagonal matrix, which is possible!
             prior = GaussianDistribution([1, 2], Utility.generateRandomSPDMatrix(2));
             obj = GaussianDistribution([0, 0], 1, prior);
-            testCase.verifyEqual(obj.PriorPrecision, NaN);
+            testCase.verifyEqual(obj.PPrec, NaN);
 
             % Test 3: spherical covariance
             prior = GaussianDistribution([1, 2], diag(4 * ones(2, 1)));
             obj = GaussianDistribution([0, 0], 1, prior);
-            testCase.verifyEqual(obj.PriorPrecision, 1/4);
+            testCase.verifyEqual(obj.PPrec, 1/4);
 
             % Test 4: diagonal covariance
             prior = GaussianDistribution([1, 2], diag([2, 4]));
             obj = GaussianDistribution([0, 0], 1, prior);
-            testCase.verifyEqual(obj.PriorPrecision, [1/2; 1/4]);
+            testCase.verifyEqual(obj.PPrec, [1/2; 1/4]);
         end
 
         
@@ -331,7 +331,7 @@ classdef GaussianDistributionTest < matlab.unittest.TestCase
         %% Private properties
         function testSetters(testCase)
             obj = GammaDistribution();
-            testCase.verifyTrue(obj.getExpInit() == obj.Expectation);
+            testCase.verifyTrue(obj.getExpInit() == obj.E);
 
             expInit = 34;
             obj.setExpInit(expInit);

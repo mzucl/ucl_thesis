@@ -14,7 +14,7 @@ classdef GFAGroup < handle
         alpha           % [K x 1] GammaDistributionContainer         
                         %       --- [size: K]
 
-        tau             % [K x 1] GammaDistributionContainer         
+        T               % [K x 1] GammaDistributionContainer         
                         %       --- [size: K]
     end
 
@@ -51,7 +51,7 @@ classdef GFAGroup < handle
 
             % tau
             tauPrior = GammaDistribution(Constants.DEFAULT_GAMMA_A, Constants.DEFAULT_GAMMA_B);
-            obj.tau = GammaDistributionContainer(repmat(tauPrior, K, 1));
+            obj.T = GammaDistributionContainer(repmat(tauPrior, K, 1));
         end
 
 
@@ -67,13 +67,13 @@ classdef GFAGroup < handle
 
         % obj.tau is GammaDistributionContainer
         function obj = qTauUpdate(obj)
-            newAVal = obj.tau.distributions(1).prior.a + obj.N/2; % All 'a' values are the same
+            newAVal = obj.T.distributions(1).prior.a + obj.N/2; % All 'a' values are the same
             newBVals = 1/2 * diag( ...
                 obj.view.XXt ...
                 - 2 * obj.W.ExpectationC * obj.Z.ExpectationC * obj.view.X' ...
                 + obj.W.ExpectationC * obj.Z.ExpectationCCt * obj.W.ExpectationC');
 
-            obj.tau.updateAllDistributionsParams(newAVal, newBVals);
+            obj.T.updateAllDistributionsParams(newAVal, newBVals);
         end
 
         

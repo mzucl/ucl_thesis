@@ -90,15 +90,22 @@ classdef GFA < handle
         % obj.Z is GaussianDistributionContainer(cols = true)
         function obj = qZUpdate(obj)
             % Update covariance
-            covNew = Utility.matrixInverse(eye(obj.K) + obj.tau.Expectation * ... 
-                obj.W.ExpectationCtC);
+            % All latent variables have the same covariance
+            covNew = zeros(obj.K);
+            for i = 1:obj.M
+                covNew = covNew + obj.views(i).W.ExpectationCt * ...
+                    obj.views(i).T.ExpectationDiag * obj.views(i).W.ExpectationC;
+            end
+            covNew = Utility.matrixInverse(eye(obj.K) + covNew);
             obj.Z.updateAllDistributionsCovariance(covNew);
 
             % Update mu
             for n = 1:obj.N
-                % All latent variables have the same covariance
-                muNew = obj.tau.Expectation * obj.Z.distributions(n).cov * obj.W.ExpectationCt * ...
-                    (obj.view.getObservation(n) - obj.mu.Expectation);
+                newMu = zeros(obj.K, 1);
+                for m = 1:obj.M
+                    newMu = newMu + obj.views(i).W.ExpectationCt * ...
+                        obj.views(i).T.ExpectationDiag * obj.views(i).X.getObservation(n);
+                end
                 obj.Z.updateDistributionMu(n, muNew);
             end
         end

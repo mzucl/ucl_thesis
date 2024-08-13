@@ -12,7 +12,7 @@ classdef GaussianDistributionContainerTest < matlab.unittest.TestCase
             testCase.verifyEqual(obj.cols, true);
 
             for i = 1:obj.Size
-                GaussianDistributionTest.verifyObject(testCase, obj.distributions(i), ...
+                GaussianDistributionTest.verifyObject(testCase, obj.ds(i), ...
                     prior.mu, prior.cov, prior, prior.dim);
             end
         end
@@ -39,32 +39,32 @@ classdef GaussianDistributionContainerTest < matlab.unittest.TestCase
             newCov = [10, 1; 1, 2];
             obj.updateDistributionParams(3, [1; 2], newCov);
 
-            % Expectation, ExpectationXXt, ExpectationXtX
+            % E, E_XXt, E_XtX
             for i = 1:numDistributions
-                testCase.verifyEqual(obj.Expectation{i}, obj.distributions(i).Expectation);
-                testCase.verifyEqual(obj.ExpectationXXt{i}, obj.distributions(i).ExpectationXXt);
-                testCase.verifyEqual(obj.ExpectationXtX{i}, obj.distributions(i).ExpectationXtX);
+                testCase.verifyEqual(obj.E{i}, obj.ds(i).E);
+                testCase.verifyEqual(obj.E_XXt{i}, obj.ds(i).E_XXt);
+                testCase.verifyEqual(obj.E_XtX{i}, obj.ds(i).E_XtX);
             end
 
-            % ExpectationC, ExpectationCt, ExpectationCtC
-            % ExpectationC in this format must have dimension (dim x numDistributions)
-            testCase.verifyEqual(size(obj.ExpectationC, 1), dim);
-            testCase.verifyEqual(size(obj.ExpectationC, 2), numDistributions);
+            % EC, E_Ct, E_CtC
+            % EC in this format must have dimension (dim x numDistributions)
+            testCase.verifyEqual(size(obj.EC, 1), dim);
+            testCase.verifyEqual(size(obj.EC, 2), numDistributions);
 
-            expectedVal = [obj.distributions(1).Expectation, obj.distributions(2).Expectation ...
-                    obj.distributions(3).Expectation];
+            expectedVal = [obj.ds(1).E, obj.ds(2).E ...
+                    obj.ds(3).E];
 
-            testCase.verifyEqual(obj.ExpectationC, expectedVal);
-            testCase.verifyEqual(obj.ExpectationCt, expectedVal');
-            testCase.verifyEqual(obj.ExpectationCtC, [[2, 0, 0]; [0, 6, 3]; [0, 3, 17]]);
+            testCase.verifyEqual(obj.EC, expectedVal);
+            testCase.verifyEqual(obj.E_Ct, expectedVal');
+            testCase.verifyEqual(obj.E_CtC, [[2, 0, 0]; [0, 6, 3]; [0, 3, 17]]);
 
             % [!!!]
             colSqNorm = obj.getExpectationOfColumnsNormSq();
             testCase.verifyEqual(colSqNorm, [2; 6; 17]);
 
-            % Test 2: Same test when none of the distributions are st. normal
+            % Test 2: Same test when none of the ds are st. normal
             obj.updateDistributionParams(1, [5; 7], [3, 4; 4, 7]);
-            testCase.verifyEqual(obj.ExpectationCtC, [[84, 12, 19]; [12, 6, 3]; [19, 3, 17]]);
+            testCase.verifyEqual(obj.E_CtC, [[84, 12, 19]; [12, 6, 3]; [19, 3, 17]]);
 
             colSqNorm = obj.getExpectationOfColumnsNormSq();
             testCase.verifyEqual(colSqNorm, [84; 6; 17]);
@@ -90,31 +90,31 @@ classdef GaussianDistributionContainerTest < matlab.unittest.TestCase
             newCov = [10, 1; 1, 2];
             obj.updateDistributionParams(3, [1; 2], newCov);
 
-            % Expectation, ExpectationXXt, ExpectationXtX
+            % E, E_XXt, E_XtX
             for i = 1:numDistributions
-                testCase.verifyEqual(obj.Expectation{i}, obj.distributions(i).Expectation);
-                testCase.verifyEqual(obj.ExpectationXXt{i}, obj.distributions(i).ExpectationXXt);
-                testCase.verifyEqual(obj.ExpectationXtX{i}, obj.distributions(i).ExpectationXtX);
+                testCase.verifyEqual(obj.E{i}, obj.ds(i).E);
+                testCase.verifyEqual(obj.E_XXt{i}, obj.ds(i).E_XXt);
+                testCase.verifyEqual(obj.E_XtX{i}, obj.ds(i).E_XtX);
             end
 
-            testCase.verifyEqual(size(obj.ExpectationC, 1), numDistributions);
-            testCase.verifyEqual(size(obj.ExpectationC, 2), dim);
+            testCase.verifyEqual(size(obj.EC, 1), numDistributions);
+            testCase.verifyEqual(size(obj.EC, 2), dim);
 
-            % ExpectationC, ExpectationCt, ExpectationCtC
-            expectedVal = [obj.distributions(1).Expectation'; obj.distributions(2).Expectation'; ...
-                    obj.distributions(3).Expectation'];
+            % EC, E_Ct, E_CtC
+            expectedVal = [obj.ds(1).E'; obj.ds(2).E'; ...
+                    obj.ds(3).E'];
 
-            testCase.verifyEqual(obj.ExpectationC, expectedVal);
-            testCase.verifyEqual(obj.ExpectationCt, expectedVal');
-            testCase.verifyEqual(obj.ExpectationCtC, [[15, 4]; [4, 10]]);
+            testCase.verifyEqual(obj.EC, expectedVal);
+            testCase.verifyEqual(obj.E_Ct, expectedVal');
+            testCase.verifyEqual(obj.E_CtC, [[15, 4]; [4, 10]]);
 
             % [!!!]
             colSqNorm = obj.getExpectationOfColumnsNormSq();
             testCase.verifyEqual(colSqNorm, [15; 10]);
 
-            % Test 2: Same test when none of the distributions are st. normal
+            % Test 2: Same test when none of the ds are st. normal
             obj.updateDistributionParams(1, [5; 7], [3, 4; 4, 7]);
-            testCase.verifyEqual(obj.ExpectationCtC, [[42, 43]; [43, 65]]);
+            testCase.verifyEqual(obj.E_CtC, [[42, 43]; [43, 65]]);
 
             colSqNorm = obj.getExpectationOfColumnsNormSq();
             testCase.verifyEqual(colSqNorm, [42; 65]);
@@ -147,7 +147,7 @@ classdef GaussianDistributionContainerTest < matlab.unittest.TestCase
             prior = GaussianDistribution(zeros(dim, 1), 5 * eye(dim));
             obj = GaussianDistributionContainer(numDistributions, prior, true);
             
-            testCase.verifyEqual(obj.PriorPrecision{1}, 1/5);
+            testCase.verifyEqual(obj.PPrec{1}, 1/5);
 
             % Test 2: diagonal covariance
             dim = 10;
@@ -158,7 +158,7 @@ classdef GaussianDistributionContainerTest < matlab.unittest.TestCase
             obj = GaussianDistributionContainer(numDistributions, prior, true);
             
             for i = 1:numDistributions
-                testCase.verifyEqual(obj.PriorPrecision{i}, 1./precisions);
+                testCase.verifyEqual(obj.PPrec{i}, 1./precisions);
             end
 
             % Test 3: full covariance
@@ -169,7 +169,7 @@ classdef GaussianDistributionContainerTest < matlab.unittest.TestCase
             obj = GaussianDistributionContainer(numDistributions, prior, true);
             
             for i = 1:numDistributions
-                testCase.verifyEqual(obj.PriorPrecision{i}, NaN);
+                testCase.verifyEqual(obj.PPrec{i}, NaN);
             end
         end
         
@@ -184,7 +184,7 @@ classdef GaussianDistributionContainerTest < matlab.unittest.TestCase
             prior = GaussianDistribution(zeros(dim, 1), 5 * eye(dim));
             obj = GaussianDistributionContainer(numDistributions, prior, true);
 
-            testCase.verifyTrue(all(isequal(obj.getExpCInit(), obj.ExpectationC)));
+            testCase.verifyTrue(all(isequal(obj.getExpCInit(), obj.EC)));
 
             % Set init expectation
             newExpC = Utility.generateRandomIntMatrix(dim, numDistributions);
@@ -195,7 +195,7 @@ classdef GaussianDistributionContainerTest < matlab.unittest.TestCase
             % Test 2: cols = false
             obj = GaussianDistributionContainer(numDistributions, prior, false);
 
-            testCase.verifyTrue(all(isequal(obj.getExpCInit(), obj.ExpectationC)));
+            testCase.verifyTrue(all(isequal(obj.getExpCInit(), obj.EC)));
 
             % Set init expectation
             newExpC = Utility.generateRandomIntMatrix(numDistributions, dim);
@@ -240,10 +240,10 @@ classdef GaussianDistributionContainerTest < matlab.unittest.TestCase
 
             for i = 1:obj.Size
                 if i ~= idx
-                    GaussianDistributionTest.verifyObject(testCase, obj.distributions(i), ...
+                    GaussianDistributionTest.verifyObject(testCase, obj.ds(i), ...
                         zeros(dim, 1), eye(dim), prior, dim);
                 else
-                    GaussianDistributionTest.verifyObject(testCase, obj.distributions(i), ...
+                    GaussianDistributionTest.verifyObject(testCase, obj.ds(i), ...
                         newDist.mu, newDist.cov, NaN, newDist.dim); % After update prior should be NaN
                 end
             end
@@ -264,10 +264,10 @@ classdef GaussianDistributionContainerTest < matlab.unittest.TestCase
 
             for i = 1:obj.Size
                 if i ~= idx
-                    GaussianDistributionTest.verifyObject(testCase, obj.distributions(i), ...
+                    GaussianDistributionTest.verifyObject(testCase, obj.ds(i), ...
                         zeros(dim, 1), eye(dim), prior, dim);
                 else
-                    GaussianDistributionTest.verifyObject(testCase, obj.distributions(i), ...
+                    GaussianDistributionTest.verifyObject(testCase, obj.ds(i), ...
                         ones(dim, 1), covNew, prior, dim);
                 end
             end
@@ -286,10 +286,10 @@ classdef GaussianDistributionContainerTest < matlab.unittest.TestCase
 
             for i = 1:obj.Size
                 if i ~= idx
-                    GaussianDistributionTest.verifyObject(testCase, obj.distributions(i), ...
+                    GaussianDistributionTest.verifyObject(testCase, obj.ds(i), ...
                         zeros(dim, 1), eye(dim), prior, dim);
                 else
-                    GaussianDistributionTest.verifyObject(testCase, obj.distributions(i), ...
+                    GaussianDistributionTest.verifyObject(testCase, obj.ds(i), ...
                         (newMu)', eye(dim), prior, dim);
                 end
             end
@@ -308,8 +308,8 @@ classdef GaussianDistributionContainerTest < matlab.unittest.TestCase
             % Test that for each distribution value of 'mu' hasn't changed,
             % but the value of 'cov' is set to 'newCov'
             for i = 1:obj.Size
-                GaussianDistributionTest.verifyObject(testCase, obj.distributions(i), ...
-                    obj.distributions(i).mu, newCov, prior, dim);
+                GaussianDistributionTest.verifyObject(testCase, obj.ds(i), ...
+                    obj.ds(i).mu, newCov, prior, dim);
             end
         end
     end
