@@ -1,12 +1,11 @@
-% Format of the view: [D x N], observations are columns of the matrix
 classdef ViewHandler
     properties
-        data
+        X
     end
     
     properties (Dependent)
         N       % Number of samples
-        D       % Dimensionality
+        D       % Dimensionality/number of features
         TrXtX   % Tr(X^TX)
     end
 
@@ -20,23 +19,32 @@ classdef ViewHandler
     end
 
     methods
-        function obj = ViewHandler(data)
-            % TODO (high): We assume here that the observations (N of them) are in
-            % the columns of 'data', thus data is DxN matrix. Implement something to get rid of this
-            % assumption. I could pass in number of samples as well and
-            % check which dimension of 'data' corresponds to it, but this
-            % will make problems when we import views from external files (maybe).
+        function obj = ViewHandler(data, featuresInCols)
+            % 'featuresInCols' (default: true) tells if the features are
+            % stored in columns or rows of the 'data' matrix.
+            
+            % 'X' that is the part of the ViewHandler is in the [D x N]
+            % format, that is observations are stored in the columns of 'X'
             if nargin < 1
-                error(['Error in class ' class(obj) ': Too few arguments passed.']);
-            else
-                obj.data = data;
+                error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
+            
+            % [NOTE] I choose default to be 'true' because usually tabular
+            % data has features in the columns
+            elseif nargin < 2
+                featuresInCols = true;
             end
+
+            obj.X = Utility.ternary(featuresInCols, data', data);
         end
         
+        
+
+        %% Retreive methods
         function observation = getObservation(obj, idx, tr)
             if nargin < 2
-                error(['Error in class ' class(obj) ': Too few arguments passed.']);
+                error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
             end
+
             % Default value for 'tr' is false
             if nargin < 3
                 tr = false;
@@ -44,13 +52,13 @@ classdef ViewHandler
 
             validateIndex(obj, idx);
 
-            observation = obj.data(:, idx);
+            observation = obj.X(:, idx);
             observation = Utility.ternary(tr, observation', observation);
         end
 
         function normSq = getObservationNormSq(obj, idx)
             observation = obj.getObservation(idx);
-            normSq = norm(observation) ^ 2;
+            normSq = observation' * observation;
         end
       
         function el = getObservationEntry(obj, idx, d)
@@ -59,22 +67,23 @@ classdef ViewHandler
             if d > 0 && d <= length(observation)
                 el = observation(d);
             else
-                error(['Error in class ' class(obj) ': Index out of bounds.']);
+                error(['##### ERROR IN THE CLASS ' class(obj) ': Index out of bounds.']);
             end
         end
 
 
+
         %% Getters
         function value = get.D(obj)
-            value = size(obj.data, 1);
+            value = size(obj.X, 1);
         end
 
         function value = get.N(obj)
-            value = size(obj.data, 2);
+            value = size(obj.X, 2);
         end
 
         function value = get.TrXtX(obj)
-            value = trace(obj.data' * obj.data);
+            value = trace(obj.X' * obj.X);
         end
     end
 end
