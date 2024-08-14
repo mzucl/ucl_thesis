@@ -1,3 +1,34 @@
+% % Parameters
+% N = 1000;  % number of samples
+% D0 = 55;   % input features
+% D1 = 3;    % output features
+% 
+% K = 2;     % common latent variables
+% K0 = 3;    % first view's latent variables
+% K1 = 3;    % second view's latent variables
+% Kc = K + K0 + K1;  % total latent variables
+% 
+% % Generation of matrix W
+% A0 = randn(D0, K);  % D0 x K matrix
+% A1 = randn(D1, K);  % D1 x K matrix
+% 
+% B0 = randn(D0, K0); % D0 x K0 matrix
+% B1 = randn(D1, K1); % D1 x K1 matrix
+% 
+% W0 = [A0, B0, zeros(D0, K1)];  % D0 x Kc matrix
+% W1 = [A1, zeros(D1, K0), B1];  % D1 x Kc matrix
+% W_tot = [W0; W1];              % (D0 + D1) x Kc matrix
+% 
+% % Generation of matrix Z
+% Z = randn(N, Kc);  % N x Kc matrix
+% 
+% % Generation of matrix X
+% X0 = Z * W0' + randn(N, D0) * 0.1;  % N x D0 matrix
+% X1 = Z * W1' + randn(N, D1) * 0.1;  % N x D1 matrix
+
+
+
+
 % Clear the workspace
 % close all; clear; clc;
 
@@ -20,7 +51,7 @@ noiseVariance = 0.05;
 % [X2, Z2, W2] = Utility.generateToyDataset(N, D, K, noiseVariance); % X is DxN
 
 maxIter = 100;
-obj =  GFA({X1, X2}, K, maxIter);
+obj =  GFA({X0', X1'}, K, maxIter);
 [elboVals, convIt, resArr] = obj.fit();
 % %% PPCA
 % W_PPCA = PPCA(X', D - 1); % PPCA expects X in NxD format
