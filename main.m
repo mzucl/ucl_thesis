@@ -50,9 +50,15 @@ noiseVariance = 0.05;
 % [X, Z, W] = Utility.generateToyDataset(N, D, K, noiseVariance); % X is DxN
 % [X2, Z2, W2] = Utility.generateToyDataset(N, D, K, noiseVariance); % X is DxN
 
+profile on;
 maxIter = 100;
 obj =  GFA({X0', X1'}, K, maxIter);
 [elboVals, convIt, resArr] = obj.fit();
+profile off;
+
+% View profiling results
+profile viewer;
+
 % %% PPCA
 % W_PPCA = PPCA(X', D - 1); % PPCA expects X in NxD format
 % 

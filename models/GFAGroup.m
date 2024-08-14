@@ -95,7 +95,6 @@ classdef GFAGroup < handle
         end
     
         function obj = qWUpdate(obj, it)
-            profile on;
             % In the first iteration we perform the update based on the
             % initialized moments of T and alpha, and in every
             % subsequent iteration we use the 'normal' update equations
@@ -107,7 +106,7 @@ classdef GFAGroup < handle
             %   obj.T.expInit
             if it > 1
                 for d = 1:obj.D
-                    covNew = Utility.matrixInverse(obj.T.E{d} * trace(obj.Z.E_CtC) * eye(obj.K) + ...
+                    covNew = Utility.matrixInverse(obj.T.E{d} * obj.Z.Tr_CtC * eye(obj.K) + ...
                         diag(obj.alpha.EC));
                 
                     muNew = covNew * obj.T.E{d} * obj.Z.EC * obj.X.getRow(d, true);
@@ -121,7 +120,7 @@ classdef GFAGroup < handle
                 expInitAlpha = obj.alpha.getExpCInit();
 
                 for d = 1:obj.D
-                    covNew = Utility.matrixInverse(expInitT(d) * trace(obj.Z.E_CtC) * eye(obj.K) + ...
+                    covNew = Utility.matrixInverse(expInitT(d) * obj.Z.Tr_CtC * eye(obj.K) + ...
                         diag(expInitAlpha));
                 
                     muNew = covNew * expInitT(d) * obj.Z.EC * obj.X.getRow(d, true);
@@ -130,10 +129,6 @@ classdef GFAGroup < handle
                     obj.W.updateDistributionCovariance(d, covNew);
                 end
             end
-            profile off;
-
-            % View profiling results
-            profile viewer;
         end
 
         function value = getExpectationLnW(obj)
