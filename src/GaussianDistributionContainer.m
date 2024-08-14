@@ -22,6 +22,9 @@ classdef GaussianDistributionContainer < handle
         HC                  % Entropy of the collection
         E_LnP               % Cell array where each entry is E_LnP
         E_LnPC              % The sum of all entries in E_LnP
+        Tr_CtC              % Tr(X^TX), but computed without computing all elements of the matrix
+                            % TODO(high): only computed for the cols format
+                            % because it is needed for Z^TZ
     end
 
     properties(Access = private)
@@ -242,6 +245,14 @@ classdef GaussianDistributionContainer < handle
             end
         end
 
+        % Dirty fix
+        function value = get.Tr_CtC(obj)
+            value = 0;
+            for i = 1:obj.Size
+                value = value + obj.ds(i).E_XtX;
+            end
+        end
+        
         % [!!!] Dependent on 'cols'
         function value = get.E_CtC(obj)
             if obj.cols

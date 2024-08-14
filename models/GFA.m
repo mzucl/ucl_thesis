@@ -47,7 +47,7 @@ classdef GFA < handle
             % toy example with 2 views starts working
             % [obj.M, obj.N] = obj.validateSources(...)
             obj.M = length(data);
-            obj.N = size(data{1}, 2);
+            obj.N = size(data{1}, 2); % Data passed in is DxN
 
             obj.K = K;
 
@@ -68,7 +68,7 @@ classdef GFA < handle
             %% Model setup and initialization
             % Z
             % ------------------------------------------------------ %
-            % Initialize the model - set random values for the 'mu'
+            % Initialize the model - set random values for the mean
             % This means we will run the update equation for W first and
             % that we should set some values for all the moments that are
             % in those update equations.
@@ -93,9 +93,9 @@ classdef GFA < handle
             % Update covariance
             % All latent variables have the same covariance
             covNew = zeros(obj.K);
-            for i = 1:obj.M
-                covNew = covNew + obj.views(i).W.E_Ct * ...
-                    obj.views(i).T.E_Diag * obj.views(i).W.EC;
+            for m = 1:obj.M
+                covNew = covNew + obj.views(m).W.E_Ct * ...
+                    obj.views(m).T.E_Diag * obj.views(m).W.EC;
             end
             covNew = Utility.matrixInverse(eye(obj.K) + covNew);
             obj.Z.updateAllDistributionsCovariance(covNew);
@@ -104,9 +104,10 @@ classdef GFA < handle
             for n = 1:obj.N
                 muNew = zeros(obj.K, 1);
                 for m = 1:obj.M
-                    muNew = muNew + obj.views(i).W.E_Ct * ...
-                        obj.views(i).T.E_Diag * obj.views(i).X.getObservation(n);
+                    muNew = muNew + obj.views(m).W.E_Ct * ...
+                        obj.views(m).T.E_Diag * obj.views(m).X.getObservation(n);
                 end
+                muNew = covNew * muNew;
                 obj.Z.updateDistributionMu(n, muNew);
             end
         end
@@ -206,7 +207,7 @@ classdef GFA < handle
             % DEBUG
 
             elbo = res.pX + res.pZ + res.pW + res.pAlpha + res.pTau + ... % p(.)
-                res.qZ + qW + qAlpha + qTau; % q(.)
+                res.qZ + res.qW + res.qAlpha + res.qTau; % q(.)
 
             % DEBUG
             res.elbo = elbo;
@@ -214,5 +215,3 @@ classdef GFA < handle
         end
     end
 end
-
-% getExpectationLnPX

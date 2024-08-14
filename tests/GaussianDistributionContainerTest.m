@@ -120,7 +120,26 @@ classdef GaussianDistributionContainerTest < matlab.unittest.TestCase
             testCase.verifyEqual(colSqNorm, [42; 65]);
         end
 
+        % TODO (high): Implement this properly, for now it works for cols
+        % format only!
+        function testTraceDependentProperties(testCase)
+            dim = 2;
+            cols = true;
+            numDistributions = 3;
+            prior = GaussianDistribution(zeros(dim, 1), eye(dim));
 
+            obj = GaussianDistributionContainer(numDistributions, prior, cols);
+
+            % Setup
+            %   standard normal
+            %   mu = 1, cov: diag(2)
+            %   mu = [1; 2], cov: newCov
+            obj.updateDistributionParams(2, ones(dim, 1), 2);
+            newCov = [10, 1; 1, 2];
+            obj.updateDistributionParams(3, [1; 2], newCov);
+
+            testCase.verifyEqual(obj.Tr_CtC, trace(obj.E_CtC));
+        end
 
         %% Dependent properties (independent of the format)
         function testEntropyProperties(testCase)

@@ -20,8 +20,8 @@ classdef GFAGroup < handle
         % TODO (high): Check if there is a better way to define these
         % inside this class - they are initialized in the constructor and
         % shouldn't be changed!
-        K
         Z
+        K
     end
 
     % properties (Dependent, SetAccess = private)
@@ -36,15 +36,14 @@ classdef GFAGroup < handle
         %% Constructors
         function obj = GFAGroup(data, Z, K, featuresInCols)
             if nargin < 3
-                return;
-                % error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
+                error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
             elseif nargin < 4
                 featuresInCols = true;
             end
 
             obj.X = ViewHandler(data, featuresInCols);
-            obj.K = K;
-            obj.Z = Z; % TODO(low): This can be a reference to avoid copying
+            obj.Z = Z;
+            obj.K = K; % TODO(low): This can be a reference to avoid copying
 
 
             %% Model setup and initialization
@@ -70,7 +69,7 @@ classdef GFAGroup < handle
             %   obj.alpha.expCInit
             % ----------------------------------------------------------------
             obj.T.setExpCInit(1000 * ones(obj.D, 1));        
-            obj.alpha.setExpCInit(repmat(1e-1, obj.K, 1));
+            % obj.alpha.setExpCInit(repmat(1e-1, obj.K, 1));
         end
 
 
@@ -96,6 +95,7 @@ classdef GFAGroup < handle
         end
     
         function obj = qWUpdate(obj, it)
+            profile on;
             % In the first iteration we perform the update based on the
             % initialized moments of T and alpha, and in every
             % subsequent iteration we use the 'normal' update equations
@@ -112,6 +112,7 @@ classdef GFAGroup < handle
                 
                     muNew = covNew * obj.T.E{d} * obj.Z.EC * obj.X.getRow(d, true);
     
+                    % TODO (low): Can be done in one call
                     obj.W.updateDistributionMu(d, muNew);
                     obj.W.updateDistributionCovariance(d, covNew);
                 end
@@ -129,6 +130,10 @@ classdef GFAGroup < handle
                     obj.W.updateDistributionCovariance(d, covNew);
                 end
             end
+            profile off;
+
+            % View profiling results
+            profile viewer;
         end
 
         function value = getExpectationLnW(obj)
