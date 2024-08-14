@@ -1,11 +1,11 @@
 % Clear the workspace
-close all; clear; clc;
+% close all; clear; clc;
 
 % Add folders to MATLAB path
-addpath('src');
-addpath('models');
-addpath('helpers');
-addpath('tests');
+% addpath('src');
+% addpath('models');
+% addpath('helpers');
+% addpath('tests');
 
 % Uncomment to run tests
 % testResults = runtests('tests');
@@ -13,16 +13,15 @@ addpath('tests');
 %% Generate the toy dataset
 N = 100;
 D = 10;
-K = 3;
+K = 10;
 noiseVariance = 0.05;
+% 
+% [X, Z, W] = Utility.generateToyDataset(N, D, K, noiseVariance); % X is DxN
+% [X2, Z2, W2] = Utility.generateToyDataset(N, D, K, noiseVariance); % X is DxN
 
-[X, Z, W] = Utility.generateToyDataset(N, D, K, noiseVariance); % X is DxN
-[X2, Z2, W2] = Utility.generateToyDataset(N, D, K, noiseVariance); % X is DxN
-
-maxIter = 1;
-obj =  GFA({X, X2}, K, maxIter);
-obj.fit();
-
+maxIter = 100;
+obj =  GFA({X1, X2}, K, maxIter);
+[elboVals, convIt, resArr] = obj.fit();
 % %% PPCA
 % W_PPCA = PPCA(X', D - 1); % PPCA expects X in NxD format
 % 
@@ -50,4 +49,4 @@ obj.fit();
 % Utility.hintonDiagram(obj.W.EC, 'BPCA');
 % hold on;
 % 
-% Utility.plotStructVariables(resArr);
+Utility.plotStructVariables(resArr);

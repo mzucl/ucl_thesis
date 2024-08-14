@@ -131,7 +131,30 @@ classdef GFAGroup < handle
             end
         end
 
+        function value = getExpectationLnW(obj)
+            value = 0;
+            colsNormSq = obj.W.getExpectationOfColumnsNormSq();
+            for k = 1:obj.K % TODO (high): This can be implemented as a dot product
+                value = value + obj.alpha.E{k} * colsNormSq(k);
+            end
+            value = -1/2 * value + obj.D/2 * (obj.alpha.E_LnC - obj.K * log(2*pi));
+        end
 
+        function value = getExpectationLnPX(obj)
+            value = obj.N/2 * obj.T.E_LnC - obj.N * obj.D/2 * log(2 * pi) - 1/2 * ...
+                obj.T.EC' * diag( ...
+                obj.X.XXt ...
+                - 2 * obj.W.EC * obj.Z.EC * obj.X.X' ...
+                + obj.W.EC * obj.Z.E_CCt * obj.W.EC');
+            % ans1 == ans2
+            % ans1 = obj.T.EC' * diag( ...
+            %     obj.X.XXt ...
+            %     - 2 * obj.W.EC * obj.Z.EC * obj.X.X' ...
+            %     + obj.W.EC * obj.Z.E_CCt * obj.W.EC');
+            % ans2 = trace(obj.T.E_Diag * (obj.X.XXt ...
+            %     - 2 * obj.W.EC * obj.Z.EC * obj.X.X' ...
+            %     + obj.W.EC * obj.Z.E_CCt * obj.W.EC'));
+        end
         
 
         %% Getters
