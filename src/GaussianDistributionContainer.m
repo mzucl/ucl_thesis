@@ -126,6 +126,15 @@ classdef GaussianDistributionContainer < handle
             obj.ds(idx).updateMu(mu); % Will raise an exception if we try to change dimension
         end
 
+        function obj = updateDistributionCovariance(obj, idx, cov)
+            if nargin < 3
+                error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
+            end
+            obj.validateIndex(idx);
+
+            obj.ds(idx).updateCovariance(cov); % Will raise an exception if we try to change dimension
+        end
+
         % [NOTE] The type of these update methods depends on the current
         % need (e.g. in the update equations for BPCA all covariances are set to the
         % same value). In future more general methods can be added (maybe

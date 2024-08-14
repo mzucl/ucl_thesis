@@ -295,6 +295,27 @@ classdef GaussianDistributionContainerTest < matlab.unittest.TestCase
             end
         end
 
+        function testUpdateDistributionCovariance(testCase)
+            dim = 10;
+            numDistributions = 2;
+            prior = GaussianDistribution(zeros(dim,1));
+            obj = GaussianDistributionContainer(numDistributions, prior, true);
+
+            idx = 1;
+            newCov = Utility.generateRandomSPDMatrix(dim);
+            obj.updateDistributionCovariance(idx, newCov);
+
+            for i = 1:obj.Size
+                if i ~= idx
+                    GaussianDistributionTest.verifyObject(testCase, obj.ds(i), ...
+                        zeros(dim, 1), eye(dim), prior, dim);
+                else
+                    GaussianDistributionTest.verifyObject(testCase, obj.ds(i), ...
+                        zeros(dim, 1), newCov, prior, dim);
+                end
+            end
+        end
+
         function testUpdateAllDistributionsCovariance(testCase)
             dim = 10;
             numDistributions = 2;
