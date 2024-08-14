@@ -6,6 +6,8 @@ classdef GFA < handle
     
         N               % Number of observations
 
+        M               % Number of groups
+
         Z               % [K x N] GaussianDistributionContainer [size: N; for each latent variable zn]
         
         views           % An array of GFAGroup instances
@@ -15,11 +17,6 @@ classdef GFA < handle
         tol
         % They all share Z, also it shouldn't be a copy it should be a
         % reference!!!
-    end
-
-    
-    properties (Dependent)
-        M       % Number of groups
     end
     
     % TODO (high): Implement
@@ -77,10 +74,11 @@ classdef GFA < handle
             zPrior = GaussianDistribution(initZMu, eye(obj.K));
             obj.Z = GaussianDistributionContainer(obj.N, zPrior, true);
 
-            obj.views = repmat(GFAGroup(), obj.M, 1); % Preallocate
+            % Initialize views
+            obj.views = GFAGroup.empty(obj.M, 0);
 
             for i = 1:obj.M
-                obj.views(i) = GFAGroup(data{i}, Z, K, true);
+                obj.views(i) = GFAGroup(data{i}, obj.Z, obj.K, true);
             end
         end
 
@@ -93,8 +91,8 @@ classdef GFA < handle
             % All latent variables have the same covariance
             covNew = zeros(obj.K);
             for i = 1:obj.M
-                covNew = covNew + obj.views(i).W.ExpectationCt * ...
-                    obj.views(i).T.ExpectationDiag * obj.views(i).W.ExpectationC;
+                covNew = covNew + obj.views(i).W.E_Ct * ...
+                    obj.views(i).T.E_Diag * obj.views(i).W.EC;
             end
             covNew = Utility.matrixInverse(eye(obj.K) + covNew);
             obj.Z.updateAllDistributionsCovariance(covNew);
@@ -103,8 +101,8 @@ classdef GFA < handle
             for n = 1:obj.N
                 newMu = zeros(obj.K, 1);
                 for m = 1:obj.M
-                    newMu = newMu + obj.views(i).W.ExpectationCt * ...
-                        obj.views(i).T.ExpectationDiag * obj.views(i).X.getObservation(n);
+                    newMu = newMu + obj.views(i).W.E_Ct * ...
+                        obj.views(i).T.E_Diag * obj.views(i).X.getObservation(n);
                 end
                 obj.Z.updateDistributionMu(n, muNew);
             end
@@ -134,16 +132,10 @@ classdef GFA < handle
             resArr = cell(1, obj.maxIter);
         
             for it = 1:obj.maxIter
-                for i = 1:obj.M
-                    obj.views(i).qWUpdate();
-                end
-                 for i = 1:obj.M
-                    obj.views(i).qWUpdate();
-                end
-                obj.qWUpdate(it);
+                % obj.qWUpdate(it);
                 obj.qZUpdate();
-                obj.qAlphaUpdate();
-                obj.qTauUpdate();
+                % obj.qAlphaUpdate();
+                % obj.qTauUpdate();
 
                 % [currElbo, res] = obj.computeELBO();
                 % 

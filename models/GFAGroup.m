@@ -16,15 +16,17 @@ classdef GFAGroup < handle
 
         T               % [K x 1] GammaDistributionContainer         
                         %       --- [size: K]
+
+        % TODO (high): Check if there is a better way to define these
+        % inside this class - they are initialized in the constructor and
+        % shouldn't be changed!
+        K
+        Z
     end
 
-    properties (Dependent, SetAccess = private)
-        K               % Initialized in the constructor and can't be changed
-        Z               % Initialized in the constructor and can't be changed
-                        % (not sure how this works with references in MATLAB, check this!)
-    end
+    % properties (Dependent, SetAccess = private)
+    % end
 
-    
     properties (Dependent)
         D
         N
@@ -34,7 +36,8 @@ classdef GFAGroup < handle
         %% Constructors
         function obj = GFAGroup(data, Z, K, featuresInCols)
             if nargin < 3
-                error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
+                return;
+                % error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
             elseif nargin < 4
                 featuresInCols = true;
             end
@@ -59,19 +62,19 @@ classdef GFAGroup < handle
         %% Update methods
         % obj.alpha is GammaDistributionContainer
         function obj = qAlphaUpdate(obj)
-            newAVal = obj.alpha.distributions(1).prior.a + obj.D/2; % All 'a' values are the same
-            newBVals = obj.alpha.distributions(1).prior.b + 1/2 * obj.W.getExpectationOfColumnsNormSq();
+            newAVal = obj.alpha.ds(1).prior.a + obj.D/2; % All 'a' values are the same
+            newBVals = obj.alpha.ds(1).prior.b + 1/2 * obj.W.getExpectationOfColumnsNormSq();
 
             obj.alpha.updateAllDistributionsParams(newAVal, newBVals);
         end
 
         % obj.tau is GammaDistributionContainer
         function obj = qTauUpdate(obj)
-            newAVal = obj.T.distributions(1).prior.a + obj.N/2; % All 'a' values are the same
-            newBVals = 1/2 * diag( ...
+            newAVal = obj.T.ds(1).prior.a + obj.N/2; % All 'a' values are the same
+            newBVals = obj.T.ds(1).prior.b + 1/2 * diag( ...
                 obj.view.XXt ...
-                - 2 * obj.W.ExpectationC * obj.Z.ExpectationC * obj.view.X' ...
-                + obj.W.ExpectationC * obj.Z.ExpectationCCt * obj.W.ExpectationC');
+                - 2 * obj.W.EC * obj.Z.EC * obj.view.X' ...
+                + obj.W.EC * obj.Z.E_CCt * obj.W.EC');
 
             obj.T.updateAllDistributionsParams(newAVal, newBVals);
         end
@@ -85,10 +88,6 @@ classdef GFAGroup < handle
 
         function value = get.N(obj)
             value = obj.view.N;
-        end
-
-        function value = get.K(obj)
-            value = obj.K;
         end
     end
 end
