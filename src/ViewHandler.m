@@ -17,6 +17,12 @@ classdef ViewHandler
                 error(['Error in ' class(obj) ': Index out of range.']); 
             end
         end
+
+        function validateRowIndex(obj, idx)
+            if idx < 1 || idx > obj.D 
+                error(['Error in ' class(obj) ': Index out of range.']); 
+            end
+        end
     end
 
     methods
@@ -54,6 +60,24 @@ classdef ViewHandler
             validateIndex(obj, idx);
 
             observation = obj.X(:, idx);
+            observation = Utility.ternary(tr, observation', observation);
+        end
+
+        % Returns the row at index idx; if 'tr' is true then the row is
+        % returned as a column vector
+        function observation = getRow(obj, idx, tr)
+            if nargin < 2
+                error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
+            end
+
+            % Default value for 'tr' is false
+            if nargin < 3
+                tr = false;
+            end
+
+            validateRowIndex(obj, idx);
+
+            observation = obj.X(idx, :);
             observation = Utility.ternary(tr, observation', observation);
         end
 

@@ -33,6 +33,8 @@ classdef ViewHandlerTest < matlab.unittest.TestCase
             idx = 2;
             testCase.verifyEqual(vh.getObservation(idx), [2; 1; 2; 1; 2]);
             testCase.verifyEqual(vh.getObservation(idx, true), [2 1 2 1 2]);
+            testCase.verifyEqual(vh.getRow(idx), [2 1 3]);
+            testCase.verifyEqual(vh.getRow(idx, true), [2; 1; 3]);
             testCase.verifyEqual(vh.getObservationNormSq(idx), 14);
             testCase.verifyEqual(vh.getObservationEntry(idx + 1, 3), 5);
             
@@ -41,6 +43,8 @@ classdef ViewHandlerTest < matlab.unittest.TestCase
             idx = 4;
             testCase.verifyEqual(vh.getObservation(idx), [4; 1; 7]);
             testCase.verifyEqual(vh.getObservation(idx, true), [4, 1, 7]);
+            testCase.verifyEqual(vh.getRow(idx - 1), [1 3 5 7 9]);
+            testCase.verifyEqual(vh.getRow(idx - 1, true), [1; 3; 5; 7; 9]);
             testCase.verifyEqual(vh.getObservationNormSq(idx), 66);
             testCase.verifyEqual(vh.getObservationEntry(idx + 1, 3), 9);
         end
