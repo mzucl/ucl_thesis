@@ -19,7 +19,9 @@ noiseVariance = 0.05;
 [X, Z, W] = Utility.generateToyDataset(N, D, K, noiseVariance); % X is DxN
 [X2, Z2, W2] = Utility.generateToyDataset(N, D, K, noiseVariance); % X is DxN
 
-
+maxIter = 1;
+obj =  GFA({X, X2}, K, maxIter);
+obj.fit();
 
 % %% PPCA
 % W_PPCA = PPCA(X', D - 1); % PPCA expects X in NxD format

@@ -43,9 +43,11 @@ classdef GFA < handle
                 error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
             end
 
+            % TODO (very high!): Implementent method below as soon as the
+            % toy example with 2 views starts working
             % [obj.M, obj.N] = obj.validateSources(...)
             obj.M = length(data);
-            obj.N = 12;
+            obj.N = size(data{1}, 2);
 
             obj.K = K;
 
@@ -78,7 +80,7 @@ classdef GFA < handle
             obj.views = GFAGroup.empty(obj.M, 0);
 
             for i = 1:obj.M
-                obj.views(i) = GFAGroup(data{i}, obj.Z, obj.K, true);
+                obj.views(i) = GFAGroup(data{i}, obj.Z, obj.K, false); % featuresInCols = false;
             end
         end
 
@@ -87,6 +89,7 @@ classdef GFA < handle
         %% Update methods
         % obj.Z is GaussianDistributionContainer(cols = true)
         function obj = qZUpdate(obj)
+            disp('qZUpdate');
             % Update covariance
             % All latent variables have the same covariance
             covNew = zeros(obj.K);
@@ -99,28 +102,31 @@ classdef GFA < handle
 
             % Update mu
             for n = 1:obj.N
-                newMu = zeros(obj.K, 1);
+                muNew = zeros(obj.K, 1);
                 for m = 1:obj.M
-                    newMu = newMu + obj.views(i).W.E_Ct * ...
+                    muNew = muNew + obj.views(i).W.E_Ct * ...
                         obj.views(i).T.E_Diag * obj.views(i).X.getObservation(n);
                 end
                 obj.Z.updateDistributionMu(n, muNew);
             end
         end
 
-        function obj = qWUpdate(obj)
+        function obj = qWUpdate(obj, it)
+            disp('qWUpdate');
             for i = 1:obj.M
-                obj.views(i).qWUpdate();
+                obj.views(i).qWUpdate(it);
             end
         end
 
         function obj = qAlphaUpdate(obj)
+            disp('qAlphaUpdate');
             for i = 1:obj.M
-                obj.views(i).qWUpdate();
+                obj.views(i).qAlphaUpdate();
             end
         end
 
         function obj = qTauUpdate(obj)
+            disp('qTauUpdate');
             for i = 1:obj.M
                 obj.views(i).qTauUpdate();
             end
@@ -132,10 +138,10 @@ classdef GFA < handle
             resArr = cell(1, obj.maxIter);
         
             for it = 1:obj.maxIter
-                % obj.qWUpdate(it);
+                obj.qWUpdate(it);
                 obj.qZUpdate();
-                % obj.qAlphaUpdate();
-                % obj.qTauUpdate();
+                obj.qAlphaUpdate();
+                obj.qTauUpdate();
 
                 % [currElbo, res] = obj.computeELBO();
                 % 

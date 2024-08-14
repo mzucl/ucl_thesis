@@ -24,7 +24,7 @@ classdef GammaDistributionContainer < handle
         E_LnPC              % The sum of all entries in E_LnP
         A                   % Array of all 'a' values
         B                   % Array of all 'b' values
-        Value           
+        Val           
     end
 
     properties(Access = private)
@@ -229,6 +229,7 @@ classdef GammaDistributionContainer < handle
                 otherwise
                     error(['##### ERROR IN THE CLASS ' class(obj) ': Invalid input arguments.']);
             end
+            
             % Set initial expectation to the real expectation
             obj.setExpCInit(obj.EC);
         end
@@ -440,7 +441,7 @@ classdef GammaDistributionContainer < handle
             end
         end
 
-        function value = get.Value(obj)
+        function value = get.Val(obj)
             value = zeros(obj.Size, 1);
             for i = 1:obj.Size
                 value(i) = obj.ds(i).Value;

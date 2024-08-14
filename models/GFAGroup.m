@@ -1,6 +1,6 @@
 classdef GFAGroup < handle
     properties         
-        view            % ViewHandler instance to hold the data
+        X               % ViewHandler instance to hold the data
 
         W               % [D x K] GaussianDistributionContainer      
                         %       --- [size: D; for each row in W matrix]
@@ -14,8 +14,8 @@ classdef GFAGroup < handle
         alpha           % [K x 1] GammaDistributionContainer         
                         %       --- [size: K]
 
-        T               % [K x 1] GammaDistributionContainer         
-                        %       --- [size: K]
+        T               % [D x 1] GammaDistributionContainer         
+                        %       --- [size: D]
 
         % TODO (high): Check if there is a better way to define these
         % inside this class - they are initialized in the constructor and
@@ -42,7 +42,7 @@ classdef GFAGroup < handle
                 featuresInCols = true;
             end
 
-            obj.view = ViewHandler(data, featuresInCols);
+            obj.X = ViewHandler(data, featuresInCols);
             obj.K = K;
             obj.Z = Z; % TODO(low): This can be a reference to avoid copying
 
@@ -50,11 +50,27 @@ classdef GFAGroup < handle
             %% Model setup and initialization
             % alpha
             alphaPrior = GammaDistribution(Constants.DEFAULT_GAMMA_A, Constants.DEFAULT_GAMMA_B);
-            obj.alpha = GammaDistributionContainer(repmat(alphaPrior, K, 1));
+            obj.alpha = GammaDistributionContainer(repmat(alphaPrior, obj.K, 1));
 
             % tau
             tauPrior = GammaDistribution(Constants.DEFAULT_GAMMA_A, Constants.DEFAULT_GAMMA_B);
-            obj.T = GammaDistributionContainer(repmat(tauPrior, K, 1));
+            obj.T = GammaDistributionContainer(repmat(tauPrior, obj.D, 1));
+
+            % W; sample from obj.alpha for the prior
+            %       Should we do this? The values for alpha are so small!!!
+            % wPrior = GaussianDistribution(0, diag(1./obj.alpha.Value));
+            wPrior = GaussianDistribution(0, eye(K));
+            obj.W = GaussianDistributionContainer(obj.D, wPrior, false);
+
+            % Model initialization - second part
+            % The first update equation is for W, so we need to initialize
+            % everything that is used in those two equations and those
+            % initilizations are given below.
+            %   obj.T.expInit
+            %   obj.alpha.expCInit
+            % ----------------------------------------------------------------
+            obj.T.setExpCInit(1000 * ones(obj.D, 1));        
+            obj.alpha.setExpCInit(repmat(1e-1, obj.K, 1));
         end
 
 
@@ -68,26 +84,63 @@ classdef GFAGroup < handle
             obj.alpha.updateAllDistributionsParams(newAVal, newBVals);
         end
 
-        % obj.tau is GammaDistributionContainer
+        % obj.T is GammaDistributionContainer
         function obj = qTauUpdate(obj)
             newAVal = obj.T.ds(1).prior.a + obj.N/2; % All 'a' values are the same
             newBVals = obj.T.ds(1).prior.b + 1/2 * diag( ...
-                obj.view.XXt ...
-                - 2 * obj.W.EC * obj.Z.EC * obj.view.X' ...
+                obj.X.XXt ...
+                - 2 * obj.W.EC * obj.Z.EC * obj.X.X' ...
                 + obj.W.EC * obj.Z.E_CCt * obj.W.EC');
 
             obj.T.updateAllDistributionsParams(newAVal, newBVals);
         end
+    
+        function obj = qWUpdate(obj, it)
+            % In the first iteration we perform the update based on the
+            % initialized moments of T and alpha, and in every
+            % subsequent iteration we use the 'normal' update equations
+
+            % TODO (medium): DRY this code: define the vars for the values
+            % that are different based on the value of 'it' before the
+            % update equations. Use Utility.ternary(it == 1, ...)
+            %   obj.alpha.expCInit
+            %   obj.T.expInit
+            if it > 1
+                for d = 1:obj.D
+                    covNew = Utility.matrixInverse(obj.T.E{d} * trace(obj.Z.E_CtC) * eye(obj.K) + ...
+                        diag(obj.alpha.EC));
+                
+                    muNew = covNew * obj.T.E{d} * obj.Z.EC * obj.X.getRow(d, true);
+    
+                    obj.W.updateDistributionMu(d, muNew);
+                    obj.W.updateDistributionCovariance(d, covNew);
+                end
+            else
+                expInitT = obj.T.getExpCInit();
+                expInitAlpha = obj.alpha.getExpCInit();
+
+                for d = 1:obj.D
+                    covNew = Utility.matrixInverse(expInitT(d) * trace(obj.Z.E_CtC) * eye(obj.K) + ...
+                        diag(expInitAlpha));
+                
+                    muNew = covNew * expInitT(d) * obj.Z.EC * obj.X.getRow(d, true);
+    
+                    obj.W.updateDistributionMu(d, muNew);
+                    obj.W.updateDistributionCovariance(d, covNew);
+                end
+            end
+        end
+
 
         
 
         %% Getters
         function value = get.D(obj)
-            value = obj.view.D;
+            value = obj.X.D;
         end
 
         function value = get.N(obj)
-            value = obj.view.N;
+            value = obj.X.N;
         end
     end
 end
