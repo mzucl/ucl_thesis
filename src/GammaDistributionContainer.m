@@ -32,9 +32,20 @@ classdef GammaDistributionContainer < handle
     end
 
     methods(Access = private)
-        function validateIndex(obj, idx)
+        function isValid = validateIndex(obj, idx)
             if idx < 1 || idx > obj.Size 
                 error(['##### ERROR IN THE CLASS ' class(obj) ': Index out of range.']); 
+            end
+            isValid = true;
+        end
+
+        function isValid = validateIndices(obj, indices)
+            isValid = true;
+            for i = 1:length(indices)
+                if ~obj.validateIndex(indices(i))
+                    isValid = false;
+                    break;
+                end
             end
         end
     end
@@ -263,6 +274,18 @@ classdef GammaDistributionContainer < handle
             end
 
             obj.ds(idx).updateParameters(a, b, inc);
+        end
+
+        % Remove distributions from the container with idx in 'indices'
+        function obj = removeDistributions(obj, indices)
+            if nargin < 1 || isempty(indices)
+                return; % No change
+            end
+            indicesValid = obj.validateIndices(indices);
+            if ~indicesValid
+                error(['##### ERROR IN THE CLASS ' class(obj) ': Index out of range.']); 
+            end
+            obj.ds(indices) = [];
         end
 
 

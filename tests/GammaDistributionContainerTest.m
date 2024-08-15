@@ -492,5 +492,24 @@ classdef GammaDistributionContainerTest < matlab.unittest.TestCase
                 testCase.verifyEqual(obj.ds(i).b, deltaB(i));
             end
         end
+        
+        function testRemoveDistributions(testCase) 
+            numOfDistr = 5;
+            aVals = 1:numOfDistr;
+            bVals = Utility.generateRandomIntMatrix(numOfDistr, 1);
+          
+            obj = GammaDistributionContainer(aVals, bVals);
+
+            testCase.verifyTrue(obj.Size == numOfDistr);
+
+            obj.removeDistributions([1, 3, 5]);
+
+            testCase.verifyTrue(obj.Size == 2);
+
+            GammaDistributionTest.verifyObject(testCase, obj.ds(1), aVals(2), ...
+                bVals(2), NaN);
+            GammaDistributionTest.verifyObject(testCase, obj.ds(2), aVals(4), ...
+                bVals(4), NaN);
+        end
     end
 end
