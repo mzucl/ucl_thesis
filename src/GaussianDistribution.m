@@ -54,6 +54,20 @@ classdef GaussianDistribution < handle
     %                                   mu = mu * ones(dim, 1) and set prior
 
 
+    %% Private methods
+    methods(Access = private)
+        function isValid = validateDimIndices(obj, indices)
+            isValid = true;
+            for i = 1:length(indices)
+                if indices(i) < 1 || indices(i) > obj.dim
+                    isValid = false;
+                    break;
+                end
+            end
+        end
+    end
+
+
     
     %% Static methods
     methods (Static, Access = private)
@@ -345,6 +359,26 @@ classdef GaussianDistribution < handle
             obj.mu = mu;
         end
 
+        function removeDimensions(obj, indices, validateInputs)
+            if validateInputs
+                if nargin < 2 || isempty(indices)
+                    return; % No change
+                end
+                if ~obj.validateDimIndices(indices)
+                    error(['##### ERROR IN THE CLASS ' class(obj) ': Index out of range.']); 
+                end
+            end
+            
+            obj.mu(indices) = [];
+            obj.cov(:, indices) = [];
+            obj.cov(indices, :) = [];
+            obj.dim = obj.dim - length(indices);
+
+            % Update prior
+            if ~Utility.isNaN(obj.prior)
+                obj.prior.removeDimensions(indices, false);
+            end
+        end
 
 
         %% Setters

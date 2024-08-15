@@ -420,5 +420,52 @@ classdef GaussianDistributionTest < matlab.unittest.TestCase
             GaussianDistributionTest.verifyObject(testCase, obj, ...
                 newMu, eye(dim), NaN, dim);
         end
+        
+        function testRemoveDimensions(testCase)
+            % Test 1: no prior
+            dim = 4;
+            mu = 1:dim;
+            cov = [
+                4, 2, 1, 3;
+                2, 5, 2, 1;
+                1, 2, 3, 0;
+                3, 1, 0, 6
+            ];
+            obj = GaussianDistribution(mu, cov, NaN);
+            exp = obj.E;
+
+            obj.removeDimensions([1, 3], true);
+
+            testCase.verifyTrue(obj.dim == 2);
+            testCase.verifyEqual(obj.E, [exp(2); exp(4)]);
+            testCase.verifyEqual(obj.cov, [5, 1; 1, 6]);
+            testCase.verifyEqual(obj.mu, [2; 4]);
+            testCase.verifyEqual(obj.prior, NaN);
+
+            % Test 2: with prior
+            dim = 4;
+            mu = 1:dim;
+            cov = [
+                4, 2, 1, 3;
+                2, 5, 2, 1;
+                1, 2, 3, 0;
+                3, 1, 0, 6
+            ];
+            obj = GaussianDistribution(mu, cov, GaussianDistribution(0, 5 * eye(dim)));
+            exp = obj.E;
+
+            obj.removeDimensions([1, 3], true);
+
+            testCase.verifyTrue(obj.dim == 2);
+            testCase.verifyEqual(obj.E, [exp(2); exp(4)]);
+            testCase.verifyEqual(obj.cov, [5, 1; 1, 6]);
+            testCase.verifyEqual(obj.mu, [2; 4]);
+
+            % Verify prior
+            testCase.verifyTrue(obj.prior.dim == 2);
+            testCase.verifyEqual(obj.prior.E, [0; 0]);
+            testCase.verifyEqual(obj.prior.cov, [5, 0; 0, 5]);
+            testCase.verifyEqual(obj.prior.mu, [0; 0]);
+        end
     end
 end
