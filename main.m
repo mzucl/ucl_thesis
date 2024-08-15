@@ -1,3 +1,48 @@
+% % Experiment 1
+% pathTrueW1 = fullfile(pwd, 'figures', 'trueW1.png');
+% pathTrueZ = fullfile(pwd, 'figures', 'trueZ.png');
+% 
+% pathW1 = fullfile(pwd, 'figures', 'W1.png');
+% pathZ = fullfile(pwd, 'figures', 'Z.png');
+% 
+% % Ensure the 'figures' folder exists
+% if ~exist(fullfile(pwd, 'figures'), 'dir')
+%     mkdir(fullfile(pwd, 'figures'));
+% end
+% 
+% addpath('figures');
+
+data = get_data_2g();
+D1 = size(data.X_tr{1}, 2);
+% plot_loadings(data.W{1}, D1, pathTrueW1);
+
+maxIter = 50;
+K = 10;
+X1 = data.X_tr{1};
+X2 = data.X_tr{2};
+obj =  GFA({X1', X2'}, K, maxIter);
+[elboVals, convIt, resArr] = obj.fit();
+Utility.plotStructVariables(resArr);
+
+% plot_loadings(obj.views(1).W.EC, D1, pathW1);
+
+
+% % Specify the path to save the figure
+% W_path = fullfile(pwd, 'figures', 'loading_plot.png');
+% 
+% % Ensure the 'figures' folder exists
+% if ~exist(fullfile(pwd, 'figures'), 'dir')
+%     mkdir(fullfile(pwd, 'figures'));
+% end
+% 
+% addpath('figures');
+% 
+% % Call the function
+% % plot_loadings(res.W{1}, size(res.X_tr{1}, 2), W_path);
+% Z_path = fullfile(pwd, 'figures', 'Z_path.png');
+% plot_Z(res.Z, Z_path);
+
+
 % % Parameters
 % N = 1000;  % number of samples
 % D0 = 55;   % input features
@@ -42,22 +87,24 @@
 % testResults = runtests('tests');
 
 %% Generate the toy dataset
-N = 100;
-D = 10;
-K = 10;
-noiseVariance = 0.05;
-% 
-% [X, Z, W] = Utility.generateToyDataset(N, D, K, noiseVariance); % X is DxN
-% [X2, Z2, W2] = Utility.generateToyDataset(N, D, K, noiseVariance); % X is DxN
+% N = 100;
+% D = 10;
+% K = 10;
+% noiseVariance = 0.05;
+% % 
+% % [X, Z, W] = Utility.generateToyDataset(N, D, K, noiseVariance); % X is DxN
+% % [X2, Z2, W2] = Utility.generateToyDataset(N, D, K, noiseVariance); % X is DxN
 
-profile on;
-maxIter = 100;
-obj =  GFA({X0', X1'}, K, maxIter);
-[elboVals, convIt, resArr] = obj.fit();
-profile off;
+% profile on;
+% maxIter = 100;
+% X1 = res.X_tr{1};
+% X2 = res.X_tr{2};
+% obj =  GFA({X1', X2'}, K, maxIter);
+% [elboVals, convIt, resArr] = obj.fit();
+% profile off;
 
 % View profiling results
-profile viewer;
+% profile viewer;
 
 % %% PPCA
 % W_PPCA = PPCA(X', D - 1); % PPCA expects X in NxD format
@@ -86,4 +133,4 @@ profile viewer;
 % Utility.hintonDiagram(obj.W.EC, 'BPCA');
 % hold on;
 % 
-Utility.plotStructVariables(resArr);
+% Utility.plotStructVariables(resArr);

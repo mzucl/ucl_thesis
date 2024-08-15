@@ -49,7 +49,7 @@ classdef GFAGroup < handle
             %% Model setup and initialization
             % alpha
             alphaPrior = GammaDistribution(Constants.DEFAULT_GAMMA_A, Constants.DEFAULT_GAMMA_B);
-            obj.alpha = GammaDistributionContainer(repmat(alphaPrior, obj.K, 1));
+            obj.alpha = GammaDistributionContainer(repmat(alphaPrior, obj.K.Val, 1));
 
             % tau
             tauPrior = GammaDistribution(Constants.DEFAULT_GAMMA_A, Constants.DEFAULT_GAMMA_B);
@@ -58,7 +58,7 @@ classdef GFAGroup < handle
             % W; sample from obj.alpha for the prior
             %       Should we do this? The values for alpha are so small!!!
             % wPrior = GaussianDistribution(0, diag(1./obj.alpha.Value));
-            wPrior = GaussianDistribution(0, eye(K));
+            wPrior = GaussianDistribution(0, eye(obj.K.Val));
             obj.W = GaussianDistributionContainer(obj.D, wPrior, false);
 
             % Model initialization - second part
@@ -69,7 +69,7 @@ classdef GFAGroup < handle
             %   obj.alpha.expCInit
             % ----------------------------------------------------------------
             obj.T.setExpCInit(1000 * ones(obj.D, 1));        
-            % obj.alpha.setExpCInit(repmat(1e-1, obj.K, 1));
+            obj.alpha.setExpCInit(repmat(1e-1, obj.K.Val, 1));
         end
 
 
@@ -104,9 +104,11 @@ classdef GFAGroup < handle
             % update equations. Use Utility.ternary(it == 1, ...)
             %   obj.alpha.expCInit
             %   obj.T.expInit
+            disp(['Min W value: ', num2str(min(obj.W.EC, [], 'all'))]);
+            disp(['Max W value: ', num2str(max(obj.W.EC, [], 'all'))]);
             if it > 1
                 for d = 1:obj.D
-                    covNew = Utility.matrixInverse(obj.T.E{d} * obj.Z.Tr_CtC * eye(obj.K) + ...
+                    covNew = Utility.matrixInverse(obj.T.E{d} * obj.Z.Tr_CtC * eye(obj.K.Val) + ...
                         diag(obj.alpha.EC));
                 
                     muNew = covNew * obj.T.E{d} * obj.Z.EC * obj.X.getRow(d, true);
@@ -120,7 +122,7 @@ classdef GFAGroup < handle
                 expInitAlpha = obj.alpha.getExpCInit();
 
                 for d = 1:obj.D
-                    covNew = Utility.matrixInverse(expInitT(d) * obj.Z.Tr_CtC * eye(obj.K) + ...
+                    covNew = Utility.matrixInverse(expInitT(d) * obj.Z.Tr_CtC * eye(obj.K.Val) + ...
                         diag(expInitAlpha));
                 
                     muNew = covNew * expInitT(d) * obj.Z.EC * obj.X.getRow(d, true);
@@ -134,10 +136,10 @@ classdef GFAGroup < handle
         function value = getExpectationLnW(obj)
             value = 0;
             colsNormSq = obj.W.getExpectationOfColumnsNormSq();
-            for k = 1:obj.K % TODO (high): This can be implemented as a dot product
+            for k = 1:obj.K.Val % TODO (high): This can be implemented as a dot product
                 value = value + obj.alpha.E{k} * colsNormSq(k);
             end
-            value = -1/2 * value + obj.D/2 * (obj.alpha.E_LnC - obj.K * log(2*pi));
+            value = -1/2 * value + obj.D/2 * (obj.alpha.E_LnC - obj.K.Val * log(2*pi));
         end
 
         function value = getExpectationLnPX(obj)

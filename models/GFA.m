@@ -49,7 +49,7 @@ classdef GFA < handle
             obj.M = length(data);
             obj.N = size(data{1}, 2); % Data passed in is DxN
 
-            obj.K = K;
+            obj.K = DoubleWrapper(K);
 
             % Set parameters to default values that will be updated if value is
             % provided
@@ -72,8 +72,8 @@ classdef GFA < handle
             % This means we will run the update equation for W first and
             % that we should set some values for all the moments that are
             % in those update equations.
-            initZMu = randn(obj.K, 1);
-            zPrior = GaussianDistribution(initZMu, eye(obj.K));
+            initZMu = randn(obj.K.Val, 1);
+            zPrior = GaussianDistribution(initZMu, eye(obj.K.Val));
             obj.Z = GaussianDistributionContainer(obj.N, zPrior, true);
 
             % Initialize views
@@ -92,17 +92,17 @@ classdef GFA < handle
             disp('qZUpdate');
             % Update covariance
             % All latent variables have the same covariance
-            covNew = zeros(obj.K);
+            covNew = zeros(obj.K.Val);
             for m = 1:obj.M
                 covNew = covNew + obj.views(m).W.E_Ct * ...
                     obj.views(m).T.E_Diag * obj.views(m).W.EC;
             end
-            covNew = Utility.matrixInverse(eye(obj.K) + covNew);
+            covNew = Utility.matrixInverse(eye(obj.K.Val) + covNew);
             obj.Z.updateAllDistributionsCovariance(covNew);
 
             % Update mu
             for n = 1:obj.N
-                muNew = zeros(obj.K, 1);
+                muNew = zeros(obj.K.Val, 1);
                 for m = 1:obj.M
                     muNew = muNew + obj.views(m).W.E_Ct * ...
                         obj.views(m).T.E_Diag * obj.views(m).X.getObservation(n);
@@ -141,6 +141,7 @@ classdef GFA < handle
             resArr = cell(1, obj.maxIter);
         
             for it = 1:obj.maxIter
+                obj.removeFactors();
                 obj.qWUpdate(it);
                 obj.qZUpdate();
                 obj.qAlphaUpdate();
@@ -158,7 +159,8 @@ classdef GFA < handle
                 elboVals(it) = currElbo;
 
                 if it ~= 1
-                    disp(['======= ELBO increased by: ', num2str(currElbo - elboVals(it - 1))]);
+                    disp(['======= ELBO increased in iteration ', num2str(it), ' by: ', ...
+                        num2str(currElbo - elboVals(it - 1))]);
                 end
 
                 % Check for convergence
@@ -212,6 +214,32 @@ classdef GFA < handle
             % DEBUG
             res.elbo = elbo;
             % DEBUG
+        end
+
+
+        function obj = removeFactors(obj, threshold)
+            if nargin < 2
+                threshold = Constants.LATENT_FACTORS_THRESHOLD;
+            end
+            % Calculate the average of the square of elements for each row of Z
+            avgSquare = mean(obj.Z.EC.^2, 2);
+        
+            removeIdx = find(avgSquare < threshold);
+
+            if isempty(removeIdx)
+                return;
+            end
+
+            disp(['Removed ', num2str(length(removeIdx)), ' factors!']);
+            % Update number of factors
+            obj.K.Val = obj.K.Val - length(removeIdx);
+        
+            % Remove those rows from Z, corresponding columns from W, and elements from alpha
+            obj.Z.removeDimensions(removeIdx);
+            for m = 1:obj.M
+                obj.views(m).alpha.removeDistributions(removeIdx);
+                obj.views(m).W.removeDimensions(removeIdx);
+            end
         end
     end
 end
