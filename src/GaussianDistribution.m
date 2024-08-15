@@ -359,7 +359,7 @@ classdef GaussianDistribution < handle
             obj.mu = mu;
         end
 
-        function removeDimensions(obj, indices, validateInputs)
+        function removeDimensions_(obj, indices, validateInputs)
             if validateInputs
                 if nargin < 2 || isempty(indices)
                     return; % No change
@@ -376,10 +376,14 @@ classdef GaussianDistribution < handle
 
             % Update prior
             if ~Utility.isNaN(obj.prior)
-                obj.prior.removeDimensions(indices, false);
+                obj.prior.removeDimensions_(indices, false);
             end
         end
 
+        % Just a wrapper for the function above
+        function removeDimensions(obj, indices)
+            obj.removeDimensions_(indices, true);
+        end
 
         %% Setters
         function obj = setExpInit(obj, value)

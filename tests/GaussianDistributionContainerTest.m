@@ -352,5 +352,23 @@ classdef GaussianDistributionContainerTest < matlab.unittest.TestCase
                     obj.ds(i).mu, newCov, prior, dim);
             end
         end
+        
+        function testRemoveDimensions(testCase)
+            dim = 5;
+            numDistributions = 2;
+            prior = GaussianDistribution(zeros(dim,1));
+            obj = GaussianDistributionContainer(numDistributions, prior, true);
+
+            disp(obj.E_CtC);
+
+            indices = [1, 3, 5];
+
+            obj.removeDimensions(indices);
+
+            testCase.verifyEqual(obj.Size, numDistributions);
+            for i = 1:numDistributions
+                testCase.verifyEqual(obj.ds(i).dim, 2);
+            end
+        end
     end
 end

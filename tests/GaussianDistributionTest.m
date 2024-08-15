@@ -434,7 +434,7 @@ classdef GaussianDistributionTest < matlab.unittest.TestCase
             obj = GaussianDistribution(mu, cov, NaN);
             exp = obj.E;
 
-            obj.removeDimensions([1, 3], true);
+            obj.removeDimensions([1, 3]);
 
             testCase.verifyTrue(obj.dim == 2);
             testCase.verifyEqual(obj.E, [exp(2); exp(4)]);
@@ -454,7 +454,7 @@ classdef GaussianDistributionTest < matlab.unittest.TestCase
             obj = GaussianDistribution(mu, cov, GaussianDistribution(0, 5 * eye(dim)));
             exp = obj.E;
 
-            obj.removeDimensions([1, 3], true);
+            obj.removeDimensions([1, 3]);
 
             testCase.verifyTrue(obj.dim == 2);
             testCase.verifyEqual(obj.E, [exp(2); exp(4)]);

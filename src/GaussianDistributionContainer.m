@@ -153,6 +153,15 @@ classdef GaussianDistributionContainer < handle
             end
         end
 
+        function removeDimensions(obj, indices)
+            if nargin < 2 || isempty(indices)
+                return; % No change
+            end
+
+            for i = 1:obj.Size
+                obj.ds(i).removeDimensions(indices);
+            end
+        end
 
 
         %% Setters
@@ -245,7 +254,10 @@ classdef GaussianDistributionContainer < handle
             end
         end
 
-        % Dirty fix
+        % TODO (high): This is implemented just for the cols format as it
+        % was needed for the Tr(<Z^TZ>). Implement this properly and add
+        % tests; The purpose of it is to optimize the calculation, where we
+        % don't calculate all elements of the Z^TZ product, just diagonal
         function value = get.Tr_CtC(obj)
             value = 0;
             for i = 1:obj.Size

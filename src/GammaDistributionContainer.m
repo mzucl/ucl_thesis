@@ -278,11 +278,10 @@ classdef GammaDistributionContainer < handle
 
         % Remove distributions from the container with idx in 'indices'
         function obj = removeDistributions(obj, indices)
-            if nargin < 1 || isempty(indices)
+            if nargin < 2 || isempty(indices)
                 return; % No change
             end
-            indicesValid = obj.validateIndices(indices);
-            if ~indicesValid
+            if ~obj.validateIndices(indices)
                 error(['##### ERROR IN THE CLASS ' class(obj) ': Index out of range.']); 
             end
             obj.ds(indices) = [];
