@@ -104,11 +104,11 @@ classdef GFAGroup < handle
             % update equations. Use Utility.ternary(it == 1, ...)
             %   obj.alpha.expCInit
             %   obj.T.expInit
-            disp(['Min W value: ', num2str(min(obj.W.EC, [], 'all'))]);
-            disp(['Max W value: ', num2str(max(obj.W.EC, [], 'all'))]);
+            % disp(['Min W value: ', num2str(min(obj.W.EC, [], 'all'))]);
+            % disp(['Max W value: ', num2str(max(obj.W.EC, [], 'all'))]);
             if it > 1
                 for d = 1:obj.D
-                    covNew = Utility.matrixInverse(obj.T.E{d} * obj.Z.Tr_CtC * eye(obj.K.Val) + ...
+                    covNew = Utility.matrixInverse(obj.T.E{d} * obj.Z.E_CCt * eye(obj.K.Val) + ...
                         diag(obj.alpha.EC));
                 
                     muNew = covNew * obj.T.E{d} * obj.Z.EC * obj.X.getRow(d, true);
@@ -122,7 +122,7 @@ classdef GFAGroup < handle
                 expInitAlpha = obj.alpha.getExpCInit();
 
                 for d = 1:obj.D
-                    covNew = Utility.matrixInverse(expInitT(d) * obj.Z.Tr_CtC * eye(obj.K.Val) + ...
+                    covNew = Utility.matrixInverse(expInitT(d) * obj.Z.E_CCt * eye(obj.K.Val) + ...
                         diag(expInitAlpha));
                 
                     muNew = covNew * expInitT(d) * obj.Z.EC * obj.X.getRow(d, true);

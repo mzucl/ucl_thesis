@@ -89,7 +89,7 @@ classdef GFA < handle
         %% Update methods
         % obj.Z is GaussianDistributionContainer(cols = true)
         function obj = qZUpdate(obj)
-            disp('qZUpdate');
+            % disp('qZUpdate');
             % Update covariance
             % All latent variables have the same covariance
             covNew = zeros(obj.K.Val);
@@ -113,21 +113,21 @@ classdef GFA < handle
         end
 
         function obj = qWUpdate(obj, it)
-            disp('qWUpdate');
+            % disp('qWUpdate');
             for i = 1:obj.M
                 obj.views(i).qWUpdate(it);
             end
         end
 
         function obj = qAlphaUpdate(obj)
-            disp('qAlphaUpdate');
+            % disp('qAlphaUpdate');
             for i = 1:obj.M
                 obj.views(i).qAlphaUpdate();
             end
         end
 
         function obj = qTauUpdate(obj)
-            disp('qTauUpdate');
+            % disp('qTauUpdate');
             for i = 1:obj.M
                 obj.views(i).qTauUpdate();
             end
@@ -216,7 +216,7 @@ classdef GFA < handle
             % DEBUG
         end
 
-        
+
 
         %% Additional methods
         function obj = removeFactors(obj, threshold)
