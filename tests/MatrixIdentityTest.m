@@ -108,5 +108,80 @@ classdef MatrixIdentityTest < matlab.unittest.TestCase
                 testCase.verifyEqual(sum, A*A');
             end 
         end
+
+        
+        %% ln q(W) terms when we expand the quadratic form
+        function testIdentity6(testCase)
+            % Setup
+            D = 20;
+            K = 10;
+            N = 50;
+
+            X = Utility.generateRandomIntMatrix(D, N);
+            W = Utility.generateRandomIntMatrix(D, K);
+            T = diag(diag(Utility.generateRandomIntMatrix(D, D)));
+            Z = Utility.generateRandomIntMatrix(K, N);
+
+            sum1 = 0;
+            for n = 1:N
+                sum1 = sum1 + X(:, n)' * T * W * Z(:, n);
+            end
+
+            sum2 = 0;
+            for d = 1:D
+                sum2 = sum2 + W(d, :) * T(d, d) * Z * X(d, :)';
+            end
+
+            testCase.verifyEqual(sum1, sum2);
+        end
+
+        function testIdentity7(testCase)
+            % Setup
+            D = 20;
+            K = 10;
+            N = 50;
+
+            X = Utility.generateRandomIntMatrix(D, N);
+            W = Utility.generateRandomIntMatrix(D, K);
+            T = diag(diag(Utility.generateRandomIntMatrix(D, D)));
+            Z = Utility.generateRandomIntMatrix(K, N);
+
+            sum1 = 0;
+            for n = 1:N
+                sum1 = sum1 + Z(:, n)' * W' * T * W * Z(:, n);
+            end
+
+            sum2 = 0;
+            for d = 1:D
+                sum2 = sum2 + W(d, :) * T(d, d) * (Z * Z') * W(d, :)';
+            end
+
+            testCase.verifyEqual(sum1, sum2);
+        end
+
+        function testIdentity8(testCase)
+            % Setup
+            D = 20;
+            K = 10;
+            N = 50;
+
+            X = Utility.generateRandomIntMatrix(D, N);
+            W = Utility.generateRandomIntMatrix(D, K);
+            T = diag(diag(Utility.generateRandomIntMatrix(D, D)));
+            Z = Utility.generateRandomIntMatrix(K, N);
+            alpha = Utility.generateRandomIntMatrix(K, 1);
+
+            sum1 = 0;
+            for k = 1:K
+                sum1 = sum1 + alpha(k) * W(:, k)' * W(:, k);
+            end
+
+            sum2 = 0;
+            for d = 1:D
+                sum2 = sum2 + W(d, :) * diag(alpha) * W(d, :)';
+            end
+
+            testCase.verifyEqual(sum1, sum2);
+        end
     end
 end
