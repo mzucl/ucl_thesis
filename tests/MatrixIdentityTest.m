@@ -164,11 +164,7 @@ classdef MatrixIdentityTest < matlab.unittest.TestCase
             D = 20;
             K = 10;
             N = 50;
-
-            X = Utility.generateRandomIntMatrix(D, N);
             W = Utility.generateRandomIntMatrix(D, K);
-            T = diag(diag(Utility.generateRandomIntMatrix(D, D)));
-            Z = Utility.generateRandomIntMatrix(K, N);
             alpha = Utility.generateRandomIntMatrix(K, 1);
 
             sum1 = 0;
@@ -179,6 +175,30 @@ classdef MatrixIdentityTest < matlab.unittest.TestCase
             sum2 = 0;
             for d = 1:D
                 sum2 = sum2 + W(d, :) * diag(alpha) * W(d, :)';
+            end
+
+            testCase.verifyEqual(sum1, sum2);
+        end
+
+        function testIdentity9(testCase)
+            % Setup
+            D = 20;
+            K = 10;
+            N = 50;
+            X = Utility.generateRandomIntMatrix(D, N);
+            W = Utility.generateRandomIntMatrix(D, K);
+            T = diag(diag(Utility.generateRandomIntMatrix(D, D)));
+            Z = Utility.generateRandomIntMatrix(K, N);
+
+            sum1 = 0;
+            for n = 1:N
+                sum1 = sum1 + (X(:, n) - W * Z(:, n))' * T * (X(:, n) - W * Z(:, n));
+            end
+
+            sum2 = 0;
+            temp = diag(X * X' - 2 * W * Z * X' + W * Z * Z' * W');
+            for d = 1:D
+                sum2 = sum2 + T(d, d) * temp(d);
             end
 
             testCase.verifyEqual(sum1, sum2);
