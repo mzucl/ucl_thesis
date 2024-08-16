@@ -217,10 +217,12 @@ classdef GammaDistribution < handle
             value = gammaln(obj.a) - (obj.a - 1) * psi(obj.a) - log(obj.b) + obj.a;
         end
 
+        % E[ln \tau]
         function value = get.E_Ln(obj)
             value = psi(obj.a) - log(obj.b);
         end
 
+        % E[ln p(\tau)]
         function value = get.E_LnP(obj)
             if ~isa(obj.prior, 'GammaDistribution')
                 error(['##### ERROR IN THE CLASS ' class(obj) ': Prior must be defined.']);

@@ -216,7 +216,9 @@ classdef GFA < handle
             % DEBUG
         end
 
+        
 
+        %% Additional methods
         function obj = removeFactors(obj, threshold)
             if nargin < 2
                 threshold = Constants.LATENT_FACTORS_THRESHOLD;

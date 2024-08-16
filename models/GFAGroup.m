@@ -43,8 +43,8 @@ classdef GFAGroup < handle
 
             obj.X = ViewHandler(data, featuresInCols);
             obj.Z = Z;
-            obj.K = K; % TODO(low): This can be a reference to avoid copying
-
+            obj.K = K;
+            
 
             %% Model setup and initialization
             % alpha
@@ -134,11 +134,8 @@ classdef GFAGroup < handle
         end
 
         function value = getExpectationLnW(obj)
-            value = 0;
-            colsNormSq = obj.W.getExpectationOfColumnsNormSq();
-            for k = 1:obj.K.Val % TODO (high): This can be implemented as a dot product
-                value = value + obj.alpha.E{k} * colsNormSq(k);
-            end
+            % The sum in the eq implemented as a dot product
+            value = obj.W.getExpectationOfColumnsNormSq()' * obj.alpha.EC;
             value = -1/2 * value + obj.D/2 * (obj.alpha.E_LnC - obj.K.Val * log(2*pi));
         end
 

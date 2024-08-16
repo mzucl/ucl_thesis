@@ -424,6 +424,7 @@ classdef GammaDistributionContainer < handle
             end
         end
         
+        % Returns the expectation of the container as a diagonal matrix
         function value = get.E_Diag(obj)
             value = diag(cell2mat(obj.E)');
         end

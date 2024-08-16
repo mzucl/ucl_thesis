@@ -435,6 +435,8 @@ classdef GaussianDistribution < handle
             value = obj.mu * obj.mu' + obj.cov;
         end
 
+        % [NOTE]: This formula is only valid if the prior covariance is
+        % spherical!
         function value = get.E_LnP(obj)
             value = obj.dim/2 * log(obj.PPrec / (2 * pi)) - ...
                 obj.PPrec/2 * obj.E_XtX;
