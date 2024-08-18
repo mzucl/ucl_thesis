@@ -56,6 +56,11 @@ classdef Utility
             res = all(arrayfun(@(x) isa(x, className), arr));
         end
         
+        % Check if the array is monotonically increasing
+        function isIncreasing = isMonotonicIncreasing(arr)
+            isIncreasing = all(diff(arr) > 0);
+        end
+        
         function result = ternary(cond, valTrue, valFalse)
             if cond
                 result = valTrue;
@@ -131,7 +136,7 @@ classdef Utility
 
         function invA = choleskyInverse(A)
             if ~Utility.isSquareMatrix(A)
-                error(['##### ERROR IN THE CLASS : Matrix must be square for inversion.']);
+                error('##### ERROR IN THE CLASS Utility : Matrix must be square for inversion.');
             end
             
             % Perform Cholesky decomposition
@@ -171,92 +176,6 @@ classdef Utility
             maxValue = 10;
             
             A = randi([minValue, maxValue], m, n);
-        end
-
-
-
-        %% Visualization and debugging
-        function isIncreasing = isMonotonicIncreasing(arr)
-            % Check if the array is monotonically increasing
-            isIncreasing = all(diff(arr) > 0);
-        end
-
-        function plotStructVariables(resArr, offset)
-            if nargin < 2
-                offset = 1;
-            end
-            if offset < 1
-                error(['##### ERROR IN THE CLASS Utility' ': Offset is the starting iteration, it can not be ' ...
-                    'less than 1']);
-            end
-            numIterations = length(resArr);
-            
-            % Check the first struct to get the field names
-            firstRes = resArr{1};
-            fieldNames = fieldnames(firstRes);
-            
-            numFields = length(fieldNames);
-            
-            % Determine the number of rows needed for subplots with 2 columns
-            numRows = ceil(numFields / 2);
-            
-            figure;
-            
-            for i = 1:numFields
-                subplot(numRows, 2, i);
-                
-                data = zeros(1, numIterations - (offset - 1));
-                
-                % Collect data across all iterations
-                for j = offset:numIterations
-                    data(j - (offset - 1)) = resArr{j}.(fieldNames{i});
-                end
-                
-                % Plot the data
-                plot(offset:numIterations, data, 'LineWidth', 1.5);
-                
-                % Set the title and labels
-                title(['Variable: ', fieldNames{i}]);
-                xlabel('Iteration');
-                ylabel(fieldNames{i});
-                grid on;
-            end
-            
-            % Adjust layout for better visibility
-            sgtitle('Evolution of ELBO variables over iteration');
-        end
-
-        % X is in DxN format
-        function [X, Z, W] = generateToyDataset(N, D, K, noiseVariance) % noiseVariance - Variance of the Gaussian noise
-            Z = randn(K, N);
-            W = randn(D, K); 
-        
-            % Generate the data matrix X without noise
-            X = W * Z;
-        
-            % Add Gaussian noise
-            noise = sqrt(noiseVariance) * randn(D, N);
-            X = X + noise;
-        end
-    
-        function hintonDiagram(matrix, t)
-            maxWeight = max(abs(matrix(:)));
-
-            for i = 1:size(matrix, 1)
-                for j = 1:size(matrix, 2)
-                    % Determine the size of the square
-                    weight = matrix(i, j);
-                    height = sqrt(abs(weight) / maxWeight);
-                    width = height;
-        
-                    % White for positive, black for negative
-                    color = [1 1 1] * (weight >= 0);
-        
-                    rectangle('Position', [j - width / 2, i - height / 2, width, height], 'FaceColor', color, 'EdgeColor', 'none');
-                end
-            end
-            set(gca, 'YDir', 'reverse', 'XAxisLocation', 'top');
-            title(t);
         end
     end
 end
