@@ -153,9 +153,11 @@ classdef GammaDistribution < handle
                 case 2
                     inc = false;
             end
+
             if ~Utility.isSingleNumber(a)
                 error(['##### ERROR IN THE CLASS ' class(obj) ': Parameter must be a numerical value.']);
             end
+            
             if (inc == true && obj.a + a <= 0 || inc == false && a <= 0)
                 error(['##### ERROR IN THE CLASS ' class(obj) ': Parameter a is a strictly positive number.']);
             end
@@ -217,7 +219,8 @@ classdef GammaDistribution < handle
             value = gammaln(obj.a) - (obj.a - 1) * psi(obj.a) - log(obj.b) + obj.a;
         end
 
-        % E[ln \tau]
+        % E[ln \tau]; tau is the name of the random variable (as in the Appendix), not the noise
+        % from the models;
         function value = get.E_Ln(obj)
             value = psi(obj.a) - log(obj.b);
         end

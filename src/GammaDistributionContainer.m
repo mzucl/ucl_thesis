@@ -467,7 +467,7 @@ classdef GammaDistributionContainer < handle
         function value = get.Val(obj)
             value = zeros(obj.Size, 1);
             for i = 1:obj.Size
-                value(i) = obj.ds(i).Value;
+                value(i) = obj.ds(i).Val;
             end
         end
     end

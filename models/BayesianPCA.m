@@ -65,11 +65,13 @@ classdef BayesianPCA < handle
             % that we should set some values for all the moments that are
             % in those update equations.
             initZMu = randn(obj.K, 1);
-            zPrior = GaussianDistribution(initZMu, eye(obj.K));
+            zPrior = GaussianDistribution(initZMu, 1e-6 * eye(obj.K));
+            % cols = true
             obj.Z = GaussianDistributionContainer(obj.N, zPrior, true);
 
             % mu
-            muPrior = GaussianDistribution(0, 1/Constants.DEFAULT_GAUSS_PRECISION * eye(obj.D));
+            empiricalMean = mean(obj.view.X, 2);
+            muPrior = GaussianDistribution(empiricalMean, 1/Constants.DEFAULT_GAUSS_PRECISION * eye(obj.D));
             obj.mu = GaussianDistribution(muPrior);
 
             % alpha
@@ -79,8 +81,9 @@ classdef BayesianPCA < handle
 
             % W; sample from obj.alpha for the prior
             %       Should we do this? The values for alpha are so small!!!
-            % wPrior = GaussianDistribution(0, diag(1./obj.alpha.Value));
-            wPrior = GaussianDistribution(0, eye(K));
+            % wPrior = GaussianDistribution(0, diag(1./obj.alpha.Val));
+            wPrior = GaussianDistribution(0, 1e-14 *  eye(K));
+            % cols = false
             obj.W = GaussianDistributionContainer(obj.D, wPrior, false);
             
             
@@ -96,9 +99,8 @@ classdef BayesianPCA < handle
             %   obj.alpha.expCInit
             %   obj.mu.expInit
             % ----------------------------------------------------------------
-            obj.tau.setExpInit(1e-3);
-                        
-            obj.alpha.setExpCInit(repmat(1e-1, obj.K, 1));
+            obj.tau.setExpInit(1e3);
+            obj.alpha.setExpCInit(repmat(1e-3, obj.K, 1));
             obj.mu.setExpInit(randn(obj.D, 1));
         end
 
@@ -115,7 +117,7 @@ classdef BayesianPCA < handle
             % Update mu
             for n = 1:obj.N
                 % All latent variables have the same covariance
-                muNew = obj.tau.E * obj.Z.ds(n).cov * obj.W.E_Ct * ...
+                muNew = obj.tau.E * covNew * obj.W.E_Ct * ...
                     (obj.view.getObservation(n) - obj.mu.E);
                 obj.Z.updateDistributionMu(n, muNew);
             end
@@ -140,7 +142,7 @@ classdef BayesianPCA < handle
             %   obj.mu.expInit
             if it > 1
                 % Covariance update
-                covNew = Utility.matrixInverse((diag(obj.alpha.EC)) + ...
+                covNew = Utility.matrixInverse(diag(obj.alpha.EC) + ...
                     obj.tau.E * obj.Z.E_CCt);
     
                 obj.W.updateAllDistributionsCovariance(covNew);
@@ -151,13 +153,13 @@ classdef BayesianPCA < handle
                     for n = 1:obj.N
                         muNew = muNew + obj.Z.E{n} * (obj.view.getObservationEntry(n, d) - obj.mu.E(d));
                     end
-                    muNew = obj.tau.E * obj.W.ds(d).cov * muNew;
+                    muNew = obj.tau.E * covNew * muNew;
                     obj.W.updateDistributionMu(d, muNew);
                 end   
             % First iteration - use 'expInit' instead of read expectations
             else
                 % Covariance update
-                covNew = Utility.matrixInverse((diag(obj.alpha.getExpCInit())) + ...
+                covNew = Utility.matrixInverse(diag(obj.alpha.getExpCInit()) + ...
                     obj.tau.getExpInit() * obj.Z.E_CCt);
     
                 obj.W.updateAllDistributionsCovariance(covNew);
@@ -165,11 +167,11 @@ classdef BayesianPCA < handle
                 % Mean update
                 for d = 1:obj.D
                     muNew = zeros(obj.K, 1);
+                    muExpInit = obj.mu.getExpInit();
                     for n = 1:obj.N
-                        muExpInit = obj.mu.getExpInit();
                         muNew = muNew + obj.Z.E{n} * (obj.view.getObservationEntry(n, d) - muExpInit(d));
                     end
-                    muNew = obj.tau.getExpInit() * obj.W.ds(d).cov * muNew;
+                    muNew = obj.tau.getExpInit() * covNew * muNew;
                     obj.W.updateDistributionMu(d, muNew);
                 end   
             end
@@ -185,20 +187,23 @@ classdef BayesianPCA < handle
 
         % obj.mu is GaussianDistribution
         function obj = qMuUpdate(obj)
+            % Update covariance
+            newCov = (1/(obj.mu.PPrec + obj.N * obj.tau.E)) * eye(obj.D);
+
+            % Update mu
             newMu = zeros(obj.D, 1);
            
             for n = 1:obj.N
                 newMu = newMu + obj.view.getObservation(n) - obj.W.EC * obj.Z.E{n};
             end
-            newMu = obj.tau.E * obj.mu.cov * newMu;
-            newCov = 1/(obj.mu.PPrec + obj.N * obj.tau.E) * eye(obj.D);
-
+            newMu = obj.tau.E * newCov * newMu;
+            
             obj.mu.updateParameters(newMu, newCov);
         end
 
         % obj.tau is GammaDistribution
         function obj = qTauUpdate(obj)
-            deltaA = obj.N * obj.D/2;
+            deltaA = (obj.N * obj.D)/2;
             deltaB = 0;
 
             for n = 1:obj.N
@@ -224,10 +229,12 @@ classdef BayesianPCA < handle
         
             for it = 1:obj.maxIter
                 obj.qWUpdate(it);
-                obj.qAlphaUpdate();
-                obj.qZUpdate();
-                obj.qTauUpdate();
                 obj.qMuUpdate();
+                obj.qZUpdate();
+                
+                obj.qAlphaUpdate();
+                obj.qTauUpdate();
+                
                 
 
                 [currElbo, res] = obj.computeELBO();

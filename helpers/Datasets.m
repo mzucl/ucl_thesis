@@ -6,7 +6,8 @@ classdef Datasets
                 N = 300;
                 D = 10;
                 % Standard deviations along orthogonal directions
-                stdDevs = [5, 4, 3, 2, 1, 1, 1, 1, 1, 1];
+                % stdDevs = [5, 4, 3, 2, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5];
+                stdDevs = [5, 5, 5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5];
             elseif nargin ~= 3
                 error(['##### ERROR IN THE CLASS Datasets' ': Pass either none or all three arguments.']);
             end
@@ -28,6 +29,19 @@ classdef Datasets
             
             % Generate dataset from multivariate Gaussian distribution
             X = mvnrnd(mu, TrueCovMatrix, N);
+        end
+    
+        
+
+        %% Standard scaler
+        function X_scaled = standardScaler(X)
+            % X: The input matrix of size [N x D]
+            mean_X = mean(X);
+
+            std_X = std(X);
+            
+            % Standardize the data
+            X_scaled = (X - mean_X) ./ std_X;
         end
     end
 end

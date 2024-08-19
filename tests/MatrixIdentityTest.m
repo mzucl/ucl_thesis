@@ -109,8 +109,9 @@ classdef MatrixIdentityTest < matlab.unittest.TestCase
             end 
         end
 
+
         
-        %% ln q(W) terms when we expand the quadratic form
+        %% ln q(W) terms when we expand the quadratic form for GFA model
         function testIdentity6(testCase)
             % Setup
             D = 20;
@@ -180,7 +181,30 @@ classdef MatrixIdentityTest < matlab.unittest.TestCase
             testCase.verifyEqual(sum1, sum2);
         end
 
+
+
+        %% Expectation in q(alpha) for GFA model
         function testIdentity9(testCase)
+            % Setup
+            D = 20;
+            K = 10;
+            N = 50;
+            X = Utility.generateRandomIntMatrix(D, N);
+            W = Utility.generateRandomIntMatrix(D, K);
+            Z = Utility.generateRandomIntMatrix(K, N);
+
+            sum = 0;
+            for n = 1:N
+                sum = sum + X(:, n) * X(:, n)' - 2 * W * Z(:, n) * X(:, n)' + ...
+                W * Z(:, n) * Z(:, n)' * W';
+            end
+
+            expr = X * X' - 2 * W * Z * X' + W * (Z * Z') * W';
+
+            testCase.verifyEqual(sum, expr);
+        end
+
+        function testIdentity10(testCase)
             % Setup
             D = 20;
             K = 10;
@@ -202,6 +226,31 @@ classdef MatrixIdentityTest < matlab.unittest.TestCase
             end
 
             testCase.verifyEqual(sum1, sum2);
+        end
+
+
+        %% Sum in E[ln p(X | Z, W, mu, tau)]
+        function testIdentity11(testCase)
+            % Setup
+            D = 20;
+            K = 10;
+            N = 50;
+            X = Utility.generateRandomIntMatrix(D, N);
+            W = Utility.generateRandomIntMatrix(D, K);
+            T = diag(diag(Utility.generateRandomIntMatrix(D, D)));
+            Z = Utility.generateRandomIntMatrix(K, N);
+            mu = Utility.generateRandomIntMatrix(D, 1);
+
+            sum = 0;
+            for n = 1:N
+                el = X(:, n) - W * Z(:, n) - mu;
+                sum = sum + el' * el;
+            end
+
+            expr = trace(X' * X) - 2 * trace(W * Z * X') - 2 * mu' * X * ones(N, 1) ...
+                + 2 * mu' * W * Z * ones(N, 1) + trace(W' * W * Z * Z') + N * mu' * mu;
+
+            testCase.verifyEqual(sum, expr);
         end
     end
 end

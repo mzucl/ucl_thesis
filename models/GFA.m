@@ -141,7 +141,7 @@ classdef GFA < handle
             resArr = cell(1, obj.maxIter);
         
             for it = 1:obj.maxIter
-                obj.removeFactors();
+                obj.removeFactors(it);
                 obj.qWUpdate(it);
                 obj.qZUpdate();
                 obj.qAlphaUpdate();
@@ -219,8 +219,8 @@ classdef GFA < handle
 
 
         %% Additional methods
-        function obj = removeFactors(obj, threshold)
-            if nargin < 2
+        function obj = removeFactors(obj, it, threshold)
+            if nargin < 3
                 threshold = Constants.LATENT_FACTORS_THRESHOLD;
             end
             % Calculate the average of the square of elements for each row of Z
@@ -232,7 +232,7 @@ classdef GFA < handle
                 return;
             end
 
-            disp(['Removed ', num2str(length(removeIdx)), ' factors!']);
+            disp(['Removed ', num2str(length(removeIdx)), ' factors in iteration ', num2str(it)]);
             % Update number of factors
             obj.K.Val = obj.K.Val - length(removeIdx);
         
