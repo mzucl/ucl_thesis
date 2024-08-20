@@ -45,18 +45,20 @@ classdef GaussianDistributionContainer < handle
     % (numDistributions, prior, cols)   -> Creates a container with
     % the specified format ('cols') and specified number of components
     % ('numDistributions') where each component is a GaussianDistribution
-    % instance defined by the prior (SINGLE prior used for all components)
-
+    % instance defined by the 'priors' (either SINGLE prior used for all components or 
+    % each component has its OWN prior, in which case the length(priors) must be equal to
+    % the 'numDistributions').
     methods
         %% Constructors
-        function obj = GaussianDistributionContainer(numDistributions, prior, cols)
-            % [NOTE] For now we have only three parameters constructor 
+        function obj = GaussianDistributionContainer(numDistributions, priors, cols)
+            % [NOTE] 'priors' can't be NaN because it is used to infer the
+            % information about the distributions!
             if nargin < 3
                 error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
             else
-                validParams = isnumeric(numDistributions) && isscalar(prior) && ...
-                    Utility.isNaNOrInstanceOf(prior, 'GaussianDistribution') && ...
-                    ~Utility.isNaN(prior) && islogical(cols);
+                validParams = isnumeric(numDistributions) && islogical(cols) && ...
+                    Utility.areAllInstancesOf(priors, 'GaussianDistribution') && ...
+                    (isscalar(priors) || length(priors) == numDistributions);
 
                 if ~validParams
                     error(['##### ERROR IN THE CLASS ' class(obj) ': Invalid parameters.']);
@@ -65,7 +67,8 @@ classdef GaussianDistributionContainer < handle
                 obj.cols = cols;
                 obj.ds = repmat(GaussianDistribution(), numDistributions, 1); % Preallocate
                 for i = 1:numDistributions
-                    obj.ds(i) = GaussianDistribution(prior);
+                    obj.ds(i) = Utility.ternaryOpt(isscalar(priors), ...
+                            @() GaussianDistribution(priors), @() GaussianDistribution(priors(i)));
                 end
             end
 
