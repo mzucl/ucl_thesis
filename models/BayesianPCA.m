@@ -29,32 +29,29 @@ classdef BayesianPCA < handle
     end
     
     methods
-        function obj = BayesianPCA(X, K, maxIter, tol)
+        function obj = BayesianPCA(X, maxIter, tol)
+            % Optional parameters: maxIter, tol
             if nargin < 1
                 error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
+            elseif nargin > 3
+                error(['##### ERROR IN THE CLASS ' class(obj) ': Too many arguments passed.']);
             end
             
             % Set obj.X right away, so it can be used below to set obj.K
             obj.view = ViewHandler(X, false);
 
-            % Set parameters to default values that will be updated if value is
-            % provided
+            % BPCA can infer the right number of components
+            obj.K = obj.D - 1;
+
+            % Set default values
             obj.maxIter = Constants.DEFAULT_MAX_ITER;
             obj.tol = Constants.DEFAULT_TOL;
 
-            % Optional parameters: maxIter, tol
-            switch nargin
-                case 1
-                    obj.K = obj.D - 1;
-                case 2
-                    obj.K = K;
-                case 3
-                    obj.K = K;
-                    obj.maxIter = maxIter;
-                case 4
-                    obj.K = K;
-                    obj.maxIter = maxIter;
+            if nargin > 1
+                obj.maxIter = maxIter;
+                if nargin > 2
                     obj.tol = tol;
+                end
             end
 
             %% Model setup and initialization
@@ -65,28 +62,36 @@ classdef BayesianPCA < handle
             % that we should set some values for all the moments that are
             % in those update equations.
             initZMu = randn(obj.K, 1);
-            zPrior = GaussianDistribution(initZMu, 1e-6 * eye(obj.K));
-            % cols = true
-            obj.Z = GaussianDistributionContainer(obj.N, zPrior, true);
+            zPrior = GaussianDistribution(initZMu, eye(obj.K));
+            obj.Z = GaussianDistributionContainer(obj.N, zPrior, true);            % cols = true
 
             % mu
-            empiricalMean = mean(obj.view.X, 2);
-            muPrior = GaussianDistribution(empiricalMean, 1/Constants.DEFAULT_GAUSS_PRECISION * eye(obj.D));
+            % empiricalMean = mean(obj.view.X, 2);
+            muPrior = GaussianDistribution(0, 1/Constants.DEFAULT_GAUSS_PRECISION * eye(obj.D));
             obj.mu = GaussianDistribution(muPrior);
 
             % alpha
             alphaPrior = GammaDistribution(Constants.DEFAULT_GAMMA_A, Constants.DEFAULT_GAMMA_B);
-            obj.alpha = GammaDistributionContainer(repmat(alphaPrior, K, 1));
+            obj.alpha = GammaDistributionContainer(repmat(alphaPrior, obj.K, 1));
             
 
-            % W; sample from obj.alpha for the prior
+            % W 
+            % Sample from obj.alpha for the prior
             %       Should we do this? The values for alpha are so small!!!
             % wPrior = GaussianDistribution(0, diag(1./obj.alpha.Val));
-            wPrior = GaussianDistribution(0, 1e-14 *  eye(K));
-            % cols = false
-            obj.W = GaussianDistributionContainer(obj.D, wPrior, false);
+
+            % Use PPCA result as an initial point
+            [W_PPCA, sigmaSq] = PPCA(obj.view.X', obj.D - 1);
             
+            wPriors = repmat(GaussianDistribution(), obj.D, 1); % Preallocate
+            wPrior = GaussianDistribution(randn(obj.K, 1), 1e-3 * eye(obj.K));
+            for d = 1:obj.D
+                wPriors(d) = GaussianDistribution(W_PPCA(d, :), 1e-3 * eye(obj.K));
+            end
+
+            obj.W = GaussianDistributionContainer(obj.D, wPrior, false);    % cols = false
             
+
             % tau
             tauPrior = GammaDistribution(Constants.DEFAULT_GAMMA_A, Constants.DEFAULT_GAMMA_B);
             obj.tau = GammaDistribution(tauPrior);
@@ -99,7 +104,7 @@ classdef BayesianPCA < handle
             %   obj.alpha.expCInit
             %   obj.mu.expInit
             % ----------------------------------------------------------------
-            obj.tau.setExpInit(1e3);
+            obj.tau.setExpInit(1 / sigmaSq);
             obj.alpha.setExpCInit(repmat(1e-3, obj.K, 1));
             obj.mu.setExpInit(randn(obj.D, 1));
         end
@@ -108,27 +113,23 @@ classdef BayesianPCA < handle
         
         %% Update methods
         % obj.Z is GaussianDistributionContainer(cols = true)
-        function obj = qZUpdate(obj)
-            % Update covariance
-            covNew = Utility.matrixInverse(eye(obj.K) + obj.tau.E * ... 
-                obj.W.E_CtC);
-            obj.Z.updateAllDistributionsCovariance(covNew);
+        function obj = qZUpdate(obj, it)
+            tauExp = Utility.ternary(it == 1, obj.tau.getExpInit(), obj.tau.E);
+            muExp = Utility.ternary(it == 1, obj.mu.getExpInit(), obj.mu.E);
 
-            % Update mu
-            for n = 1:obj.N
-                % All latent variables have the same covariance
-                muNew = obj.tau.E * covNew * obj.W.E_Ct * ...
-                    (obj.view.getObservation(n) - obj.mu.E);
-                obj.Z.updateDistributionMu(n, muNew);
-            end
+            covNew = Utility.matrixInverse(eye(obj.K) + tauExp * obj.W.E_CtC);
+            obj.Z.updateAllDistributionsCovariance(covNew);
+    
+            obj.Z.updateAllDistributionsMu(tauExp * covNew * obj.W.E_Ct * ...
+                (obj.view.X - muExp));
         end
         
         % obj.W is GaussianDistributionContainer(cols = false)
         % [NOTE] Initial distribution is defined per columns of W, but
             % update equations are defined per rows
         function obj = qWUpdate(obj, it)
-            disp(['Min W value: ', num2str(min(obj.W.EC, [], 'all'))]);
-            disp(['Max W value: ', num2str(max(obj.W.EC, [], 'all'))]);
+            % disp(['Min W value: ', num2str(min(obj.W.EC, [], 'all'))]);
+            % disp(['Max W value: ', num2str(max(obj.W.EC, [], 'all'))]);
             
             % In the first iteration we perform the update based on the
             % initialized moments of tau, mu and alpha, and in every
@@ -142,7 +143,7 @@ classdef BayesianPCA < handle
             %   obj.mu.expInit
             if it > 1
                 % Covariance update
-                covNew = Utility.matrixInverse(diag(obj.alpha.EC) + ...
+                covNew = Utility.choleskyInverse(diag(obj.alpha.EC) + ...
                     obj.tau.E * obj.Z.E_CCt);
     
                 obj.W.updateAllDistributionsCovariance(covNew);
@@ -228,13 +229,31 @@ classdef BayesianPCA < handle
             resArr = cell(1, obj.maxIter);
         
             for it = 1:obj.maxIter
+                tic;
+                obj.qZUpdate(it);
+                elapsedTime = toc;
+                fprintf('Elapsed time qZUpdate: %.4f seconds\n', elapsedTime);
+
+                tic;
                 obj.qWUpdate(it);
+                elapsedTime = toc;
+                fprintf('Elapsed time qWUpdate: %.4f seconds\n', elapsedTime);
+
+                tic;
                 obj.qMuUpdate();
-                obj.qZUpdate();
-                
+                elapsedTime = toc;
+                fprintf('Elapsed time qMuUpdate: %.4f seconds\n', elapsedTime);
+
+                tic;
                 obj.qAlphaUpdate();
+                elapsedTime = toc;
+                fprintf('Elapsed time qAlphaUpdate: %.4f seconds\n', elapsedTime);
+
+                tic;
                 obj.qTauUpdate();
-                
+                elapsedTime = toc;
+                fprintf('Elapsed time qTauUpdate: %.4f seconds\n', elapsedTime);
+
                 
 
                 [currElbo, res] = obj.computeELBO();
@@ -298,12 +317,8 @@ classdef BayesianPCA < handle
         end
 
         function value = getExpectationLnW(obj)
-            value = 0;
-            colsNormSq = obj.W.getExpectationOfColumnsNormSq();
-            for k = 1:obj.K % TODO (high): This can be implemented as a dot product
-                value = value + obj.alpha.E{k} * colsNormSq(k);
-            end
-            value = -1/2 * value + obj.D/2 * (obj.alpha.E_LnC - obj.K * log(2*pi));
+            value = -1/2 * obj.W.getExpectationOfColumnsNormSq()' * obj.alpha.EC + ...
+                + obj.D/2 * (obj.alpha.E_LnC - obj.K * log(2*pi));
         end
 
         %% Getters

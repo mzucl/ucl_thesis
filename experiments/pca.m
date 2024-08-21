@@ -1,17 +1,24 @@
 [X, D] = Datasets.generateBPCA();
 
 %% PPCA
-W_PPCA = PPCA(X, D - 1); % PPCA expects X in NxD format
+[W_PPCA, sigmaSq] = PPCA(X, D - 1); % PPCA expects X in [N x D] format
 
 
 %% BPCA
-K = D - 1; % dim - 1, because BPCA can infer effective number of components
 numIter = 500;
 
-% BayesianPCA constructor expects data in DxN format
-bpcaModel = BayesianPCA(X', K, numIter); 
+profile on;
+
+% BayesianPCA constructor expects data in [D x N] format
+bpcaModel = BayesianPCA(X', numIter); 
 [elboVals, convIt, resArr] = bpcaModel.fit();
 
+profile off;
+profile viewer;
+
+
+
+%% Visualize
 figure;
 
 ax1 = subplot(1, 2, 1);

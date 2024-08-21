@@ -4,6 +4,9 @@ classdef GaussianDistributionContainer < handle
         cols                %   - 'true' when distributions describe columns of a matrix
                             %   - 'false' when they describe rows. This is important
                             % when the dependent properties are calculated
+        sameCov             % Set this flag to true if all distributions have the same
+                            % covariance, which is the case for Z and W in
+                            % BPCA model;
     end
     
     properties (Dependent)
@@ -187,6 +190,21 @@ classdef GaussianDistributionContainer < handle
             
             for i=1:obj.Size
                 obj.ds(i).updateCovariance(cov);
+            end
+        end
+
+        % TODO(high): Consider holding mu for all distributions in a
+        % matrix! 
+
+        % 'MU' is a matrix that has 'mu' for each distribution in its
+        % columns
+        function obj = updateAllDistributionsMu(obj, MU)
+            if size(MU, 2) ~= obj.Size || size(MU, 1) ~= obj.ds(1).dim
+                error(['##### ERROR IN THE CLASS ' class(obj) ': Invalid arguments.']);
+            end
+
+            for i=1:obj.Size
+                obj.ds(i).updateMu(MU(:, i));
             end
         end
 
