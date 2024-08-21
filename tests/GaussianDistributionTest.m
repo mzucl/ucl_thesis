@@ -420,6 +420,31 @@ classdef GaussianDistributionTest < matlab.unittest.TestCase
             GaussianDistributionTest.verifyObject(testCase, obj, ...
                 newMu, eye(dim), NaN, dim);
         end
+
+        function testRotateUpdates(testCase)
+            dim = 4;
+            mu = 1:dim;
+            cov = [
+                4, 2, 1, 3;
+                2, 5, 2, 1;
+                1, 2, 3, 0;
+                3, 1, 0, 6
+            ];
+            obj = GaussianDistribution(mu, cov, NaN);
+
+            R = Utility.generateRandomRotationMatrix(dim);
+            obj.rotateMu(R);
+
+            testCase.verifyEqual(obj.mu, R * mu');
+
+            obj.rotateCovariance(R, true); % RtCovR
+            testCase.verifyEqual(obj.cov, R' * cov * R);
+
+            % Change the 'cov' back
+            obj.updateCovariance(cov);
+            obj.rotateCovariance(R, false); % RtCovR
+            testCase.verifyEqual(obj.cov, R * cov * R');
+        end
         
         function testRemoveDimensions(testCase)
             % Test 1: no prior

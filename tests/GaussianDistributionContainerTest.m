@@ -76,6 +76,9 @@ classdef GaussianDistributionContainerTest < matlab.unittest.TestCase
             testCase.verifyEqual(obj.EC, expectedVal);
             testCase.verifyEqual(obj.E_Ct, expectedVal');
             testCase.verifyEqual(obj.E_CtC, [[2, 0, 0]; [0, 6, 3]; [0, 3, 17]]);
+            
+            testCase.verifyTrue(Utility.isSymmetricMatrix(obj.E_CtC));
+            testCase.verifyTrue(Utility.isSymmetricMatrix(obj.E_CCt));
 
             % [!!!]
             colSqNorm = obj.getExpectationOfColumnsNormSq();
@@ -87,6 +90,9 @@ classdef GaussianDistributionContainerTest < matlab.unittest.TestCase
 
             colSqNorm = obj.getExpectationOfColumnsNormSq();
             testCase.verifyEqual(colSqNorm, [84; 6; 17]);
+
+            testCase.verifyTrue(Utility.isSymmetricMatrix(obj.E_CtC));
+            testCase.verifyTrue(Utility.isSymmetricMatrix(obj.E_CCt));
         end
         
         % cols = true
@@ -128,6 +134,9 @@ classdef GaussianDistributionContainerTest < matlab.unittest.TestCase
 
             testCase.verifyEqual(obj.E_CCt, obj.ds(1).E_XXt + obj.ds(2).E_XXt + ...
                 obj.ds(3).E_XXt + obj.ds(4).E_XXt)
+
+            testCase.verifyTrue(Utility.isSymmetricMatrix(obj.E_CtC));
+            testCase.verifyTrue(Utility.isSymmetricMatrix(obj.E_CCt));
         end
 
         function testDependentPropertiesRowFormat(testCase)
@@ -172,12 +181,17 @@ classdef GaussianDistributionContainerTest < matlab.unittest.TestCase
             colSqNorm = obj.getExpectationOfColumnsNormSq();
             testCase.verifyEqual(colSqNorm, [15; 10]);
 
+            testCase.verifyTrue(Utility.isSymmetricMatrix(obj.E_CtC));
+            testCase.verifyTrue(Utility.isSymmetricMatrix(obj.E_CCt));
+
             % Test 2: Same test when none of the ds are st. normal
             obj.updateDistributionParams(1, [5; 7], [3, 4; 4, 7]);
             testCase.verifyEqual(obj.E_CtC, [[42, 43]; [43, 65]]);
 
             colSqNorm = obj.getExpectationOfColumnsNormSq();
             testCase.verifyEqual(colSqNorm, [42; 65]);
+            testCase.verifyTrue(Utility.isSymmetricMatrix(obj.E_CtC));
+            testCase.verifyTrue(Utility.isSymmetricMatrix(obj.E_CCt));
         end
 
         % cols = false
@@ -219,6 +233,9 @@ classdef GaussianDistributionContainerTest < matlab.unittest.TestCase
             % [!!!]
             colSqNorm = obj.getExpectationOfColumnsNormSq();
             testCase.verifyEqual(colSqNorm, [13; 16; 40]);
+
+            testCase.verifyTrue(Utility.isSymmetricMatrix(obj.E_CtC));
+            testCase.verifyTrue(Utility.isSymmetricMatrix(obj.E_CCt));
         end
 
         % TODO (high): Implement this properly, for now it works for cols
