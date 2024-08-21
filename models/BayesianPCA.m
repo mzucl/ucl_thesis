@@ -123,72 +123,36 @@ classdef BayesianPCA < handle
                 (obj.view.X - muExp));
         end
         
-        % [NOTE] Initial distribution is defined per columns of W, but
-        % update equations are defined per rows
         function obj = qWUpdate(obj, it)
-            % disp(['Min W value: ', num2str(min(obj.W.EC, [], 'all'))]);
-            % disp(['Max W value: ', num2str(max(obj.W.EC, [], 'all'))]);
-            
-            % In the first iteration we perform the update based on the
-            % initialized moments of tau, mu and alpha, and in every
-            % subsequent iteration we use the 'normal' update equations
+            alphaExp = Utility.ternary(it == 1, obj.alpha.getExpCInit(), obj.alpha.EC);
+            tauExp = Utility.ternary(it == 1, obj.tau.getExpInit(), obj.tau.E);
+            muExp = Utility.ternary(it == 1, obj.mu.getExpInit(), obj.mu.E);
 
-            % TODO (medium): DRY this code: define the vars for the values
-            % that are different based on the value of 'it' before the
-            % update equations. Use Utility.ternary(it == 1, ...)
-            %   obj.alpha.expCInit
-            %   obj.tau.expInit
-            %   obj.mu.expInit
-            if it > 1
-                % Covariance update
-                covNew = Utility.choleskyInverse(diag(obj.alpha.EC) + ...
-                    obj.tau.E * obj.Z.E_CCt);
+            covNew = Utility.choleskyInverse(diag(alphaExp) + tauExp * obj.Z.E_CCt);
     
-                obj.W.updateAllDistributionsCovariance(covNew);
-    
-                % Mean update
-                for d = 1:obj.D
-                    muNew = zeros(obj.K, 1);
-                    for n = 1:obj.N
-                        muNew = muNew + obj.Z.E{n} * (obj.view.getObservationEntry(n, d) - obj.mu.E(d));
-                    end
-                    muNew = obj.tau.E * covNew * muNew;
-                    obj.W.updateDistributionMu(d, muNew);
-                end   
-            % First iteration - use 'expInit' instead of read expectations
-            else
-                % Covariance update
-                covNew = Utility.matrixInverse(diag(obj.alpha.getExpCInit()) + ...
-                    obj.tau.getExpInit() * obj.Z.E_CCt);
-    
-                obj.W.updateAllDistributionsCovariance(covNew);
-    
-                % Mean update
-                for d = 1:obj.D
-                    muNew = zeros(obj.K, 1);
-                    muExpInit = obj.mu.getExpInit();
-                    for n = 1:obj.N
-                        muNew = muNew + obj.Z.E{n} * (obj.view.getObservationEntry(n, d) - muExpInit(d));
-                    end
-                    muNew = obj.tau.getExpInit() * covNew * muNew;
-                    obj.W.updateDistributionMu(d, muNew);
-                end   
-            end
+            obj.W.updateAllDistributionsCovariance(covNew);
+
+            obj.W.updateAllDistributionsMu(tauExp * covNew * obj.Z.EC * ...
+                (obj.view.X' - muExp'));
         end
 
-        % obj.alpha is GammaDistributionContainer
-        function obj = qAlphaUpdate(obj)
-            newAVal = obj.alpha.ds(1).prior.a + obj.D/2; % All 'a' values are the same
+        function obj = qAlphaUpdate(obj, it)
+            % Alpha is updated to the same value through the iterations, so
+            % it is enough to update it once
+            if it == 1
+                newAVal = obj.alpha.ds(1).prior.a + obj.D/2;
+                obj.alpha.updateAllDistributionsA(newAVal);
+            end
+            
             newBVals = obj.alpha.ds(1).prior.b + 1/2 * obj.W.getExpectationOfColumnsNormSq();
 
-            obj.alpha.updateAllDistributionsParams(newAVal, newBVals);
+            obj.alpha.updateAllDistributionsB(newBVals);
         end
 
         function obj = qMuUpdate(obj)
             tauExp = obj.tau.E;
 
             newCov = (1/(obj.mu.PPrec + obj.N * tauExp)) * eye(obj.D);
-
             newMu = tauExp * newCov * (obj.view.X - obj.W.EC * obj.Z.EC) * ones(obj.N, 1);
 
             obj.mu.updateParameters(newMu, newCov);
@@ -237,7 +201,7 @@ classdef BayesianPCA < handle
                 fprintf('Elapsed time qMuUpdate: %.4f seconds\n', elapsedTime);
 
                 tic;
-                obj.qAlphaUpdate();
+                obj.qAlphaUpdate(it);
                 elapsedTime = toc;
                 fprintf('Elapsed time qAlphaUpdate: %.4f seconds\n', elapsedTime);
 
