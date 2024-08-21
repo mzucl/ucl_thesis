@@ -202,6 +202,9 @@ classdef GammaDistribution < handle
             value = obj.expInit;
         end
 
+        
+
+        %% Dependent properties
         function value = get.E(obj)
             value = obj.a / obj.b;
         end

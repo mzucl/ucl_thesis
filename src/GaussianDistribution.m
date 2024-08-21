@@ -359,6 +359,40 @@ classdef GaussianDistribution < handle
             obj.mu = mu;
         end
 
+        function obj = rotateMu(obj, R)
+            if nargin < 2
+                error(['##### ERROR IN THE THE CLASS ' class(obj) ': Too few arguments passed.']);
+            end
+
+            % if ~Utility.isRotationMatrix(R)
+            %     error(['##### ERROR IN THE THE CLASS ' class(obj) ': R is not a valid rotation matrix.']);
+            % end
+
+            if size(R, 1) ~= size(obj.mu, 1)
+                error(['##### ERROR IN THE THE CLASS ' class(obj) ': Dimensions do not match.']);
+            end
+            
+            obj.mu = R * obj.mu;
+        end
+
+        function obj = rotateCovariance(obj, R, RtCovR)
+            if nargin < 2
+                error(['##### ERROR IN THE THE CLASS ' class(obj) ': Too few arguments passed.']);
+            end
+
+            % if ~Utility.isRotationMatrix(R)
+            %     error(['##### ERROR IN THE THE CLASS ' class(obj) ': R is not a valid rotation matrix.']);
+            % end
+
+            % It is enough to check one size becaue both matrices are
+            % symmetric
+            if size(R, 1) ~= size(obj.cov, 1)
+                error(['##### ERROR IN THE THE CLASS ' class(obj) ': Dimensions do not match.']);
+            end
+            
+            obj.cov = Utility.ternary(RtCovR, R' * obj.cov * R, R * obj.cov * R');
+        end
+
         function removeDimensions_(obj, indices, validateInputs)
             if validateInputs
                 if nargin < 2 || isempty(indices)
@@ -385,6 +419,8 @@ classdef GaussianDistribution < handle
             obj.removeDimensions_(indices, true);
         end
 
+
+
         %% Setters
         function obj = setExpInit(obj, value)
             obj.expInit = value;
@@ -398,6 +434,9 @@ classdef GaussianDistribution < handle
             value = obj.expInit;
         end
 
+
+
+        %% Dependent properties
         function value = get.E(obj)
             value = obj.mu;
         end

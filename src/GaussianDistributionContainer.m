@@ -38,6 +38,40 @@ classdef GaussianDistributionContainer < handle
                 error(['##### ERROR IN THE CLASS ' class(obj) ': Index out of range.']); 
             end
         end
+
+        % [!!!] Dependent on 'cols'
+        function value = getContainerExpectations(obj, CtC)
+            if (obj.cols && CtC) || (~obj.cols && ~CtC)
+                value = zeros(obj.Size, obj.Size);
+                % MATLAB stores data in column-major order
+                for j = 1:obj.Size
+                    for i = 1:obj.Size
+                        % 
+                        % [NOTE] E[Wt * W] is a matrix where each entry is e.g. E[w1^T *
+                        % w2] (w1 and w2 are columns of the matrix W and there
+                        % are independent random variable). Given the
+                        % independence this is E[w1^T]E[w2], but when i == j
+                        % then the independence doesn't hold and in that case
+                        % we should use E_XtX from the GaussianDistribution class.
+                        %
+                        if i < j
+                            value(i, j) = value(j, i); % Matrix is symmetric
+                        elseif i ~= j
+                            value(i, j) = obj.ds(i).E_Xt * ...
+                            obj.ds(j).E;
+                        else 
+                            value(i, j) = obj.ds(i).E_XtX;
+                        end
+                    end
+                end
+            else
+                dim = obj.ds(1).dim; % They are all of the same dimension
+                value = zeros(dim, dim);
+                for i = 1:obj.Size
+                    value = value + obj.ds(i).E_XXt;
+                end
+            end
+        end
     end
 
     %% Options for the constructor GaussianDistributionContainer
@@ -156,6 +190,28 @@ classdef GaussianDistributionContainer < handle
             end
         end
 
+        function obj = rotateAllDistributionsMu(obj, R)
+            if nargin < 2
+                error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
+            end
+            for i = 1:obj.Size
+                obj.ds(i).rotateMu(R);
+            end
+        end
+
+        function obj = rotateAllDistributionsCovariance(obj, R, RtCovR)
+            % Update covariance of all distributions
+            % if(RtCovR = true) -> R' * cov * R
+            % else              -> R * cov * R'
+            if nargin < 3
+                error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
+            end
+            
+            for i=1:obj.Size
+                obj.ds(i).rotateCovariance(R, RtCovR);
+            end
+        end
+
         function removeDimensions(obj, indices)
             if nargin < 2 || isempty(indices)
                 return; % No change
@@ -226,35 +282,12 @@ classdef GaussianDistributionContainer < handle
             value = obj.EC';
         end
 
-        % TODO (high): Refactor this and the one below this - the code is
-        % the same!
         function value = get.E_CCt(obj)
-            if obj.cols
-                dim = obj.ds(1).dim; % They are all of the same dimension
-                value = zeros(dim, dim);
-                for i = 1:obj.Size
-                    value = value + obj.ds(i).E_XXt;
-                end
-            else
-                value = zeros(obj.Size, obj.Size);
-                for i = 1:obj.Size
-                    for j = 1:obj.Size
-                        % [NOTE] E[Wt * W] is a matrix where each entry is e.g. E[w1^T *
-                        % w2] (w1 and w2 are columns of the matrix W and there
-                        % are independent random variable). Given the
-                        % independence this is E[w1^T]E[w2], but when i == j
-                        % then the independence doesn't hold and in that case
-                        % we should use E_XtX from the
-                        % GaussianDistribution class.
-                        if i ~= j
-                            value(i, j) = obj.ds(i).E_Xt * ...
-                            obj.ds(j).E;
-                        else 
-                            value(i, j) = obj.ds(i).E_XtX;
-                        end
-                    end
-                end
-            end
+            value = obj.getContainerExpectations(false); % CtC
+        end
+
+        function value = get.E_CtC(obj)
+            value = obj.getContainerExpectations(true); % CtC
         end
 
         % TODO (high): This is implemented just for the cols format as it
@@ -265,36 +298,6 @@ classdef GaussianDistributionContainer < handle
             value = 0;
             for i = 1:obj.Size
                 value = value + obj.ds(i).E_XtX;
-            end
-        end
-        
-        % [!!!] Dependent on 'cols'
-        function value = get.E_CtC(obj)
-            if obj.cols
-                value = zeros(obj.Size, obj.Size);
-                for i = 1:obj.Size
-                    for j = 1:obj.Size
-                        % [NOTE] E[Wt * W] is a matrix where each entry is e.g. E[w1^T *
-                        % w2] (w1 and w2 are columns of the matrix W and there
-                        % are independent random variable). Given the
-                        % independence this is E[w1^T]E[w2], but when i == j
-                        % then the independence doesn't hold and in that case
-                        % we should use E_XtX from the
-                        % GaussianDistribution class.
-                        if i ~= j
-                            value(i, j) = obj.ds(i).E_Xt * ...
-                            obj.ds(j).E;
-                        else 
-                            value(i, j) = obj.ds(i).E_XtX;
-                        end
-                    end
-                end
-            else
-                dim = obj.ds(1).dim; % They are all of the same dimension
-                value = zeros(dim, dim);
-                for i = 1:obj.Size
-                    value = value + obj.ds(i).E_XXt;
-                end
             end
         end
 
