@@ -119,9 +119,21 @@ classdef MatrixIdentityTest < matlab.unittest.TestCase
                 testCase.verifyEqual(trace(A' * A), dot(A(:), A(:)));
             end 
         end
-
-
         
+        function testIdentity5_2(testCase)
+            %% trace(A * B) = dot(A'(:), B(:))
+            mVals = [5, 5, 2, 10];
+            nVals = [5, 3, 7, 10];
+            for i = 1:length(mVals)
+                A = Utility.generateRandomIntMatrix(mVals(i), nVals(i));
+                B = Utility.generateRandomIntMatrix(nVals(i), mVals(i));
+
+                A_tr = A';
+                testCase.verifyEqual(trace(A * B), dot(A_tr(:), B(:)));
+            end 
+        end
+
+
         
         %% ln q(W) terms when we expand the quadratic form for GFA model
         function testIdentity6(testCase)
@@ -357,6 +369,31 @@ classdef MatrixIdentityTest < matlab.unittest.TestCase
                 mu' * W * Z * ones(N, 1) - trace(W * Z * X') - mu' * X * ones(N, 1);
 
             testCase.verifyEqual(sum, res);
+        end
+
+        % Vectorization for qTauUpdate in BPCA model - second step
+        function testIdentity16(testCase)
+            % Setup
+            D = 20;
+            K = 10;
+            N = 50;
+            X = Utility.generateRandomIntMatrix(D, N);
+            Z = Utility.generateRandomIntMatrix(K, N);
+            mu = Utility.generateRandomIntMatrix(D, 1);
+            W = Utility.generateRandomIntMatrix(D, K);
+
+            % Vectorized, but not optimized
+            res1 = 1/2 * trace(X' * X) + N/2 * dot(mu, mu) + 1/2 * trace((W' * W) * (Z * Z')) + ...
+                mu' * W * Z * ones(N, 1) - trace(W * Z * X') - mu' * X * ones(N, 1);
+            
+            WtW = (W' * W)'; % This can be optimized, but the purpose here is to test identity
+            ZZt = Z * Z';
+            WZ = (W * Z);
+
+            res2 = 1/2 * dot(X(:), X(:)) + N/2 * dot(mu, mu) + 1/2 * dot(WtW(:), ZZt(:)) + ...
+                - dot(X(:), WZ(:)) +  mu' * (W * Z - X) * ones(N, 1);
+            
+            testCase.verifyEqual(res1, res2);
         end
     end
 end
