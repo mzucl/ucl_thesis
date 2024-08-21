@@ -112,7 +112,6 @@ classdef BayesianPCA < handle
 
         
         %% Update methods
-        % obj.Z is GaussianDistributionContainer(cols = true)
         function obj = qZUpdate(obj, it)
             tauExp = Utility.ternary(it == 1, obj.tau.getExpInit(), obj.tau.E);
             muExp = Utility.ternary(it == 1, obj.mu.getExpInit(), obj.mu.E);
@@ -124,9 +123,8 @@ classdef BayesianPCA < handle
                 (obj.view.X - muExp));
         end
         
-        % obj.W is GaussianDistributionContainer(cols = false)
         % [NOTE] Initial distribution is defined per columns of W, but
-            % update equations are defined per rows
+        % update equations are defined per rows
         function obj = qWUpdate(obj, it)
             % disp(['Min W value: ', num2str(min(obj.W.EC, [], 'all'))]);
             % disp(['Max W value: ', num2str(max(obj.W.EC, [], 'all'))]);
@@ -186,19 +184,13 @@ classdef BayesianPCA < handle
             obj.alpha.updateAllDistributionsParams(newAVal, newBVals);
         end
 
-        % obj.mu is GaussianDistribution
         function obj = qMuUpdate(obj)
-            % Update covariance
-            newCov = (1/(obj.mu.PPrec + obj.N * obj.tau.E)) * eye(obj.D);
+            tauExp = obj.tau.E;
 
-            % Update mu
-            newMu = zeros(obj.D, 1);
-           
-            for n = 1:obj.N
-                newMu = newMu + obj.view.getObservation(n) - obj.W.EC * obj.Z.E{n};
-            end
-            newMu = obj.tau.E * newCov * newMu;
-            
+            newCov = (1/(obj.mu.PPrec + obj.N * tauExp)) * eye(obj.D);
+
+            newMu = tauExp * newCov * (obj.view.X - obj.W.EC * obj.Z.EC) * ones(obj.N, 1);
+
             obj.mu.updateParameters(newMu, newCov);
         end
 

@@ -274,5 +274,27 @@ classdef MatrixIdentityTest < matlab.unittest.TestCase
                 testCase.verifyEqual(mu_n, MU(:, n));
             end
         end
+
+        % Vectorization for qMuUpdate in BPCA model
+        function testIdentity13(testCase)
+            % Setup
+            D = 20;
+            K = 10;
+            N = 50;
+            X = Utility.generateRandomIntMatrix(D, N);
+            W = Utility.generateRandomIntMatrix(D, K);
+            Z = Utility.generateRandomIntMatrix(K, N);
+
+            sum = 0;
+
+            % Non-vectorized code
+            for n = 1:N
+                sum = sum + (X(:, n) - W * Z(:, n));
+            end
+
+            res = (X - W * Z) * ones(N, 1);
+
+            testCase.verifyEqual(sum, res);
+        end
     end
 end
