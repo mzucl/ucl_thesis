@@ -109,7 +109,19 @@ classdef MatrixIdentityTest < matlab.unittest.TestCase
             end 
         end
 
+        function testIdentity5_1(testCase)
+            %% trace(A^T * A) = sum of squared elements of A
+            mVals = [5, 5, 2, 10];
+            nVals = [5, 3, 7, 10];
+            for i = 1:length(mVals)
+                A = Utility.generateRandomIntMatrix(mVals(i), nVals(i));
 
+                testCase.verifyEqual(trace(A' * A), dot(A(:), A(:)));
+            end 
+        end
+
+
+        
         
         %% ln q(W) terms when we expand the quadratic form for GFA model
         function testIdentity6(testCase)
@@ -319,6 +331,32 @@ classdef MatrixIdentityTest < matlab.unittest.TestCase
     
                 testCase.verifyEqual(sum, MU(:, d));
             end
+        end
+
+        % Vectorization for qTauUpdate in BPCA model - first step
+        function testIdentity15(testCase)
+            % Setup
+            D = 20;
+            K = 10;
+            N = 50;
+            X = Utility.generateRandomIntMatrix(D, N);
+            Z = Utility.generateRandomIntMatrix(K, N);
+            mu = Utility.generateRandomIntMatrix(D, 1);
+            W = Utility.generateRandomIntMatrix(D, K);
+
+            sum = 0;
+
+            for n = 1:N
+                sum = sum + X(:, n)' * X(:, n) + mu' * mu + trace(W' * W * Z(:, n) * Z(:, n)') + ...
+                    2 * mu' * W * Z(:, n) - 2 * X(:, n)' * W * Z(:, n) - 2 * X(:, n)' * mu;
+            end
+
+            sum = 1/2 * sum;
+
+            res = 1/2 * trace(X' * X) + N/2 * (mu' * mu) + 1/2 * trace((W' * W) * (Z * Z')) + ...
+                mu' * W * Z * ones(N, 1) - trace(W * Z * X') - mu' * X * ones(N, 1);
+
+            testCase.verifyEqual(sum, res);
         end
     end
 end
