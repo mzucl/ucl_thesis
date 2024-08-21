@@ -434,6 +434,21 @@ classdef GaussianDistributionContainerTest < matlab.unittest.TestCase
             end
         end
 
+        function testUpdateAllDistributionsMu(testCase)
+            dim = 3;
+            numDistributions = 2;
+            prior = GaussianDistribution(zeros(dim,1));
+            obj = GaussianDistributionContainer(numDistributions, prior, true);
+
+            newMU = [[1; 2; 3;], [4; 5; 6]];
+            obj.updateAllDistributionsMu(newMU);
+
+            for i = 1:obj.Size
+                GaussianDistributionTest.verifyObject(testCase, obj.ds(i), ...
+                        newMU(:, i), eye(dim), prior, dim);
+            end
+        end
+
         function testUpdateDistributionCovariance(testCase)
             dim = 10;
             numDistributions = 2;
