@@ -1,4 +1,5 @@
-classdef ViewHandler
+classdef ViewHandler < handle
+    % TODO: I just added < handle -> check if that makes any issues
     properties
         X
     end
@@ -8,6 +9,20 @@ classdef ViewHandler
         D           % Dimensionality/number of features
         Tr_XtX      % Tr(X^TX)
         XXt         % XX^T
+    end
+
+    % Private properties for caching
+    properties (Access = private)
+        Tr_XtX_Cached
+        XXt_Cached
+    end
+
+    events
+        XChanged
+    end
+
+    properties (Access = private)
+        controller
     end
 
     methods(Access = private)
@@ -22,6 +37,11 @@ classdef ViewHandler
             if idx < 1 || idx > obj.D 
                 error(['Error in ' class(obj) ': Index out of range.']); 
             end
+        end
+    
+        function setFlags(obj)
+            obj.controller.setDirtyFlag('Tr_XtX');
+            obj.controller.setDirtyFlag('XXt');
         end
     end
 
@@ -42,6 +62,8 @@ classdef ViewHandler
             end
 
             obj.X = Utility.ternary(featuresInCols, data', data);
+            obj.controller = Controller();
+            addlistener(obj, 'XChanged', @(src, evt) obj.setFlags());
         end
         
         
@@ -97,6 +119,12 @@ classdef ViewHandler
         end
 
 
+        %% Setters
+        function set.X(obj, value)
+            obj.X = value;
+            notify(obj, 'XChanged');
+        end
+
 
         %% Getters
         function value = get.D(obj)
@@ -108,11 +136,19 @@ classdef ViewHandler
         end
 
         function value = get.Tr_XtX(obj)
-            value = trace(obj.X' * obj.X);
+            if obj.controller.isDirty('Tr_XtX')
+                obj.Tr_XtX_Cached = dot(obj.X(:), obj.X(:));
+                obj.controller.clearDirtyFlag('Tr_XtX');
+            end
+            value = obj.Tr_XtX_Cached;
         end
 
         function value = get.XXt(obj)
-            value = obj.X * obj.X';
+            if obj.controller.isDirty('XXt')
+                obj.XXt_Cached = obj.X * obj.X';
+                obj.controller.clearDirtyFlag('XXt');
+            end
+            value = obj.XXt_Cached;
         end
     end
 end
