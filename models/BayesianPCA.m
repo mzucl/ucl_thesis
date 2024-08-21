@@ -159,22 +159,23 @@ classdef BayesianPCA < handle
         end
 
         % obj.tau is GammaDistribution
-        function obj = qTauUpdate(obj)
-            deltaA = (obj.N * obj.D)/2;
-            deltaB = 0;
-
-            for n = 1:obj.N
-                deltaB = deltaB + obj.view.getObservationNormSq(n) ...
-                    + obj.mu.E_XtX ...
-                    + trace(obj.W.E_CtC * obj.Z.E_XXt{n}) ...
-                    + 2 * obj.mu.E_Xt * obj.W.EC * obj.Z.E{n} ...
-                    - 2 * obj.view.getObservation(n, true) * obj.W.EC * obj.Z.E{n} ...
-                    - 2 * obj.view.getObservation(n, true) * obj.mu.E;
+        function obj = qTauUpdate(obj, it)
+            % Alpha is updated to the same value through the iterations, so
+            % it is enough to update it once
+            if it == 1
+                newAVal = obj.tau.prior.a + (obj.N * obj.D)/2;
+                obj.tau.updateA(newAVal);
             end
 
-            deltaB = 1/2 * deltaB;
-
-            obj.tau.updateParameters(obj.tau.prior.a + deltaA, obj.tau.prior.b + deltaB); 
+            expWtW_Tr = obj.W.E_CtC';
+            expZZt = obj.Z.E_CCt;
+            expWZ = obj.W.EC * obj.Z.EC;
+            
+            newBVal = obj.tau.prior.b + 1/2 * obj.view.Tr_XtX + obj.N/2 * obj.mu.E_XtX + ...
+                1/2 * dot(expWtW_Tr(:), expZZt(:)) - dot(obj.view.X(:), expWZ(:)) + ...
+                obj.mu.E' * (expWZ - obj.view.X) * ones(obj.N, 1);
+        
+            obj.tau.updateB(newBVal);
         end
         
         
@@ -185,32 +186,11 @@ classdef BayesianPCA < handle
             resArr = cell(1, obj.maxIter);
         
             for it = 1:obj.maxIter
-                tic;
                 obj.qZUpdate(it);
-                elapsedTime = toc;
-                fprintf('Elapsed time qZUpdate: %.4f seconds\n', elapsedTime);
-
-                tic;
                 obj.qWUpdate(it);
-                elapsedTime = toc;
-                fprintf('Elapsed time qWUpdate: %.4f seconds\n', elapsedTime);
-
-                tic;
                 obj.qMuUpdate();
-                elapsedTime = toc;
-                fprintf('Elapsed time qMuUpdate: %.4f seconds\n', elapsedTime);
-
-                tic;
                 obj.qAlphaUpdate(it);
-                elapsedTime = toc;
-                fprintf('Elapsed time qAlphaUpdate: %.4f seconds\n', elapsedTime);
-
-                tic;
-                obj.qTauUpdate();
-                elapsedTime = toc;
-                fprintf('Elapsed time qTauUpdate: %.4f seconds\n', elapsedTime);
-
-                
+                obj.qTauUpdate(it);
 
                 [currElbo, res] = obj.computeELBO();
 
