@@ -81,5 +81,53 @@ classdef Visualization
             sgtitle('Evolution of ELBO variables over iteration');
         end
 
+        function plotLoadings(W, dimList, figureTitle)
+            % Parameters
+            % ----------
+            % W : matrix, [D_total x K]
+            % dimList: number of features in each view 
+            if nargin < 3
+                figureTitle = '';
+            end
+
+            [D, K] = size(W);
+        
+            % Max height per each row
+            maxHeight = 0;
+            for k = 1:K
+                h = max(W(:, k)) - min(W(:, k));
+                if h > maxHeight
+                    maxHeight = h;
+                end
+            end
+            offset = ceil(1.25 * maxHeight);
+            x = linspace(1, D, D);
+        
+            figure;
+            hold on;
+        
+            for k = 1:K
+                y = W(:, k) + (K - k + 1) * offset;
+        
+                plot(x, y, 'Color', 'black', 'LineWidth', 1.5); %, 'Label', ['ind: ', k]);
+            end
+            
+            ax = gca;
+            ax.XAxis.Visible = 'off';
+            ax.YAxis.Visible = 'off';
+            
+            linePos = 0;
+            for k = 1:length(dimList) - 1 % Don't plot vertical line for the last view
+                linePos = linePos + dimList(k);
+                labelText = ['$D_{', num2str(k), '}$'];
+                xline(linePos, 'Color', 'blue', 'LineWidth', 1.5, ...
+                    'Label', labelText, 'LabelVerticalAlignment', 'top', ...
+                    'LabelHorizontalAlignment', 'left', 'Interpreter', 'latex');
+            end
+
+            if ~isempty(figureTitle)
+                title(figureTitle);
+            end
+        end
     end
 end

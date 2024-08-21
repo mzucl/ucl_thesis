@@ -105,6 +105,25 @@ classdef Utility
             end
         end
 
+        function res = isRotationMatrix(R)
+            % Check if the matrix is square
+            [rows, cols] = size(R);
+            if rows ~= cols
+                res = false;
+                return;
+            end
+            
+            % Orthogonality check: R' * R should be close to the identity matrix
+            shouldBeIdentity = R' * R;
+            identityMatrix = eye(rows);
+            orthoCheck = norm(shouldBeIdentity - identityMatrix, 'fro') < 1e-6;
+            
+            % Determinant check: det(R) should be close to 1
+            detCheck = abs(det(R) - 1) < 1e-6;
+
+            res = orthoCheck && detCheck;
+        end
+
         function res = isSemiPositiveDefinite(matrix)
             if ~Utility.isSquareMatrix(matrix)
                 error(['##### ERROR IN THE CLASS Utility' ': Input must be a square matrix.']);
@@ -176,6 +195,17 @@ classdef Utility
             maxValue = 10;
             
             A = randi([minValue, maxValue], m, n);
+        end
+
+        function R = generateRandomRotationMatrix(n)
+            [Q, ~] = qr(randn(n));  % QR decomposition of a random matrix
+            
+            % Ensure the determinant is 1 (not -1)
+            if det(Q) < 0
+                Q(:,1) = -Q(:,1);  % Flip the sign of the first column
+            end
+            
+            R = Q;
         end
     end
 end

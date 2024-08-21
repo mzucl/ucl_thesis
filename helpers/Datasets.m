@@ -3,7 +3,7 @@ classdef Datasets
         % X is [N x D]
         function [X, D] = generateBPCA(N, D, stdDevs)
             if nargin == 0
-                N = 300;
+                N = 100;
                 D = 10;
                 % Standard deviations along orthogonal directions
                 % stdDevs = [5, 4, 3, 2, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5];
