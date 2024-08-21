@@ -133,6 +133,23 @@ classdef MatrixIdentityTest < matlab.unittest.TestCase
             end 
         end
 
+        function testIdentity5_3(testCase)
+            %% trace(A * B * C) = dot(AB'(:), C(:))
+            % this is the same as trace(CAB) and trace(BCA), so we can choose 
+            % which two matrices to multiply
+            mVals = [5, 5, 2, 10];
+            nVals = [5, 3, 7, 10];
+            kVals = [5, 5, 12, 15];
+            for i = 1:length(mVals)
+                A = Utility.generateRandomIntMatrix(mVals(i), nVals(i));
+                B = Utility.generateRandomIntMatrix(nVals(i), kVals(i));
+                C = Utility.generateRandomIntMatrix(kVals(i), mVals(i));
+
+                AB_tr = (A * B)';
+                testCase.verifyEqual(trace(A * B * C), dot(AB_tr(:), C(:)));
+            end 
+        end
+
 
         
         %% ln q(W) terms when we expand the quadratic form for GFA model
@@ -392,7 +409,7 @@ classdef MatrixIdentityTest < matlab.unittest.TestCase
 
             res2 = 1/2 * dot(X(:), X(:)) + N/2 * dot(mu, mu) + 1/2 * dot(WtW(:), ZZt(:)) + ...
                 - dot(X(:), WZ(:)) +  mu' * (W * Z - X) * ones(N, 1);
-            
+
             testCase.verifyEqual(res1, res2);
         end
     end
