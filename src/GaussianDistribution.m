@@ -450,8 +450,7 @@ classdef GaussianDistribution < handle
         end
 
         function value = get.H(obj)
-            % TODO (high): Choleskey decom. check diag and sum log(diag)
-            value = 1/2 * log(det(obj.cov)) + obj.dim/2 * (1 + log(2 * pi)); 
+            value = 1/2 * Utility.logDetUsingCholesky(obj.cov) + obj.dim/2 * (1 + log(2 * pi)); 
         end
         
         function value = get.PPrec(obj)
@@ -468,7 +467,7 @@ classdef GaussianDistribution < handle
         end
 
         function value = get.E_XtX(obj)
-            value = obj.mu' * obj.mu + trace(obj.cov);
+            value = dot(obj.mu, obj.mu) + trace(obj.cov);
         end
 
         function value = get.E_XXt(obj)

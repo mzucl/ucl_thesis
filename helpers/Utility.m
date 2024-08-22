@@ -207,5 +207,11 @@ classdef Utility
             
             R = Q;
         end
+
+        function logDetA = logDetUsingCholesky(A)
+            L = chol(A, 'lower');
+
+            logDetA = 2 * sum(log(diag(L)));
+        end
     end
 end
