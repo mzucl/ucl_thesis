@@ -1,4 +1,4 @@
-classdef GammaDistributionTest < matlab.unittest.TestCase
+classdef GammaTest < matlab.unittest.TestCase
     methods (Static)
         function verifyObject(testCase, obj, a, b, prior)
             testCase.verifyEqual(obj.a, a);
@@ -14,6 +14,8 @@ classdef GammaDistributionTest < matlab.unittest.TestCase
         end
     end
 
+
+    
     methods (Test)
         %% Deep copy and operators overloading
         function testEq(testCase)
@@ -21,55 +23,55 @@ classdef GammaDistributionTest < matlab.unittest.TestCase
             a2 = 3; b2 = 4;
 
             % Test 1: Same objects; no priors;
-            obj1 = GammaDistribution(a1, b1);
-            obj2 = GammaDistribution(a1, b1);
+            obj1 = Gamma(a1, b1);
+            obj2 = Gamma(a1, b1);
             testCase.verifyTrue(obj1 == obj2);
 
             % Test 2: Same objects; same priors;
-            obj1 = GammaDistribution(a1, b1, GammaDistribution());
-            obj2 = GammaDistribution(a1, b1, GammaDistribution());
+            obj1 = Gamma(a1, b1, Gamma());
+            obj2 = Gamma(a1, b1, Gamma());
             testCase.verifyTrue(obj1 == obj2);
 
             % Test 3.1: Same objects; different priors (one in NaN);
-            obj1 = GammaDistribution(a1, b1, GammaDistribution());
-            obj2 = GammaDistribution(a1, b1);
+            obj1 = Gamma(a1, b1, Gamma());
+            obj2 = Gamma(a1, b1);
             testCase.verifyTrue(obj1 ~= obj2);
 
             % Test 3.2: Same objects; different priors (one in NaN);
-            obj1 = GammaDistribution(a1, b1);
-            obj2 = GammaDistribution(a1, b1, GammaDistribution());
+            obj1 = Gamma(a1, b1);
+            obj2 = Gamma(a1, b1, Gamma());
             testCase.verifyTrue(obj1 ~= obj2);
 
             % Test 3.3: Same objects; different priors;
-            obj1 = GammaDistribution(a1, b1, GammaDistribution());
-            obj2 = GammaDistribution(a1, b1, GammaDistribution(10, 20));
+            obj1 = Gamma(a1, b1, Gamma());
+            obj2 = Gamma(a1, b1, Gamma(10, 20));
             testCase.verifyTrue(obj1 ~= obj2);
 
             % Test 4: Different objects; no priors;
-            obj1 = GammaDistribution(a1, b1);
-            obj2 = GammaDistribution(a2, b2);
+            obj1 = Gamma(a1, b1);
+            obj2 = Gamma(a2, b2);
             testCase.verifyTrue(obj1 ~= obj2);
 
             % Test 5: Different objects; same priors;
-            obj1 = GammaDistribution(a1, b1, GammaDistribution());
-            obj2 = GammaDistribution(a2, b2, GammaDistribution());
+            obj1 = Gamma(a1, b1, Gamma());
+            obj2 = Gamma(a2, b2, Gamma());
             testCase.verifyTrue(obj1 ~= obj2);
 
             % Test 6.1: Different objects; different priors (one is NaN);
-            obj1 = GammaDistribution(a1, b1, GammaDistribution());
-            obj2 = GammaDistribution(a2, b2);
+            obj1 = Gamma(a1, b1, Gamma());
+            obj2 = Gamma(a2, b2);
             testCase.verifyTrue(obj1 ~= obj2);
 
             % Test 6.2: Different objects; different priors;
-            obj1 = GammaDistribution(a1, b1, GammaDistribution(10, 20));
-            obj2 = GammaDistribution(a2, b2, GammaDistribution(30, 40));
+            obj1 = Gamma(a1, b1, Gamma(10, 20));
+            obj2 = Gamma(a2, b2, Gamma(30, 40));
             testCase.verifyTrue(obj1 ~= obj2);
         end
 
         function testDeepCopy(testCase)
             a = 1; b = 2;
             aNew = 5; bNew = 6;
-            obj = GammaDistribution(a, b);
+            obj = Gamma(a, b);
 
             % Test 1: Deep copy
             deepCopy = obj.copy();
@@ -91,7 +93,7 @@ classdef GammaDistributionTest < matlab.unittest.TestCase
             a = 1; b = 2;
             aNew = 5; bNew = 6;
 
-            obj = GammaDistribution(a, b, GammaDistribution());
+            obj = Gamma(a, b, Gamma());
             deepCopy = obj.copy();
 
             testCase.verifyTrue(obj == deepCopy);
@@ -110,33 +112,33 @@ classdef GammaDistributionTest < matlab.unittest.TestCase
         %% Constructor
         function testConstructor(testCase)
             % Test 1: Default constructor
-            obj = GammaDistribution();
-            GammaDistributionTest.verifyObject(testCase, obj, Constants.DEFAULT_GAMMA_A, Constants.DEFAULT_GAMMA_B);
+            obj = Gamma();
+            GammaTest.verifyObject(testCase, obj, Constants.DEFAULT_GAMMA_A, Constants.DEFAULT_GAMMA_B);
 
             % Test 2: One parameter constructor - parameter is the prior
-            truePrior = GammaDistribution();
-            obj = GammaDistribution(truePrior);
-            GammaDistributionTest.verifyObject(testCase, obj, Constants.DEFAULT_GAMMA_A, Constants.DEFAULT_GAMMA_B, truePrior);
-            GammaDistributionTest.verifyObject(testCase, obj.prior, Constants.DEFAULT_GAMMA_A, Constants.DEFAULT_GAMMA_B, NaN);
+            truePrior = Gamma();
+            obj = Gamma(truePrior);
+            GammaTest.verifyObject(testCase, obj, Constants.DEFAULT_GAMMA_A, Constants.DEFAULT_GAMMA_B, truePrior);
+            GammaTest.verifyObject(testCase, obj.prior, Constants.DEFAULT_GAMMA_A, Constants.DEFAULT_GAMMA_B, NaN);
           
             % Test 3: One parameter constructor - parameter is numeric,
             % thus value for a
             a = 5;
-            obj = GammaDistribution(a);
-            GammaDistributionTest.verifyObject(testCase, obj, a, a, NaN);
+            obj = Gamma(a);
+            GammaTest.verifyObject(testCase, obj, a, a, NaN);
 
             % Test 4: Two parameters constructor
             b = 7;
-            obj = GammaDistribution(a, b);
-            GammaDistributionTest.verifyObject(testCase, obj, a, b, NaN);
+            obj = Gamma(a, b);
+            GammaTest.verifyObject(testCase, obj, a, b, NaN);
 
             % Test 5: Three parameters constructor
             aPrior = 1; bPrior = 2;
-            prior = GammaDistribution(aPrior, bPrior);
-            obj = GammaDistribution(a, b, prior);
+            prior = Gamma(aPrior, bPrior);
+            obj = Gamma(a, b, prior);
 
-            GammaDistributionTest.verifyObject(testCase, obj, a, b, prior);
-            GammaDistributionTest.verifyObject(testCase, obj.prior, aPrior, bPrior, NaN);
+            GammaTest.verifyObject(testCase, obj, a, b, prior);
+            GammaTest.verifyObject(testCase, obj.prior, aPrior, bPrior, NaN);
         end
 
 
@@ -144,27 +146,27 @@ classdef GammaDistributionTest < matlab.unittest.TestCase
         %% Dependent properties
         function testDependentProperties(testCase)
             a = 1; b = 2;
-            obj = GammaDistribution(a, b);
+            obj = Gamma(a, b);
             testCase.verifyEqual(obj.E, 0.5);
             testCase.verifyEqual(obj.Var, 0.25);
 
             a = 1; b = 1;
-            obj = GammaDistribution(a, b);
+            obj = Gamma(a, b);
             testCase.verifyEqual(obj.E, 1);
             testCase.verifyEqual(obj.Var, 1);
             testCase.verifyEqual(obj.H, 1);
 
             a = 1; b = exp(1);
-            obj = GammaDistribution(a, b);
+            obj = Gamma(a, b);
             testCase.verifyEqual(obj.E, exp(-1));
             testCase.verifyEqual(obj.Var, exp(-2));
             testCase.verifyEqual(obj.H, 0);
-            testCase.verifyEqual(obj.E_Ln, psi(obj.a) - log(obj.b));
+            testCase.verifyEqual(obj.E_LnX, psi(obj.a) - log(obj.b));
 
             a = 14; b = 7;
             aPrior = 1; bPrior = 1;
-            prior = GammaDistribution(aPrior, bPrior);
-            obj = GammaDistribution(a, b, prior);
+            prior = Gamma(aPrior, bPrior);
+            obj = Gamma(a, b, prior);
 
             testCase.verifyEqual(obj.E_LnP, -2);
         end
@@ -174,7 +176,7 @@ classdef GammaDistributionTest < matlab.unittest.TestCase
         %% Private properties
         function testSetters(testCase)
             a = 2; b = 1;
-            obj = GammaDistribution(a, b);
+            obj = Gamma(a, b);
             testCase.verifyTrue(obj.getExpInit() == obj.E);
 
             expInit = 34;
@@ -187,39 +189,24 @@ classdef GammaDistributionTest < matlab.unittest.TestCase
         %% Update methods
         function testUpdateMethods(testCase)
             a = 1; b = 2;
-            obj = GammaDistribution(a, b);
+            obj = Gamma(a, b);
 
             % updateA
-            deltaA = 10;
-            for i=1:10
-                obj.updateA(deltaA, true); % 'inc' = true
-                GammaDistributionTest.verifyObject(testCase, obj, a + deltaA * i, b);
-            end
+            newA = 10;
     
-            obj.updateA(deltaA);
-            GammaDistributionTest.verifyObject(testCase, obj, deltaA, b);
+            obj.updateA(newA);
+            GammaTest.verifyObject(testCase, obj, newA, b);
             
-            % Get parameter values after all 'updateA' calls
-            a = obj.a; b = obj.b;
+            a = obj.a;
 
             % updateB
-            deltaB = 100;
+            newB = 100;
+            obj.updateB(newB);
+            GammaTest.verifyObject(testCase, obj, a, newB);
 
-            for i=1:10
-                obj.updateB(deltaB, true);
-                GammaDistributionTest.verifyObject(testCase, obj, a, b + deltaB * i);
-            end
-    
-            obj.updateB(deltaB);
-            GammaDistributionTest.verifyObject(testCase, obj, a, deltaB);
-
-            a = obj.a; b = obj.b;
             % updateParameters
-            obj.updateParameters(deltaA, deltaB, true);
-            GammaDistributionTest.verifyObject(testCase, obj, a + deltaA, b + deltaB);
-
-            obj.updateParameters(deltaA, deltaB);
-            GammaDistributionTest.verifyObject(testCase, obj, deltaA, deltaB);
+            obj.updateParameters(newA, newB);
+            GammaTest.verifyObject(testCase, obj, newA, newB);
         end
     end
 end

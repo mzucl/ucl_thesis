@@ -1,15 +1,23 @@
 classdef ViewHandler < handle
-    % TODO: I just added < handle -> check if that makes any issues
+    % TODO: I just added < handle -> check if that makes any issues for GFA
+    % model!!!
+
+    % THIS IS OVERKILL FOR THIS CLASS!
     properties
         X
-    end
-    
-    properties (Dependent)
+
         N           % Number of samples
         D           % Dimensionality/number of features
         Tr_XtX      % Tr(X^TX)
         XXt         % XX^T
     end
+    
+    % properties (Dependent)
+    %     N           % Number of samples
+    %     D           % Dimensionality/number of features
+    %     Tr_XtX      % Tr(X^TX)
+    %     XXt         % XX^T
+    % end
 
     % Private properties for caching
     properties (Access = private)
@@ -62,8 +70,20 @@ classdef ViewHandler < handle
             end
 
             obj.X = Utility.ternary(featuresInCols, data', data);
-            obj.controller = Controller();
-            addlistener(obj, 'XChanged', @(src, evt) obj.setFlags());
+
+            obj.D = size(obj.X, 1);
+    
+      
+            obj.N = size(obj.X, 2);
+        
+            obj.Tr_XtX = dot(obj.X(:), obj.X(:));
+            obj.XXt = obj.X * obj.X';
+    
+        
+
+
+            % obj.controller = Controller();
+            % addlistener(obj, 'XChanged', @(src, evt) obj.setFlags());
         end
         
         
@@ -120,29 +140,29 @@ classdef ViewHandler < handle
 
 
         %% Setters
-        function set.X(obj, value)
-            obj.X = value;
-            notify(obj, 'XChanged');
-        end
+        % function set.X(obj, value)
+        %     obj.X = value;
+        %     notify(obj, 'XChanged');
+        % end
 
 
         %% Getters
-        function value = get.D(obj)
-            value = size(obj.X, 1);
-        end
-
-        function value = get.N(obj)
-            value = size(obj.X, 2);
-        end
-
-        function value = get.Tr_XtX(obj)
-            if obj.controller.isDirty('Tr_XtX')
-                obj.Tr_XtX_Cached = dot(obj.X(:), obj.X(:));
-                obj.controller.clearDirtyFlag('Tr_XtX');
-            end
-            value = obj.Tr_XtX_Cached;
-        end
-
+        % function value = get.D(obj)
+        %     value = size(obj.X, 1);
+        % end
+        % 
+        % function value = get.N(obj)
+        %     value = size(obj.X, 2);
+        % end
+        % 
+        % function value = get.Tr_XtX(obj)
+        %     if obj.controller.isDirty('Tr_XtX')
+        %         obj.Tr_XtX_Cached = dot(obj.X(:), obj.X(:));
+        %         obj.controller.clearDirtyFlag('Tr_XtX');
+        %     end
+        %     value = obj.Tr_XtX_Cached;
+        % end
+        % 
         function value = get.XXt(obj)
             if obj.controller.isDirty('XXt')
                 obj.XXt_Cached = obj.X * obj.X';

@@ -123,6 +123,8 @@ classdef GaussianDistributionContainer < handle
             dist = obj.ds(idx);
         end
 
+        % TODO (medium): This can maybe be optimized if we have a different
+        % structure to store stuff! 
         % [NOTE] This is used in the scenario when e.g. W is stored in the rows
         % format, but we need expectation of the squared norm of a column
         function res = getExpectationOfColumnsNormSq(obj)
@@ -137,8 +139,7 @@ classdef GaussianDistributionContainer < handle
                 res = zeros(numOfCols, 1);
                 for k = 1:numOfCols
                     for d = 1:obj.Size
-                        res(k) = res(k) + obj.ds(d).mu(k) ^ 2 + ...
-                            obj.ds(d).cov(k, k);
+                        res(k) = res(k) + obj.ds(d).mu(k) ^ 2 + obj.ds(d).cov(k, k);
                     end
                 end
             end
@@ -347,11 +348,9 @@ classdef GaussianDistributionContainer < handle
             end
         end
 
+        % TODO: Can the obj.Size change??? What about dim?
         function value = get.E_LnPC(obj)
-            value = 0;
-            for i = 1:obj.Size
-                value = value + obj.ds(i).E_LnP;
-            end
+            value = (-obj.Size * obj.ds(1).dim/2) * log(2 * pi) - 1/2 * obj.Tr_CtC; 
         end
     end
 end

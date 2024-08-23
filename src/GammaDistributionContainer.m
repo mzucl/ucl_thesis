@@ -446,7 +446,7 @@ classdef GammaDistributionContainer < handle
         function value = get.E_LnC(obj)
             value = 0;
             for i = 1:obj.Size
-                value = value + obj.ds(i).E_Ln;
+                value = value + obj.ds(i).E_LnX;
             end
         end
 
