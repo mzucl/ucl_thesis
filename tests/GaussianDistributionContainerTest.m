@@ -80,7 +80,6 @@ classdef GaussianDistributionContainerTest < matlab.unittest.TestCase
             testCase.verifyTrue(Utility.isSymmetricMatrix(obj.E_CtC));
             testCase.verifyTrue(Utility.isSymmetricMatrix(obj.E_CCt));
 
-            % [!!!]
             colSqNorm = obj.getExpectationOfColumnsNormSq();
             testCase.verifyEqual(colSqNorm, [2; 6; 17]);
 
@@ -95,6 +94,37 @@ classdef GaussianDistributionContainerTest < matlab.unittest.TestCase
             testCase.verifyTrue(Utility.isSymmetricMatrix(obj.E_CCt));
         end
         
+        function testExpectationOfColumnsNormSq(testCase)
+            dim = 2;
+            cols = false;
+            numDistributions = 3;
+
+            prior = GaussianDistribution(zeros(dim, 1), eye(dim));
+
+            obj = GaussianDistributionContainer(numDistributions, prior, cols);
+
+            % Size
+            testCase.verifyEqual(obj.Size, numDistributions);
+
+            cov = Utility.generateRandomSPDMatrix(2);
+            % Setup
+            %   mu = 0, cov
+            %   mu = 1, cov
+            %   mu = [1; 2], cov
+            obj.updateDistributionParams(1, zeros(dim, 1), cov);
+            obj.updateDistributionParams(2, ones(dim, 1), cov);
+            obj.updateDistributionParams(3, [1; 2], cov);
+
+            % Test: non-vectorized version
+            colSqNorm = obj.getExpectationOfColumnsNormSq();
+
+            % Test: vectorized version
+            MU = [obj.ds(1).mu, obj.ds(2).mu, obj.ds(3).mu];
+            colSqNorm_Vect = diag(MU * MU') + obj.Size * diag(obj.ds(1).cov);
+
+            testCase.verifyTrue(norm(colSqNorm - colSqNorm_Vect) < 1e-12);
+        end
+
         % cols = true
         function testDependentPropertiesColumnFormat2(testCase)
             dim = 3;
@@ -128,7 +158,6 @@ classdef GaussianDistributionContainerTest < matlab.unittest.TestCase
             testCase.verifyEqual(obj.E_Ct, expectedEC');
             testCase.verifyEqual(obj.E_CtC, [3, 0, 0, 0; 0, 21, 14, 6; 0, 14, 33, 6; 0, 6, 6, 12]);
 
-            % [!!!]
             colSqNorm = obj.getExpectationOfColumnsNormSq();
             testCase.verifyEqual(colSqNorm, [3; 21; 33; 12]);
 
@@ -177,7 +206,6 @@ classdef GaussianDistributionContainerTest < matlab.unittest.TestCase
             testCase.verifyEqual(obj.E_Ct, expectedVal');
             testCase.verifyEqual(obj.E_CtC, [[15, 4]; [4, 10]]);
 
-            % [!!!]
             colSqNorm = obj.getExpectationOfColumnsNormSq();
             testCase.verifyEqual(colSqNorm, [15; 10]);
 
@@ -230,7 +258,6 @@ classdef GaussianDistributionContainerTest < matlab.unittest.TestCase
 
             testCase.verifyEqual(obj.E_CCt, [3, 0, 0, 0; 0, 21, 14, 6; 0, 14, 33, 6; 0, 6, 6, 12]);
 
-            % [!!!]
             colSqNorm = obj.getExpectationOfColumnsNormSq();
             testCase.verifyEqual(colSqNorm, [13; 16; 40]);
 
