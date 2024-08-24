@@ -182,14 +182,14 @@ classdef GammaContainerTest < matlab.unittest.TestCase
         end
 
 
-        function testRemoveDistributions(testCase) 
+        function testRemoveDimensions(testCase) 
             % Setup
             size = 4;
             a = 2;
             b = [2; 4; 8; 10];
             obj = GammaContainer("SD", size, a, b);
 
-            obj.removeDistributions([1, 2]);
+            obj.removeDimensions([1, 2]);
 
             testCase.verifyEqual(obj.Size, 2);
             testCase.verifyEqual(obj.E, [0.25; 0.2]);

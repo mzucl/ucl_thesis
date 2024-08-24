@@ -330,7 +330,7 @@ classdef GaussianDistributionTest < matlab.unittest.TestCase
 
         %% Private properties
         function testSetters(testCase)
-            obj = GammaDistribution();
+            obj = GaussianDistribution();
             testCase.verifyTrue(obj.getExpInit() == obj.E);
 
             expInit = 34;
