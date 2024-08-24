@@ -3,7 +3,7 @@ classdef BPCA < handle
         view            % ViewHandler
         K               % Number of latent dimensions/principal components
 
-        % Model parameters with prior ds
+        % Model parameters
         Z               % [K x N] GaussianDistributionContainer      [size: N; for each latent variable zn]
         
         mu              % [D x 1] GaussianDistribution               [D x 1; all observations have the same 'mu' parameter]
@@ -15,16 +15,15 @@ classdef BPCA < handle
                         % representing W as a size D container in a row
                         % format.
 
-        alpha           % [K x 1] GammaDistributionContainer         [size: K]
-        tau             % [scalar]GammaDistribution                  [scalar]
+        alpha           % [K x 1]   GammaContainer         [size: K]
+        tau             % [scalar]  Gamma                  [scalar]
 
         % Optimization parameters
         maxIter
         tol
 
         %% Dependent properties
-        %   They are not declared as dependent because they never change
-        %   upon the initialization
+        %   They are not declared as dependent because they never change upon the initialization
         N   % Number of observations/latent variables
         D   % Dimensionality
     end
@@ -80,8 +79,7 @@ classdef BPCA < handle
             obj.mu = GaussianDistribution(muPrior);
 
             % alpha
-            alphaPrior = GammaDistribution(Constants.DEFAULT_GAMMA_A, Constants.DEFAULT_GAMMA_B);
-            obj.alpha = GammaDistributionContainer(repmat(alphaPrior, obj.K, 1));
+            obj.alpha = GammaContainer("SD", obj.K);
             
 
             % W 
@@ -102,8 +100,8 @@ classdef BPCA < handle
             
 
             % tau
-            tauPrior = GammaDistribution(Constants.DEFAULT_GAMMA_A, Constants.DEFAULT_GAMMA_B);
-            obj.tau = GammaDistribution(tauPrior);
+            tauPrior = Gamma(Constants.DEFAULT_GAMMA_A, Constants.DEFAULT_GAMMA_B);
+            obj.tau = Gamma(tauPrior);
 
             % Model initialization - second part
             % The first update equation is for W, so we need to initialize
@@ -117,6 +115,7 @@ classdef BPCA < handle
             obj.alpha.setExpCInit(repmat(1e-3, obj.K, 1));
             obj.mu.setExpInit(randn(obj.D, 1));
 
+            % Performed only once
             obj.qConstantUpdates();
         end
 
@@ -125,7 +124,7 @@ classdef BPCA < handle
         %% Update methods
         function obj = qConstantUpdates(obj)
             % alpha.a
-            obj.alpha.updateAllDistributionsA(obj.alpha.ds(1).prior.a + obj.D/2);
+            obj.alpha.updateAllDistributionsA(obj.alpha.prior.a + obj.D/2);
             % tau.a
             obj.tau.updateA(obj.tau.prior.a + (obj.N * obj.D)/2);
         end
@@ -144,7 +143,7 @@ classdef BPCA < handle
 
         
         function obj = qWUpdate(obj, it)
-            alphaExp = Utility.ternary(it == 1, obj.alpha.getExpCInit(), obj.alpha.EC);
+            alphaExp = Utility.ternary(it == 1, obj.alpha.getExpCInit(), obj.alpha.E);
             tauExp = Utility.ternary(it == 1, obj.tau.getExpInit(), obj.tau.E);
             muExp = Utility.ternary(it == 1, obj.mu.getExpInit(), obj.mu.E);
 
@@ -158,7 +157,7 @@ classdef BPCA < handle
 
 
         function obj = qAlphaUpdate(obj)
-            obj.alpha.updateAllDistributionsB(obj.alpha.ds(1).prior.b + ...
+            obj.alpha.updateAllDistributionsB(obj.alpha.prior.b + ...
                 1/2 * obj.W.getExpectationOfColumnsNormSq());
         end
 
@@ -242,20 +241,20 @@ classdef BPCA < handle
 
         function [elbo, res] = computeELBO(obj)
             elbo = obj.getExpectationLnPX() + obj.Z.E_LnPC + obj.getExpectationLnPW() + ... % p(.)
-                obj.alpha.E_LnPC + obj.mu.E_LnP + obj.tau.E_LnP + ... % p(.)
-                obj.Z.HC + obj.W.HC + obj.alpha.HC + obj.mu.H + obj.tau.H; % q(.)
+                obj.alpha.E_LnP + obj.mu.E_LnP + obj.tau.E_LnP + ... % p(.)
+                obj.Z.HC + obj.W.HC + obj.alpha.H + obj.mu.H + obj.tau.H; % q(.)
             if obj.DEBUG
                 res = {};
                 res.pX = obj.getExpectationLnPX();
                 res.pZ = obj.Z.E_LnPC;
                 res.pW = obj.getExpectationLnPW();
-                res.pAlpha = obj.alpha.E_LnPC;
+                res.pAlpha = obj.alpha.E_LnP;
                 res.pMu = obj.mu.E_LnP;
                 res.pTau = obj.tau.E_LnP;
                 
                 res.qZ = obj.Z.HC;
                 res.qW = obj.W.HC;
-                res.qAlpha = obj.alpha.HC;
+                res.qAlpha = obj.alpha.H;
                 res.qMu = obj.mu.H;
                 res.qTau = obj.tau.H;
 
@@ -280,8 +279,8 @@ classdef BPCA < handle
 
 
         function value = getExpectationLnPW(obj)
-            value = -1/2 * obj.W.getExpectationOfColumnsNormSq()' * obj.alpha.EC + ...
-                + obj.D/2 * (obj.alpha.E_LnC - obj.K * log(2*pi));
+            value = -1/2 * dot(obj.W.getExpectationOfColumnsNormSq(), obj.alpha.E) + ...
+                + obj.D/2 * (obj.alpha.E_LnX - obj.K * log(2*pi));
         end
     end
 end
