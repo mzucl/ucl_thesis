@@ -23,7 +23,6 @@ classdef Gamma < handle
         expInit % Explicit expectation initialization
         cache = struct(...
             'E', NaN, ...
-            'Var', NaN, ...
             'H', NaN, ...
             'E_LnX', NaN, ...
             'E_LnP', NaN);
@@ -33,11 +32,11 @@ classdef Gamma < handle
 
     properties (Dependent)
         E
-        Var
         H          % Entropy
         E_LnX      % E[ln(x)] wrt to q(x)
         E_LnP      % E[ln(p(x))] wrt to the q(x)
 
+        Var
         Val        % Sample from the distribution
     end
     
@@ -183,6 +182,9 @@ classdef Gamma < handle
 
             obj.a = a;
             obj.b = b;
+
+            % Clear cache
+            obj.clearCache();
         end
         
         function obj = updateA(obj, a)
@@ -199,6 +201,9 @@ classdef Gamma < handle
             end
 
             obj.a = a;
+            
+            % Clear cache
+            obj.clearCache();
         end
 
         function obj = updateB(obj, b)
@@ -215,6 +220,9 @@ classdef Gamma < handle
             end
 
             obj.b = b;
+
+            % Clear cache
+            obj.clearCache();
         end
 
 
@@ -238,35 +246,44 @@ classdef Gamma < handle
 
         %% Dependent properties
         function value = get.E(obj)
-            value = obj.a / obj.b;
+            if isnan(obj.cache.E)
+                obj.cache.E = obj.a / obj.b;
+            end
+            value = obj.cache.E;
         end
         
-        function value = get.Var(obj)
-            value = obj.a / obj.b^2;
-        end
-
         function value = get.H(obj)
             % From MATLAB help
             % Y = gammaln(X) computes the natural logarithm of the gamma function for each element of X.
             % log(X) is the natural logarithm of the elements of X.
             % psi(X) evaluates the psi function (also know as the digamma function) for each element of X.
-            value = gammaln(obj.a) - (obj.a - 1) * psi(obj.a) - log(obj.b) + obj.a;
+            if isnan(obj.cache.H)
+                obj.cache.H = gammaln(obj.a) - (obj.a - 1) * psi(obj.a) - log(obj.b) + obj.a;
+            end
+            value = obj.cache.H;
         end
 
         function value = get.E_LnX(obj)
-            value = psi(obj.a) - log(obj.b);
+            if isnan(obj.cache.E_LnX)
+                obj.cache.E_LnX = psi(obj.a) - log(obj.b);
+            end
+            value = obj.cache.E_LnX;
         end
 
-        % TODO (performance): Using expressions for obj.E_LnX and obj.E
-        % directly could speed this up.
         function value = get.E_LnP(obj)
-            % The value is set only when prior is defined
-            if isa(obj.prior, 'Gamma')
-                value = -gammaln(obj.prior.a) + obj.prior.a * log(obj.prior.b) + ...
-                    (obj.prior.a - 1) * obj.E_LnX - obj.prior.b * obj.E;
-            else
-                value = NaN;
+            if isnan(obj.cache.E_LnP)
+                if isa(obj.prior, 'Gamma') % The value is set only when prior is defined
+                    obj.cache.E_LnP = -gammaln(obj.prior.a) + obj.prior.a * log(obj.prior.b) + ...
+                        (obj.prior.a - 1) * (psi(obj.a) - log(obj.b)) - obj.prior.b * obj.a / obj.b;
+                else
+                    obj.cache.E_LnP = NaN;
+                end
             end
+            value = obj.cache.E_LnP;
+        end
+
+        function value = get.Var(obj)
+            value = obj.a / obj.b^2;
         end
 
         function value = get.Val(obj)
