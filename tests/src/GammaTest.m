@@ -149,12 +149,14 @@ classdef GammaTest < matlab.unittest.TestCase
             obj = Gamma(a, b);
             testCase.verifyEqual(obj.E, 0.5);
             testCase.verifyEqual(obj.Var, 0.25);
+            testCase.verifyEqual(obj.E_LnP, NaN);
 
             a = 1; b = 1;
             obj = Gamma(a, b);
             testCase.verifyEqual(obj.E, 1);
             testCase.verifyEqual(obj.Var, 1);
             testCase.verifyEqual(obj.H, 1);
+            testCase.verifyEqual(obj.E_LnP, NaN);
 
             a = 1; b = exp(1);
             obj = Gamma(a, b);
@@ -162,6 +164,7 @@ classdef GammaTest < matlab.unittest.TestCase
             testCase.verifyEqual(obj.Var, exp(-2));
             testCase.verifyEqual(obj.H, 0);
             testCase.verifyEqual(obj.E_LnX, psi(obj.a) - log(obj.b));
+            testCase.verifyEqual(obj.E_LnP, NaN);
 
             a = 14; b = 7;
             aPrior = 1; bPrior = 1;
