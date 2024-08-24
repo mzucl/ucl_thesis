@@ -13,9 +13,12 @@ classdef Constants
         DEFAULT_MAX_ITER = 100;
         DEFAULT_TOL = 1e-6; % relative tolerance
 
-        % Tau
         DEFAULT_NOISE_VAL = 1e3;
 
         LATENT_FACTORS_THRESHOLD = 1e-6;
+
+        VALIDATE = true; % Validate inputs in classes
+
+        DEBUG = true;
     end
 end
