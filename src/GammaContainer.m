@@ -69,7 +69,7 @@ classdef GammaContainer < handle
     end
 
     methods
-        %% Options for the constructor GammaDistributionContainer
+        %% Options for the constructor GammaContainer
         % ZERO PARAMETERS
         % -> error!
         %
@@ -132,7 +132,7 @@ classdef GammaContainer < handle
                         if obj.VALIDATE && ~Utility.isNaNOrInstanceOf(prior, 'Gamma')
                             error(['##### ERROR IN THE CLASS ' class(obj) ': Invalid prior parameter.']);
                         end
-                        obj.prior = prior;
+                        obj.prior = prior.copy();
                     end
             end
             

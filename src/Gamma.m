@@ -108,20 +108,32 @@ classdef Gamma < handle
         end
 
 
-
-        %% Constructors
-        % TODO (high): Use update methods to set the parameters, because in
-        % those methods parameter values are validated unlike here
+        
+        %% Options for the constructor Gamma
+        % ZERO PARAMETERS
+        % -> default values for 'a' and 'b'; prior = NaN;
+        %
+        % 1 PARAMETER: a
+        % OPTION 1: 'a' is an instane of Gamma
+        %       -> set 'obj' and 'prior' to that value
+        % OPTION 2: 'a' is a scalar
+        %       -> set 'a' and 'b' to that value
+        % 
+        % 2 PARAMETERS: a, b
+        % -> Gamma(a, b)
+        %
+        % 3 PARAMETERS: a, b, prior
+        % -> same as previous constructor, but the prior is set
+        %
+        %
+        %%
         function obj = Gamma(a, b, prior)
-            % Optional parameters: a, b, prior
-            % -------------------------------------------------------------
-            obj.prior = NaN; % It is only set when the number of parameters passed in is 3
+            % Default param values
+            obj.a = Constants.DEFAULT_GAMMA_A;
+            obj.b = Constants.DEFAULT_GAMMA_B;
+            obj.prior = NaN;
 
             switch nargin
-                case 0
-                    obj.a = Constants.DEFAULT_GAMMA_A;
-                    obj.b = Constants.DEFAULT_GAMMA_B;
-
                 case 1
                     % If the ONLY parameter is of a type Gamma that is
                     % the prior and we initialize the 'obj' and its prior
@@ -133,22 +145,23 @@ classdef Gamma < handle
                     % The one parameter passed in is the value for 'a', set
                     % both 'a' and 'b' to that value
                     elseif Utility.isSingleNumber(a)
-                        obj.a = a;
-                        obj.b = a;
+                        obj.updateParameters(a, a);
                     else
                         error(['##### ERROR IN THE CLASS ' class(obj) ': Invalid arguments passed.']);
                     end
             
-                case {2, 3}
-                    obj.a = a;
-                    obj.b = b;
-                    if nargin == 3 && ~Utility.isNaN(prior) % 'prior' is passed in
+                case {2, 3} % a, b
+                    obj.updateParameters(a, b);
+
+                    if nargin == 3 % prior
+                        if obj.VALIDATE && ~Utility.isNaNOrInstanceOf(prior, 'Gamma')
+                            error(['##### ERROR IN THE CLASS ' class(obj) ': Invalid prior parameter.']);
+                        end
                         obj.prior = prior.copy();
                     end
-                otherwise
-                    error(['##### ERROR IN THE CLASS ' class(obj) ': Too many arguments passed into the constructor.']);
             end
-            % Set initial expectation to the real expectation
+
+            % Set initial expectation to the actual expectation
             obj.setExpInit(obj.E);
         end
 
@@ -244,7 +257,7 @@ classdef Gamma < handle
             value = psi(obj.a) - log(obj.b);
         end
 
-        % TODO (low/medium): Using expressions for obj.E_LnX and obj.E
+        % TODO (performance): Using expressions for obj.E_LnX and obj.E
         % directly could speed this up.
         function value = get.E_LnP(obj)
             % The value is set only when prior is defined
