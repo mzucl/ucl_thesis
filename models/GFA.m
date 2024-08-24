@@ -15,8 +15,12 @@ classdef GFA < handle
         % Optimization parameters
         maxIter
         tol
-        % They all share Z, also it shouldn't be a copy it should be a
-        % reference!!!
+
+        doRotation
+    end
+
+    properties (Dependent)
+        D   % Array containing dimensions of each view
     end
     
     % TODO (high): Implement
@@ -38,7 +42,7 @@ classdef GFA < handle
 
         % [NOTE] For now we have 2 datasets passed in as matrices
         %% Constructors
-        function obj = GFA(data, K, maxIter, tol)
+        function obj = GFA(data, K, maxIter, tol, doRotation)
             if nargin < 2
                 error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
             end
@@ -55,14 +59,17 @@ classdef GFA < handle
             % provided
             obj.maxIter = Constants.DEFAULT_MAX_ITER;
             obj.tol = Constants.DEFAULT_TOL;
+            obj.doRotation = false;
 
             % Optional parameters: maxIter, tol
-            switch nargin
-                case 3
-                    obj.maxIter = maxIter;
-                case 4
-                    obj.maxIter = maxIter;
+            if nargin > 2
+                obj.maxIter = maxIter;
+                if nargin > 3
                     obj.tol = tol;
+                    if nargin > 4
+                        obj.doRotation = doRotation;
+                    end
+                end
             end
 
             %% Model setup and initialization
@@ -144,6 +151,9 @@ classdef GFA < handle
                 obj.removeFactors(it);
                 obj.qWUpdate(it);
                 obj.qZUpdate();
+                % if it > 0
+                %     obj.updateRotation();
+                % end  
                 obj.qAlphaUpdate();
                 obj.qTauUpdate();
 
@@ -241,6 +251,122 @@ classdef GFA < handle
             for m = 1:obj.M
                 obj.views(m).alpha.removeDistributions(removeIdx);
                 obj.views(m).W.removeDimensions(removeIdx);
+            end
+        end
+    
+
+        
+        %% Rotations
+        % TODO (high): Move helper methods to the private section
+        % Helper function to compute the cost and gradient
+        function [cost, grad] = costAndGrad(r, obj)
+            R = reshape(r, obj.K.Val, obj.K.Val);
+            cost = obj.Er(R);
+            grad = obj.gradEr(r);
+        end
+
+        function val = Er(obj, r)
+            % Reshape the input vector `r` into a matrix `R`
+            R = reshape(r, obj.K.Val, obj.K.Val);
+            
+            % Perform Singular Value Decomposition (SVD) on R
+            [U, S, ~] = svd(R);
+            
+            % Calculate tmp as described in the original function
+            tmp = U.* (ones(1, obj.K.Val) ./ diag(S))';
+
+            % tmp = U.* (ones(1, obj.K.Val)' * diag(S)');
+            
+            % Calculate the negative cost function value
+            val = -0.5 * sum(sum(obj.Z.E_CCt .* (tmp * tmp')));
+            
+            % Add the second term to the value
+            val = val + (sum(obj.D) - obj.N) * sum(log(diag(S)));
+            
+            % Loop over each `i` to add the third term
+            for m = 1:obj.M
+                tmp = R.* (obj.views(m).W.E_XXt{m} * R);
+                val = val - obj.D(m) * sum(log(sum(tmp, 1))) / 2;
+            end
+            
+            % Negate the value to return the final result
+            val = -val;
+        end
+
+        function grad = gradEr(obj, r)
+
+            % Evaluates the (negative) gradient of the cost function Er().
+        
+            % Parameters
+            % ----------
+            % r : array-like
+            %     Flattened transformation matrix R.                   
+        
+            % Reshape the input vector `r` into a square matrix `R`
+            R = reshape(r, obj.K.Val, obj.K.Val);
+            
+            % Perform Singular Value Decomposition (SVD) on R
+            [U, S, V] = svd(R);
+            
+            % Calculate the inverse of R using the SVD components
+            Rinv = V * (diag(1 ./ diag(S)) * U');
+            
+            % Calculate tmp using SVD components and element-wise operations
+            tmp = U * diag(1 ./ (diag(S) .^ 2));
+            
+            % Compute tmp1 based on tmp and the E_zz matrix
+            tmp1 = tmp * U' * obj.Z.E_CCt + diag((sum(obj.D) - obj.N) * ones(1, obj.K.Val));
+            
+            % Calculate the gradient before looping through the remaining operations
+            grad = tmp1 * Rinv';
+
+            grad = reshape(grad, [], 1);
+            
+            % Loop over each `i` to accumulate the gradient
+            for m = 1:obj.M
+                A = obj.views(m).W.E_XXt{m} * R;
+                B = 1 ./ sum(R .* A, 1);
+                tmp2 = obj.D(m) * reshape(A * diag(B), [], 1);
+                grad = grad - tmp2;
+            end
+            
+            % Flatten the gradient matrix and negate it
+            grad = -reshape(grad, [], 1);
+        end
+
+        function updateRotation(obj)
+            % Optimization of the rotation
+            r = reshape(eye(obj.K.Val), [], 1);
+            options = optimoptions('fmincon', 'Algorithm', 'trust-region-reflective', 'SpecifyObjectiveGradient', true, 'Display', 'off');
+            [r_opt, ~, exitflag] = fmincon(@(r)costAndGrad(r, obj), r, [], [], [], [], [], [], [], options);
+            
+            if exitflag > 0
+                % Update transformation matrix R
+                R = reshape(r_opt, obj.K.Val, obj.K.Val);
+                [U, S, V] = svd(R);
+                RInv = V * diag(1 ./ diag(S)) * U';
+
+                obj.Z.rotateAllDistributionsMu(RInv');
+                obj.Z.rotateAllDistributionsCovariance(RInv, false);
+        
+                % Update W
+                for m = 1:obj.M
+                    obj.views(m).W.rotateAllDistributionsMu(R);
+                    obj.views(m).W.rotateAllDistributionsCovariance(R, true);
+                end
+            else
+                obj.doRotation = false;
+                disp('Rotation stopped!');
+            end
+        end
+        
+
+    
+        %% Getters
+        function value = get.D(obj)
+            value = zeros(obj.M, 1);
+            for m = 1:length(obj.views)
+                value(m) = obj.views(m).D;
             end
         end
     end

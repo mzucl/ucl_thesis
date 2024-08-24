@@ -1,4 +1,4 @@
-function W = PPCA(X, K)
+function [W, sigmaSq] = PPCA(X, K)
     [~, D] = size(X);
 
     if nargin < 2

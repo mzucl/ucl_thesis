@@ -1,4 +1,4 @@
-classdef BayesianPCA < handle
+classdef BPCA < handle
     properties 
         view            % ViewHandler
         K               % Number of latent dimensions/principal components
@@ -21,15 +21,22 @@ classdef BayesianPCA < handle
         % Optimization parameters
         maxIter
         tol
-    end
 
-    properties (Dependent)
+        %% Dependent properties
+        %   They are not declared as dependent because they never change
+        %   upon the initialization
         N   % Number of observations/latent variables
         D   % Dimensionality
     end
+
+
+    properties (Constant)
+        DEBUG = Constants.DEBUG;
+    end
+
     
     methods
-        function obj = BayesianPCA(X, maxIter, tol)
+        function obj = BPCA(X, maxIter, tol)
             % Optional parameters: maxIter, tol
             if nargin < 1
                 error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
@@ -37,10 +44,12 @@ classdef BayesianPCA < handle
                 error(['##### ERROR IN THE CLASS ' class(obj) ': Too many arguments passed.']);
             end
             
-            % Set obj.X right away, so it can be used below to set obj.K
             obj.view = ViewHandler(X, false);
+            obj.N = obj.view.N;
+            obj.D = obj.view.D;
 
-            % BPCA can infer the right number of components
+            % BPCA can infer the right number of components, thus K is not
+            % passed in as a parameter
             obj.K = obj.D - 1;
 
             % Set default values
@@ -107,11 +116,21 @@ classdef BayesianPCA < handle
             obj.tau.setExpInit(1 / sigmaSq);
             obj.alpha.setExpCInit(repmat(1e-3, obj.K, 1));
             obj.mu.setExpInit(randn(obj.D, 1));
+
+            obj.qConstantUpdates();
         end
 
 
         
         %% Update methods
+        function obj = qConstantUpdates(obj)
+            % alpha.a
+            obj.alpha.updateAllDistributionsA(obj.alpha.ds(1).prior.a + obj.D/2);
+            % tau.a
+            obj.tau.updateA(obj.tau.prior.a + (obj.N * obj.D)/2);
+        end
+
+
         function obj = qZUpdate(obj, it)
             tauExp = Utility.ternary(it == 1, obj.tau.getExpInit(), obj.tau.E);
             muExp = Utility.ternary(it == 1, obj.mu.getExpInit(), obj.mu.E);
@@ -122,6 +141,7 @@ classdef BayesianPCA < handle
             obj.Z.updateAllDistributionsMu(tauExp * covNew * obj.W.E_Ct * ...
                 (obj.view.X - muExp));
         end
+
         
         function obj = qWUpdate(obj, it)
             alphaExp = Utility.ternary(it == 1, obj.alpha.getExpCInit(), obj.alpha.EC);
@@ -136,18 +156,12 @@ classdef BayesianPCA < handle
                 (obj.view.X' - muExp'));
         end
 
-        function obj = qAlphaUpdate(obj, it)
-            % Alpha is updated to the same value through the iterations, so
-            % it is enough to update it once
-            if it == 1
-                newAVal = obj.alpha.ds(1).prior.a + obj.D/2;
-                obj.alpha.updateAllDistributionsA(newAVal);
-            end
-            
-            newBVals = obj.alpha.ds(1).prior.b + 1/2 * obj.W.getExpectationOfColumnsNormSq();
 
-            obj.alpha.updateAllDistributionsB(newBVals);
+        function obj = qAlphaUpdate(obj)
+            obj.alpha.updateAllDistributionsB(obj.alpha.ds(1).prior.b + ...
+                1/2 * obj.W.getExpectationOfColumnsNormSq());
         end
+
 
         function obj = qMuUpdate(obj)
             tauExp = obj.tau.E;
@@ -156,23 +170,18 @@ classdef BayesianPCA < handle
             newMu = tauExp * newCov * (obj.view.X - obj.W.EC * obj.Z.EC) * ones(obj.N, 1);
 
             obj.mu.updateParameters(newMu, newCov);
+
+            % obj.mu.clearCache();
         end
 
-        % obj.tau is GammaDistribution
-        function obj = qTauUpdate(obj, it)
-            % Alpha is updated to the same value through the iterations, so
-            % it is enough to update it once
-            if it == 1
-                newAVal = obj.tau.prior.a + (obj.N * obj.D)/2;
-                obj.tau.updateA(newAVal);
-            end
 
-            expWtW_Tr = obj.W.E_CtC';
+        function obj = qTauUpdate(obj)
+            expWtW_tr = obj.W.E_CtC';
             expZZt = obj.Z.E_CCt;
             expWZ = obj.W.EC * obj.Z.EC;
             
             newBVal = obj.tau.prior.b + 1/2 * obj.view.Tr_XtX + obj.N/2 * obj.mu.E_XtX + ...
-                1/2 * dot(expWtW_Tr(:), expZZt(:)) - dot(obj.view.X(:), expWZ(:)) + ...
+                1/2 * dot(expWtW_tr(:), expZZt(:)) - dot(obj.view.X(:), expWZ(:)) + ...
                 obj.mu.E' * (expWZ - obj.view.X) * ones(obj.N, 1);
         
             obj.tau.updateB(newBVal);
@@ -181,89 +190,98 @@ classdef BayesianPCA < handle
         
 
         %% fit() and ELBO
-        function [elboVals, it, resArr] = fit(obj)
+        function [elboVals, it, resArr] = fit(obj, elboIterStep)
+            if nargin < 2
+                elboIterStep = 1;
+            end
             elboVals = -Inf(1, obj.maxIter);
-            resArr = cell(1, obj.maxIter);
-        
+            
             for it = 1:obj.maxIter
                 obj.qZUpdate(it);
                 obj.qWUpdate(it);
                 obj.qMuUpdate();
-                obj.qAlphaUpdate(it);
-                obj.qTauUpdate(it);
+                obj.qAlphaUpdate();
+                obj.qTauUpdate();
 
-                [currElbo, res] = obj.computeELBO();
+                if mod(it, elboIterStep) ~= 0
+                    continue;
+                end
 
-                resArr{it} = res;
+                % Compute elbo
+                if obj.DEBUG
+                    resArr = cell(1, obj.maxIter);
+                    [currElbo, res] = obj.computeELBO();
+                    resArr{it} = res;
 
-                % CHECK: ELBO has to increase from iteration to iteration
+                    if it ~= 1
+                        disp(['======= ELBO increased by: ', num2str(currElbo - elboVals(it - 1))]);
+                    end
+                else
+                    currElbo = obj.computeELBO();
+                end
+
+                % ELBO has to increase from iteration to iteration
                 if it ~= 1 && currElbo < elboVals(it - 1)
-                    fprintf(2, 'ELBO decreased in iteration %d\n', it);
+                    fprintf(2, 'ELBO decreased in iteration %d\n!!!', it);
                 end 
 
                 elboVals(it) = currElbo;
-
-                if it ~= 1
-                    disp(['======= ELBO increased by: ', num2str(currElbo - elboVals(it - 1))]);
-                end
 
                 % Check for convergence
                 if it ~= 1 && abs(currElbo - elboVals(it - 1)) / abs(currElbo) < obj.tol
                     disp(['Convergence at iteration: ', num2str(it)]);
                     elboVals = elboVals(1:it); % cut the -Inf values at the end
-                    resArr = resArr(1:it);
+                    if obj.DEBUG
+                        resArr = resArr(1:it);
+                    end
                     break;
                 end
             end
         end
         
-        function [elbo, res] = computeELBO(obj)
-            % DEBUG
-            res = {};
-            res.pX = obj.getExpectationLnPX();
-            res.pZ = obj.Z.E_LnPC;
-            res.pW = obj.getExpectationLnW();
-            res.pAlpha = obj.alpha.E_LnPC;
-            res.pMu = obj.mu.E_LnP;
-            res.pTau = obj.tau.E_LnP;
-            
-            res.qZ = obj.Z.HC;
-            res.qW = obj.W.HC;
-            res.qAlpha = obj.alpha.HC;
-            res.qMu = obj.mu.H;
-            res.qTau = obj.tau.H;
-            % DEBUG
 
-            elbo = obj.getExpectationLnPX() + obj.Z.E_LnPC + obj.getExpectationLnW() + ... % p(.)
+        function [elbo, res] = computeELBO(obj)
+            elbo = obj.getExpectationLnPX() + obj.Z.E_LnPC + obj.getExpectationLnPW() + ... % p(.)
                 obj.alpha.E_LnPC + obj.mu.E_LnP + obj.tau.E_LnP + ... % p(.)
                 obj.Z.HC + obj.W.HC + obj.alpha.HC + obj.mu.H + obj.tau.H; % q(.)
+            if obj.DEBUG
+                res = {};
+                res.pX = obj.getExpectationLnPX();
+                res.pZ = obj.Z.E_LnPC;
+                res.pW = obj.getExpectationLnPW();
+                res.pAlpha = obj.alpha.E_LnPC;
+                res.pMu = obj.mu.E_LnP;
+                res.pTau = obj.tau.E_LnP;
+                
+                res.qZ = obj.Z.HC;
+                res.qW = obj.W.HC;
+                res.qAlpha = obj.alpha.HC;
+                res.qMu = obj.mu.H;
+                res.qTau = obj.tau.H;
 
-            % DEBUG
-            res.elbo = elbo;
-            % DEBUG
+                res.elbo = elbo;
+            end
         end
+
 
         function value = getExpectationLnPX(obj)
-            value = obj.N * obj.D/2 * (obj.tau.E_Ln - log(2 * pi)) - obj.tau.E/2 * ( ...
-                obj.view.Tr_XtX - 2 * trace(obj.W.EC * obj.Z.EC * obj.view.X') ...
-                - 2 * obj.mu.E_Xt * obj.view.X * ones(obj.N, 1) ...
-                + 2 * obj.mu.E_Xt * obj.W.EC * obj.Z.EC * ones(obj.N, 1) ...
-                + trace(obj.W.E_CtC * obj.Z.E_CCt) + obj.N * obj.mu.E_XtX);
+            % Setup
+            expWtW_tr = obj.W.E_CtC';
+            expZZt = obj.Z.E_CCt;
+            expW_tr = obj.W.EC';
+            expZXt = obj.Z.EC * obj.view.X';
 
+            value = obj.N * obj.D/2 * (obj.tau.E_LnX - log(2 * pi)) - obj.tau.E/2 * ( ...
+                obj.view.Tr_XtX - 2 * dot(expW_tr(:), expZXt(:)) ...
+                - 2 * obj.mu.E_Xt * (obj.view.X * ones(obj.N, 1)) ...
+                + 2 * (expW_tr * obj.mu.E)' * (obj.Z.EC * ones(obj.N, 1)) ...
+                + dot(expWtW_tr(:), expZZt(:)) + obj.N * obj.mu.E_XtX);
         end
 
-        function value = getExpectationLnW(obj)
+
+        function value = getExpectationLnPW(obj)
             value = -1/2 * obj.W.getExpectationOfColumnsNormSq()' * obj.alpha.EC + ...
                 + obj.D/2 * (obj.alpha.E_LnC - obj.K * log(2*pi));
-        end
-
-        %% Getters
-        function value = get.N(obj)
-            value = obj.view.N;
-        end
-        
-        function value = get.D(obj)
-            value = obj.view.D;
         end
     end
 end
