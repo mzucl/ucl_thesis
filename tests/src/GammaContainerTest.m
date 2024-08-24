@@ -110,9 +110,19 @@ classdef GammaContainerTest < matlab.unittest.TestCase
                 E_LnP = E_LnP + ds.E_LnP;
             end
             testCase.verifyEqual(obj.H, H);
-            % TODO (high): Roundoff error is huge, or something is wrong!
-            % disp(obj.E_LnP - E_LnP)
-            % testCase.verifyEqual(obj.E_LnP, E_LnP);
+            testCase.verifyTrue(obj.E_LnP - E_LnP < 1e-12);
+
+            % E_LnP (special test)
+            a = 14; b = 7;
+            aPrior = 1; bPrior = 1;
+            prior = Gamma(aPrior, bPrior);
+            obj = GammaContainer("SD", size, a, b, prior);
+            
+            testCase.verifyEqual(obj.E_LnP, -2 * size);
+
+            % E_LnX
+            obj.updateAllDistributionsB([exp(1); exp(2); exp(6); exp(10)]);
+            testCase.verifyTrue(obj.E_LnX - (4 * psi(a) - 19) < 1e-12);
         end
 
 
