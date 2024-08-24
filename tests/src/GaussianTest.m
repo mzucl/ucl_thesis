@@ -1,13 +1,12 @@
 classdef GaussianTest < matlab.unittest.TestCase
     %% Static methods
     methods (Static, Access = public)
-        function verifyObject(testCase, obj, mu, cov, prior, dim)
+        function verifyObject(testCase, obj, mu, cov, priorPrec, dim)
             testCase.verifyEqual(obj.mu, mu);
             testCase.verifyEqual(obj.cov, cov);
+
             if nargin > 5
-                areEqual = Utility.isNaN(obj.prior) && Utility.isNaN(prior) || ...
-                    obj.prior == prior;
-                testCase.verifyTrue(areEqual);
+                testCase.verifyEqual(obj.priorPrec, priorPrec);
                 if nargin == 6
                     testCase.verifyEqual(obj.dim, dim);
                 end
@@ -16,11 +15,15 @@ classdef GaussianTest < matlab.unittest.TestCase
         
     end
 
+
+
+
+
     methods (Test)
         %% Deep copy and operators overloading
         function testDeepCopy(testCase)
             mu = 1; cov = 1;
-            obj = Gaussian(mu, cov);
+            obj = Gaussian(1, mu, cov);
 
             % Test 1: Deep copy
             deepCopy = obj.copy();
@@ -35,7 +38,8 @@ classdef GaussianTest < matlab.unittest.TestCase
 
             % Test 2: Shallow copy
             shallowCopy = obj;
-            shallowCopy.updateParameters(muNew, covNew);
+            shallowCopy.updateMu(muNew);
+            shallowCopy.updateCovariance(covNew);
             
             % Both 'obj' and 'shallowCopy' are updated
             GaussianTest.verifyObject(testCase, obj, muNew, covNew);
@@ -46,18 +50,17 @@ classdef GaussianTest < matlab.unittest.TestCase
             mu = 1; cov = 2;
             muNew = 5; covNew = 6;
 
-            obj = Gaussian(mu, cov, Gaussian());
+            obj = Gaussian(1, mu, cov, 10); % priorPrec = 10
             deepCopy = obj.copy();
 
             testCase.verifyTrue(obj == deepCopy);
           
-            obj.updateParameters(muNew, covNew);
+            obj.updateMu(muNew);
+            obj.updateCovariance(covNew);
 
             testCase.verifyTrue(obj ~= deepCopy);
 
-            % They still should have the same prior 
-            %   (this will test if the prior is copied correctly)
-            testCase.verifyTrue(obj.prior == deepCopy.prior);
+            testCase.verifyTrue(obj.priorPrec == deepCopy.priorPrec);
         end
         
         function testEq(testCase)
@@ -65,50 +68,52 @@ classdef GaussianTest < matlab.unittest.TestCase
             mu2 = 3; cov2 = 4;
 
             % Test 1: Same objects; no priors;
-            obj1 = Gaussian(mu1, cov1);
-            obj2 = Gaussian(mu1, cov1);
+            obj1 = Gaussian(1, mu1, cov1);
+            obj2 = Gaussian(1, mu1, cov1);
             testCase.verifyTrue(obj1 == obj2);
 
             % Test 2: Same objects; same priors;
-            obj1 = Gaussian(mu1, cov1, Gaussian());
-            obj2 = Gaussian(mu1, cov1, Gaussian());
+            obj1 = Gaussian(1, mu1, cov1, 12);
+            obj2 = Gaussian(1, mu1, cov1, 12);
             testCase.verifyTrue(obj1 == obj2);
 
-            % Test 3.1: Same objects; different priors (one in NaN);
-            obj1 = Gaussian(mu1, cov1, Gaussian());
-            obj2 = Gaussian(mu1, cov1);
+            % Test 3.1: Same objects; different priors (one in not set);
+            obj1 = Gaussian(1, mu1, cov1, 10);
+            obj2 = Gaussian(1, mu1, cov1);
             testCase.verifyTrue(obj1 ~= obj2);
 
-            % Test 3.2: Same objects; different priors (one in NaN);
-            obj1 = Gaussian(mu1, cov1);
-            obj2 = Gaussian(mu1, cov1, Gaussian());
+            % Test 3.2: Same objects; different priors (one in not set);
+            obj1 = Gaussian(1, mu1, cov1);
+            obj2 = Gaussian(1, mu1, cov1, 12);
             testCase.verifyTrue(obj1 ~= obj2);
 
             % Test 3.3: Same objects; different priors;
-            obj1 = Gaussian(mu1, cov1, Gaussian());
-            obj2 = Gaussian(mu1, cov1, Gaussian(10, 20));
+            obj1 = Gaussian(1, mu1, cov1, 12);
+            obj2 = Gaussian(1, mu1, cov1, 14);
             testCase.verifyTrue(obj1 ~= obj2);
 
             % Test 4: Different objects; no priors;
-            obj1 = Gaussian(mu1, cov1);
-            obj2 = Gaussian(mu2, cov2);
+            obj1 = Gaussian(1, mu1, cov1);
+            obj2 = Gaussian(1, mu2, cov2);
             testCase.verifyTrue(obj1 ~= obj2);
 
             % Test 5: Different objects; same priors;
-            obj1 = Gaussian(mu1, cov1, Gaussian());
-            obj2 = Gaussian(mu2, cov2, Gaussian());
+            obj1 = Gaussian(1, mu1, cov1, 1);
+            obj2 = Gaussian(1, mu2, cov2, 1);
             testCase.verifyTrue(obj1 ~= obj2);
 
-            % Test 6.1: Different objects; different priors (one is NaN);
-            obj1 = Gaussian(mu1, cov1, Gaussian());
-            obj2 = Gaussian(mu2, cov2);
+            % Test 6.1: Different objects; different priors (one is not set);
+            obj1 = Gaussian(1, mu1, cov1, 12);
+            obj2 = Gaussian(1, mu2, cov2);
             testCase.verifyTrue(obj1 ~= obj2);
 
             % Test 6.2: Different objects; different priors;
-            obj1 = Gaussian(mu1, cov1, Gaussian(10, 20));
-            obj2 = Gaussian(mu2, cov2, Gaussian(30, 40));
+            obj1 = Gaussian(1, mu1, cov1, 12);
+            obj2 = Gaussian(1, mu2, cov2, 14);
             testCase.verifyTrue(obj1 ~= obj2);
         end
+
+
 
 
 
@@ -118,156 +123,172 @@ classdef GaussianTest < matlab.unittest.TestCase
 
             GaussianTest.verifyObject(testCase, obj, ...
                 Constants.DEFAULT_GAUSS_MU, 1/Constants.DEFAULT_GAUSS_PRECISION, ...
-                NaN, Constants.DEFAULT_GAUSS_DIM);
+                Constants.DEFAULT_GAUSS_PRECISION, Constants.DEFAULT_GAUSS_DIM);
         end
 
         function testOneParameterConstructor(testCase)
-            % Test 1: 'mu' is a column vector
-            mu = [1; 2; 3];
-            obj = Gaussian(mu);
+            % OPTION 1: Parameter is an instance of Gaussian
+            param = Gaussian();
+            obj = Gaussian(param);
 
+            GaussianTest.verifyObject(testCase, obj, param.mu, param.cov, param.priorPrec, param.dim);
+
+            % OPTION 2: Parameter is 'dim' (scalar)
+            dim = 5;
+            obj = Gaussian(dim);
             GaussianTest.verifyObject(testCase, obj, ...
-                mu, eye(length(mu)), NaN, length(mu));
-
-            % Test 2: 'mu' is a row vector
-            mu = [1, 2, 3];
-            obj = Gaussian(mu);
-
-            GaussianTest.verifyObject(testCase, obj, ...
-                mu', eye(length(mu)), NaN, length(mu));
-
-            % Test 3: When parameter is a prior distribution
-            prior = Gaussian();
-            obj = Gaussian(prior);
-            
-            GaussianTest.verifyObject(testCase, obj, ...
-                prior.mu, prior.cov, prior, prior.dim);
-
+                repmat(Constants.DEFAULT_GAUSS_MU, dim, 1), eye(5), ...
+                Constants.DEFAULT_GAUSS_PRECISION, dim);
         end
 
         function testTwoParameterConstructor(testCase)
-            % Test 1
-            % mu: array
-            % cov: scalar
-            mu = [1; 2; 3];
-            cov = 4;
-            obj = Gaussian(mu, cov);
+            dim = 5;
 
-            GaussianTest.verifyObject(testCase, obj, ...
-                mu, cov * eye(length(mu)), NaN, length(mu));
+            % OPTION 1: 'mu' is a scalar
+            mu = 7;
+            obj = Gaussian(dim, 7);    
+            GaussianTest.verifyObject(testCase, obj, repmat(mu, dim, 1), eye(dim), ...
+                Constants.DEFAULT_GAUSS_PRECISION, dim);
 
-
-            % Test 2
-            % mu: array
-            % cov: array
+            % OPTION 2: 'mu' is a column vector
             mu = [1; 2; 3; 4; 5];
-            cov = [1, 1, 2, 2, 3];
-            obj = Gaussian(mu, cov);
-            
-            GaussianTest.verifyObject(testCase, obj, ...
-                mu, diag(cov), NaN, length(mu));
+            obj = Gaussian(dim, mu);
 
-            % Test 3
-            % mu: array
-            % cov: matrix
-            mu = [1; 2; 3];
-            cov = Utility.generateRandomSPDMatrix(length(mu));
-            obj = Gaussian(mu, cov);
-            
-            GaussianTest.verifyObject(testCase, obj, ...
-                mu, cov, NaN, length(mu));
-
-
-            % Test 4
-            % mu: scalar
-            % cov: scalar
-            mu = 5;
-            cov = 1;
-            obj = Gaussian(mu, cov);
-            
-            GaussianTest.verifyObject(testCase, obj, ...
-                mu, cov, NaN, 1);
-
-
-            % Test 5
-            % mu: scalar
-            % cov: array
-            mu = 5;
-            cov = [1; 2; 3];
-            obj = Gaussian(mu, cov);
-            
-            GaussianTest.verifyObject(testCase, obj, ...
-                mu * ones(length(cov), 1), diag(cov), NaN, length(cov));
-
-
-            % Test 6
-            % mu: scalar
-            % cov: matrix
-            mu = 5;
-            cov = Utility.generateRandomSPDMatrix(5);
-            obj = Gaussian(mu, cov);
-            
-            GaussianTest.verifyObject(testCase, obj, ...
-                mu * ones(length(cov), 1), cov, NaN, size(cov, 1));
+            GaussianTest.verifyObject(testCase, obj, mu, eye(dim), ...
+                Constants.DEFAULT_GAUSS_PRECISION, dim);
         end
 
         function testThreeParameterConstructor(testCase)
             % Test 1
             % mu: array
             % cov: scalar
+            dim = 3;
             mu = [1; 2; 3];
             cov = 4;
+            obj = Gaussian(dim, mu, cov);
 
-            % 'true value' for the prior
-            prior = Gaussian(0, 1/2 * eye(length(mu)));
+            GaussianTest.verifyObject(testCase, obj, mu, cov * eye(dim), ...
+                Constants.DEFAULT_GAUSS_PRECISION, dim);
 
-            obj = Gaussian(mu, cov, prior);
+            % Test 2
+            % mu: array
+            % cov: array
+            dim = 5;
+            mu = [1; 2; 3; 4; 5];
+            cov = [1, 1, 2, 2, 3];
+            obj = Gaussian(dim, mu, cov);
 
-            GaussianTest.verifyObject(testCase, obj, ...
-                mu, cov * eye(length(mu)), prior, length(mu));
+            GaussianTest.verifyObject(testCase, obj, mu, diag(cov), ...
+                Constants.DEFAULT_GAUSS_PRECISION, dim);
+
+            % Test 3
+            % mu: array
+            % cov: matrix
+            dim = 3;
+            mu = [1; 2; 3];
+            cov = Utility.generateRandomSPDMatrix(dim);
+            obj = Gaussian(dim, mu, cov);
+
+            GaussianTest.verifyObject(testCase, obj, mu, cov, ...
+                Constants.DEFAULT_GAUSS_PRECISION, dim);
+
+            % Test 4
+            % mu: scalar
+            % cov: scalar
+            dim = 10;
+            mu = 5;
+            cov = 1;
+            obj = Gaussian(dim, mu, cov);
+
+            GaussianTest.verifyObject(testCase, obj, repmat(mu, dim, 1), cov * eye(dim), ...
+                Constants.DEFAULT_GAUSS_PRECISION, dim);
+
+            % Test 5
+            % mu: scalar
+            % cov: array
+            dim = 3;
+            mu = 5;
+            cov = [1; 2; 3];
+            obj = Gaussian(dim, mu, cov);
+
+            GaussianTest.verifyObject(testCase, obj, repmat(mu, dim, 1), diag(cov), ...
+                Constants.DEFAULT_GAUSS_PRECISION, dim);
 
             % Test 6
             % mu: scalar
             % cov: matrix
+            dim = 5;
             mu = 5;
-            cov = Utility.generateRandomSPDMatrix(5);
+            cov = Utility.generateRandomSPDMatrix(dim);
+            obj = Gaussian(dim, mu, cov);
 
-            % 'true value' for the dim and prior
-            trueDim = size(cov, 1);
-            prior = Gaussian(0, 1/2 * eye(trueDim));
-
-            obj = Gaussian(mu, cov, prior);
-            
-            GaussianTest.verifyObject(testCase, obj, ...
-                mu * ones(trueDim, 1), cov, prior, trueDim);
-
-            % NaN for 'prior'
-            obj = Gaussian(mu, cov, NaN);
-            
-            GaussianTest.verifyObject(testCase, obj, ...
-                mu * ones(trueDim, 1), cov, NaN, trueDim);
+            GaussianTest.verifyObject(testCase, obj, repmat(mu, dim, 1), cov, ...
+                Constants.DEFAULT_GAUSS_PRECISION, dim);
         end
 
         function testFourParameterConstructor(testCase)
-            % Test 1: full test
+            % Test 1
+            % mu: array
+            % cov: scalar
+            dim = 3;
+            mu = [1; 2; 3];
+            cov = 4;
+            priorPrec = 12;
+            obj = Gaussian(dim, mu, cov, priorPrec);
+
+            GaussianTest.verifyObject(testCase, obj, mu, cov * eye(dim), priorPrec, dim);
+
+            % Test 2
+            % mu: array
+            % cov: array
+            dim = 5;
+            mu = [1; 2; 3; 4; 5];
+            cov = [1, 1, 2, 2, 3];
+            obj = Gaussian(dim, mu, cov, priorPrec);
+
+            GaussianTest.verifyObject(testCase, obj, mu, diag(cov), priorPrec, dim);
+
+            % Test 3
+            % mu: array
+            % cov: matrix
+            dim = 3;
+            mu = [1; 2; 3];
+            cov = Utility.generateRandomSPDMatrix(dim);
+            obj = Gaussian(dim, mu, cov, priorPrec);
+
+            GaussianTest.verifyObject(testCase, obj, mu, cov, priorPrec, dim);
+
+            % Test 4
+            % mu: scalar
+            % cov: scalar
+            dim = 10;
             mu = 5;
             cov = 1;
-            dim = 10;
+            obj = Gaussian(dim, mu, cov, priorPrec);
 
-            priorMu = 1:dim;
-            prior = Gaussian(priorMu); % mu = [1, 2, ..., dim]
+            GaussianTest.verifyObject(testCase, obj, repmat(mu, dim, 1), cov * eye(dim), priorPrec, dim);
 
-            obj = Gaussian(mu, cov, prior, dim);
+            % Test 5
+            % mu: scalar
+            % cov: array
+            dim = 3;
+            mu = 5;
+            cov = [1; 2; 3];
+            obj = Gaussian(dim, mu, cov, priorPrec);
 
-            % Verify object
-            GaussianTest.verifyObject(testCase, obj, ...
-                mu * ones(dim, 1), cov * eye(dim), prior, dim);
+            GaussianTest.verifyObject(testCase, obj, repmat(mu, dim, 1), diag(cov), priorPrec, dim);
 
-            % Test 2: prior is NaN
-            obj = Gaussian(mu, cov, NaN, dim);
-            GaussianTest.verifyObject(testCase, obj, ...
-                mu * ones(dim, 1), cov * eye(dim), NaN, dim);
+            % Test 6
+            % mu: scalar
+            % cov: matrix
+            dim = 5;
+            mu = 5;
+            cov = Utility.generateRandomSPDMatrix(dim);
+            obj = Gaussian(dim, mu, cov, priorPrec);
+
+            GaussianTest.verifyObject(testCase, obj, repmat(mu, dim, 1), cov, priorPrec, dim);
         end
+
         
 
         
@@ -275,11 +296,10 @@ classdef GaussianTest < matlab.unittest.TestCase
         function testDependentProperties(testCase)
             % Test 1.1: Expectations and Variance
             dim = 10;
-            obj = Gaussian(0, 1, NaN, dim);
+            obj = Gaussian(dim, 0, 1);
             
             testCase.verifyEqual(obj.E, zeros(dim, 1));
-            testCase.verifyEqual(obj.Var, eye ...
-                (dim));
+            testCase.verifyEqual(obj.Var, eye(dim));
             testCase.verifyEqual(obj.E_Xt, zeros(1, dim));
             testCase.verifyEqual(obj.E_XtX, dim);
             testCase.verifyEqual(obj.E_XXt, eye(dim));
@@ -288,7 +308,7 @@ classdef GaussianTest < matlab.unittest.TestCase
             dim = 10;
             cov = Utility.generateRandomSPDMatrix(dim);
             mu = ones(dim, 1);
-            obj = Gaussian(mu, cov);
+            obj = Gaussian(dim, mu, cov);
             
             testCase.verifyEqual(obj.E, mu);
             testCase.verifyEqual(obj.Var, cov);
@@ -298,39 +318,21 @@ classdef GaussianTest < matlab.unittest.TestCase
 
             % Test 2: H
             dim = 2;
-            obj = Gaussian(0, 2*pi, NaN, dim);
+            obj = Gaussian(dim, 0, 2*pi);
             testCase.verifyEqual(obj.H, 1 + 2 * log(2*pi));
+
+            % Test 3: E_LnP
+            obj = Gaussian(dim, 0, 1, 2 * pi);
+            testCase.verifyEqual(obj.E_LnP, -pi * dim);
         end
         
-        function testPriorPrecision(testCase)
-            % Test 1: covariance is identity matrix
-            prior = Gaussian();
-            obj = Gaussian(2, 4, prior);
-            testCase.verifyEqual(obj.PPrec, Constants.DEFAULT_GAUSS_PRECISION);
 
-            % Test 2: covariance is full matrix
-            %   this test can fail if generateRandomSPDMatrix returns
-            %   a diagonal matrix, which is possible!
-            prior = Gaussian([1, 2], Utility.generateRandomSPDMatrix(2));
-            obj = Gaussian([0, 0], 1, prior);
-            testCase.verifyEqual(obj.PPrec, NaN);
 
-            % Test 3: spherical covariance
-            prior = Gaussian([1, 2], diag(4 * ones(2, 1)));
-            obj = Gaussian([0, 0], 1, prior);
-            testCase.verifyEqual(obj.PPrec, 1/4);
 
-            % Test 4: diagonal covariance
-            prior = Gaussian([1, 2], diag([2, 4]));
-            obj = Gaussian([0, 0], 1, prior);
-            testCase.verifyEqual(obj.PPrec, [1/2; 1/4]);
-        end
-
-        
 
         %% Private properties
         function testSetters(testCase)
-            obj = GammaDistribution();
+            obj = Gaussian();
             testCase.verifyTrue(obj.getExpInit() == obj.E);
 
             expInit = 34;
@@ -339,124 +341,46 @@ classdef GaussianTest < matlab.unittest.TestCase
         end
 
 
+
+
         
         %% Update methods
-        function testUpdateParameters(testCase)
-            % Test 1: No prior
-            % ----------------------------------------------------
+        function testUpdateMu(testCase)
             dim = 10;
-            obj = Gaussian(0, 1, NaN, dim);
+            obj = Gaussian(dim, 0, 1);
 
-            % New values for 'mu' and 'cov'
-            newMu = 5;
-            newCov = Utility.generateRandomSPDMatrix(dim); % We want to keep the same dimension
-            obj.updateParameters(newMu, newCov);
+            newMu = 5 * ones(dim, 1); % We want to keep the same dimension
 
-            GaussianTest.verifyObject(testCase, obj, ...
-                newMu * ones(dim, 1), newCov, NaN, dim);
+            obj.updateMu(newMu);
 
-            % Test 2: With prior
-            % ----------------------------------------------------
-            dim = 10;
-            prior = Gaussian(1:dim, Utility.generateRandomSPDMatrix(dim));
-            obj = Gaussian(0, 1, prior, dim);
-
-            % New values for 'mu' and 'cov'
-            newMu = 13;
-            newCov = Utility.generateRandomSPDMatrix(dim); % We want to keep the same dimension
-
-            % Before update
-            testCase.verifyTrue(obj.prior == prior);
-            % After update (prior is verified in the verifyObject call)
-            obj.updateParameters(newMu, newCov);
-            GaussianTest.verifyObject(testCase, obj, ...
-                newMu * ones(dim, 1), newCov, prior, dim);
-        end
-
-        function testUpdateParameters2(testCase)
-            % Test if prior is affected by the update method
-            dim = 10;
-            priorPrec = 2;
-            % 'true value' for the prior
-            prior = Gaussian(0, 1/priorPrec * eye(dim));
-
-            obj = Gaussian(0, 1, prior, dim);
-
-            GaussianTest.verifyObject(testCase, obj, ...
-                zeros(dim, 1), eye(dim), prior, dim);
-
-            % Update
-            newMu = 5;
-            newCov = Utility.generateRandomSPDMatrix(dim); % We want to keep the same dimension
-            obj.updateParameters(newMu, newCov);
-
-            GaussianTest.verifyObject(testCase, obj, ...
-                newMu * ones(dim, 1), newCov, prior, dim);
+            GaussianTest.verifyObject(testCase, obj, newMu, eye(dim), Constants.DEFAULT_GAUSS_PRECISION, dim);
         end
 
         function testUpdateCovariance(testCase)
             dim = 10;
-            priorPrec = 2;
-            % 'true value' for the prior
-            prior = Gaussian(0, 1/priorPrec * eye(dim));
-            obj = Gaussian(0, 1, prior, dim);
+            obj = Gaussian(dim, 0);
 
-            newCov = Utility.generateRandomSPDMatrix(dim); % We want to keep the same dimension
+            testCase.verifyEqual(obj.cov, eye(dim));
+
+            newCov = Utility.generateRandomSPDMatrix(dim);
 
             obj.updateCovariance(newCov);
 
-            GaussianTest.verifyObject(testCase, obj, ...
-                zeros(dim, 1), newCov, prior, dim);
+            GaussianTest.verifyObject(testCase, obj, zeros(dim, 1), newCov, Constants.DEFAULT_GAUSS_PRECISION, dim);
         end
 
-        function testUpdateMu(testCase)
-            dim = 10;
-            obj = Gaussian(0, 1, NaN, dim);
-
-            newMu = 5 * ones(dim); % We want to keep the same dimension
-
-            obj.updateMu(newMu);
-
-            GaussianTest.verifyObject(testCase, obj, ...
-                newMu, eye(dim), NaN, dim);
-        end
-
-        function testRotateUpdates(testCase)
-            dim = 4;
-            mu = 1:dim;
-            cov = [
-                4, 2, 1, 3;
-                2, 5, 2, 1;
-                1, 2, 3, 0;
-                3, 1, 0, 6
-            ];
-            obj = Gaussian(mu, cov, NaN);
-
-            R = Utility.generateRandomRotationMatrix(dim);
-            obj.rotateMu(R);
-
-            testCase.verifyEqual(obj.mu, R * mu');
-
-            obj.rotateCovariance(R, true); % RtCovR
-            testCase.verifyEqual(obj.cov, R' * cov * R);
-
-            % Change the 'cov' back
-            obj.updateCovariance(cov);
-            obj.rotateCovariance(R, false); % RtCovR
-            testCase.verifyEqual(obj.cov, R * cov * R');
-        end
-        
         function testRemoveDimensions(testCase)
-            % Test 1: no prior
+            % Setup
             dim = 4;
-            mu = 1:dim;
+            mu = (1:dim)';
             cov = [
                 4, 2, 1, 3;
                 2, 5, 2, 1;
                 1, 2, 3, 0;
                 3, 1, 0, 6
             ];
-            obj = Gaussian(mu, cov, NaN);
+
+            obj = Gaussian(dim, mu, cov);
             exp = obj.E;
 
             obj.removeDimensions([1, 3]);
@@ -465,32 +389,7 @@ classdef GaussianTest < matlab.unittest.TestCase
             testCase.verifyEqual(obj.E, [exp(2); exp(4)]);
             testCase.verifyEqual(obj.cov, [5, 1; 1, 6]);
             testCase.verifyEqual(obj.mu, [2; 4]);
-            testCase.verifyEqual(obj.prior, NaN);
-
-            % Test 2: with prior
-            dim = 4;
-            mu = 1:dim;
-            cov = [
-                4, 2, 1, 3;
-                2, 5, 2, 1;
-                1, 2, 3, 0;
-                3, 1, 0, 6
-            ];
-            obj = Gaussian(mu, cov, Gaussian(0, 5 * eye(dim)));
-            exp = obj.E;
-
-            obj.removeDimensions([1, 3]);
-
-            testCase.verifyTrue(obj.dim == 2);
-            testCase.verifyEqual(obj.E, [exp(2); exp(4)]);
-            testCase.verifyEqual(obj.cov, [5, 1; 1, 6]);
-            testCase.verifyEqual(obj.mu, [2; 4]);
-
-            % Verify prior
-            testCase.verifyTrue(obj.prior.dim == 2);
-            testCase.verifyEqual(obj.prior.E, [0; 0]);
-            testCase.verifyEqual(obj.prior.cov, [5, 0; 0, 5]);
-            testCase.verifyEqual(obj.prior.mu, [0; 0]);
+            testCase.verifyEqual(obj.priorPrec, Constants.DEFAULT_GAUSS_PRECISION);
         end
     end
 end
