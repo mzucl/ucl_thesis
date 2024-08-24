@@ -15,7 +15,7 @@ classdef Gamma < handle
     
 
     properties (Constant)
-        validate = Constants.VALIDATE;
+        VALIDATE = Constants.VALIDATE;
     end
 
 
@@ -156,7 +156,7 @@ classdef Gamma < handle
 
         %% Update methods
         function obj = updateParameters(obj, a, b)
-            if Gamma.validate
+            if Gamma.VALIDATE
                 if nargin < 3
                     error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
                 end
@@ -173,7 +173,7 @@ classdef Gamma < handle
         end
         
         function obj = updateA(obj, a)
-            if Gamma.validate
+            if Gamma.VALIDATE
                 if nargin < 2
                     error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
                 end
@@ -189,7 +189,7 @@ classdef Gamma < handle
         end
 
         function obj = updateB(obj, b)
-            if Gamma.validate
+            if Gamma.VALIDATE
                 if nargin < 2
                     error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
                 end
@@ -208,7 +208,7 @@ classdef Gamma < handle
         
         %% Setters
         function obj = setExpInit(obj, value)
-            if Gamma.validate && value <= 0
+            if Gamma.VALIDATE && value <= 0
                 error(['##### ERROR IN THE CLASS ' class(obj) ': Expectation is a strictly positive number.']);
             end
             obj.expInit = value;
@@ -245,13 +245,15 @@ classdef Gamma < handle
         end
 
         % TODO (low/medium): Using expressions for obj.E_LnX and obj.E
-        % could speed this up.
+        % directly could speed this up.
         function value = get.E_LnP(obj)
-            if Gamma.validate && ~isa(obj.prior, 'Gamma')
-                error(['##### ERROR IN THE CLASS ' class(obj) ': Prior must be defined.']);
+            % The value is set only when prior is defined
+            if isa(obj.prior, 'Gamma')
+                value = -gammaln(obj.prior.a) + obj.prior.a * log(obj.prior.b) + ...
+                    (obj.prior.a - 1) * obj.E_LnX - obj.prior.b * obj.E;
+            else
+                value = NaN;
             end
-            value = -gammaln(obj.prior.a) + obj.prior.a * log(obj.prior.b) + ...
-                (obj.prior.a - 1) * obj.E_LnX - obj.prior.b * obj.E;
         end
 
         function value = get.Val(obj)
