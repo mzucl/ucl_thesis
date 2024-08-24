@@ -30,7 +30,6 @@ classdef GammaContainer < handle
     properties(Access = private)
         expCInit
         cache = struct(...
-            'Distributions', NaN, ...
             'Size', NaN, ...
             'E', NaN, ...
             'E_Diag', NaN, ...
@@ -70,39 +69,71 @@ classdef GammaContainer < handle
     end
 
     methods
-        %% Constructor
-        function obj = GammaContainer(type, size, a, b, prior)
-            if nargin == 0
-                error(['##### ERROR IN THE CLASS ' class(obj) ': Too few argumentes passed in.']);
-            end
-            if type == "DS" || type == "SS" || type == "DD"
-                error(['##### ERROR IN THE CLASS ' class(obj) ': Not implemented yet.']);
+        %% Options for the constructor GammaDistributionContainer
+        % ZERO PARAMETERS
+        % -> error!
+        %
+        % 1 PARAMETER: type
+        % -> container has 1 Gamma with default parameters and default prior
+        % 
+        % 2 PARAMETERS: type, size_
+        % -> container has 'size' Gamma with default parameters and default
+        % prior
+        %
+        % 3 PARAMETERS: type, size_, a
+        % -> container has 'size' Gamma with set 'a' and default 'b'
+        %
+        % 4 PARAMETERS: type, size_, a, b
+        % -> container has 'size' Gamma with set 'a' and set 'b' if 'b' is
+        % scalar; if b is an array of values then those values are used,
+        % but the length of the array must match the size
+        %
+        % 5 PARAMETERS: type, size_, a, b, prior
+        % -> same as previous constructor, but the prior is set
+        %
+        %%
+        function obj = GammaContainer(type, size_, a, b, prior)
+            if obj.VALIDATE
+                if nargin == 0
+                    error(['##### ERROR IN THE CLASS ' class(obj) ': Too few argumentes passed in.']);
+                end
+                if type == "DS" || type == "SS" || type == "DD"
+                    error(['##### ERROR IN THE CLASS ' class(obj) ': Not implemented yet.']);
+                end
             end
 
             obj.type = type;
 
             % Default values
-            obj.prior = Gamma();
             obj.a = Constants.DEFAULT_GAMMA_A;
             obj.b = Constants.DEFAULT_GAMMA_B; % scalar
+            obj.prior = Gamma();
 
-            if nargin > 1 % 'size'
-                obj.b = repmat(Constants.DEFAULT_GAMMA_B, size, 1);
-                if nargin > 2 % 'a'
+            switch nargin
+                case 2 % type, size
+                    obj.b = repmat(Constants.DEFAULT_GAMMA_B, size_, 1);
+
+                case 3 % type, size, a
                     obj.a = a;
-                    if nargin > 3 % 'b'
-                        if obj.VALIDATE && length(b) ~= size
+                    obj.b = repmat(Constants.DEFAULT_GAMMA_B, size_, 1);
+                   
+                case {4, 5} % type, size, a, b
+                    obj.a = a;
+                    if Utility.isSingleNumber(b)
+                        obj.b = repmat(b, size_, 1);
+                    else
+                        if obj.VALIDATE && size(b, 1) ~= size_ % 'b' must be a column vector
                             error(['##### ERROR IN THE CLASS ' class(obj) ': Length of b doesn''t match the size.']);
                         end
                         obj.b = b;
-                        if nargin > 4 % 'prior'
-                            if obj.VALIDATE && ~Utility.isNaNOrInstanceOf('Gamma')
-                                error(['##### ERROR IN THE CLASS ' class(obj) ': Invalid argument for prior.']);
-                            end
-                            obj.prior = prior;
-                        end
                     end
-                end
+                    
+                    if nargin > 4 % prior
+                        if obj.VALIDATE && ~Utility.isNaNOrInstanceOf(prior, 'Gamma')
+                            error(['##### ERROR IN THE CLASS ' class(obj) ': Invalid prior parameter.']);
+                        end
+                        obj.prior = prior;
+                    end
             end
             
             % Set initial expectation to the actual expectation
@@ -137,7 +168,7 @@ classdef GammaContainer < handle
                 if nargin < 2
                     error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
                 end
-                if ~(isscalar(b) || Utility.isArray(b) && length(b) == obj.Size)
+                if ~(Utility.isSingleNumber(b) || Utility.isArray(b) && size(b, 1) == obj.Size) % 'b' must be a column vector
                     error(['##### ERROR IN THE CLASS ' class(obj) ': Dimensions do not match.']);
                 end
                 if ~all(b > 0)
@@ -145,8 +176,13 @@ classdef GammaContainer < handle
                 end
             end
 
-            obj.b = b;
+            if Utility.isSingleNumber(b)
+                obj.b = repmat(b, obj.Size, 1);
+            else
+                obj.b = b;
+            end
         end
+
 
         % Remove distributions from the container with idx in 'indices'
         function obj = removeDistributions(obj, indices)
@@ -169,7 +205,7 @@ classdef GammaContainer < handle
                 if ~all(value > 0)
                     error(['##### ERROR IN THE CLASS ' class(obj) ': Expectation is a strictly positive number.']);
                 end
-                if length(value) ~= obj.Size
+                if size(value, 1) ~= obj.Size % Expectation is a column vector
                     error(['##### ERROR IN THE CLASS ' class(obj) ': Number of elements in the expectation must be equal to the number of ' ...
                         'components. ']);
                 end
