@@ -577,17 +577,12 @@ classdef GaussianContainerTest < matlab.unittest.TestCase
             testCase.verifyTrue(abs(obj.H - H) < 1e-12);
         end
 
-        % obj.E_SNC
-        function testSquaredColumNorm_1(testCase)
-            % Test 2: 
-            % type: "DS"
-            % cols = true
-            % -----------------------------------
-
+        % Test 1: 
+        % type: "DS"
+        % cols = true
+        function testFormatDependentProperties_1(testCase)
             % Setup
-            %   dist1: standard normal
-            %   dist2: mu = 1, cov: diag([2, 2])
-            %   dist3: mu = [1; 2], cov: newCov
+            %   cov: [10, 1; 1, 2];
             type = "DS";
             size_ = 3;
             dim = 2;
@@ -598,21 +593,26 @@ classdef GaussianContainerTest < matlab.unittest.TestCase
 
             obj = GaussianContainer(type, size_, cols, dim, mu, cov);
 
-            % -------------------------------------------------------
+            % Test 1
+            testCase.verifyEqual(size(obj.E), [dim, obj.Size]);
+            testCase.verifyTrue(Utility.isSymmetricMatrix(obj.E_XtX));
+            testCase.verifyTrue(Utility.isSymmetricMatrix(obj.E_XXt));
+
+            testCase.verifyEqual(obj.E, mu);
+            testCase.verifyEqual(obj.E_Xt, mu');
+
             testCase.verifyEqual(obj.E_SNC, [12; 14; 17]);
+            testCase.verifyEqual(obj.E_XtX, [[12, 0, 0]; [0, 14, 3]; [0, 3, 17]]);
+            testCase.verifyEqual(obj.E_XXt, [32, 6; 6, 11]);
+            testCase.verifyEqual(obj.E_TrXtX, trace(obj.E_XtX));
         end
 
-        % obj.E_SNC
-        function testSquaredColumNorm_2(testCase)
-            % Test 1: 
-            % type: "DS"
-            % cols = false
-            % -----------------------------------
-
+        % Test 2: 
+        % type: "DS"
+        % cols = false
+        function testFormatDependentProperties_2(testCase)
             % Setup
-            %   dist1: standard normal
-            %   dist2: mu = 1, cov: diag([2, 2])
-            %   dist3: mu = [1; 2], cov: newCov
+            %   cov: [10, 1; 1, 2];
             type = "DS";
             size_ = 3;
             dim = 2;
@@ -624,16 +624,24 @@ classdef GaussianContainerTest < matlab.unittest.TestCase
             obj = GaussianContainer(type, size_, cols, dim, mu, cov);
 
             % -------------------------------------------------------
+            % Test 1
+            testCase.verifyEqual(size(obj.E), [obj.Size, dim]);
+            testCase.verifyTrue(Utility.isSymmetricMatrix(obj.E_XtX));
+            testCase.verifyTrue(Utility.isSymmetricMatrix(obj.E_XXt));
+
+            testCase.verifyEqual(obj.E, mu');
+            testCase.verifyEqual(obj.E_Xt, mu);
+
             testCase.verifyEqual(obj.E_SNC, [32; 11]);
+            testCase.verifyEqual(obj.E_XtX, [[32, 6]; [6, 11]]);
+            testCase.verifyEqual(obj.E_XXt, [12, 0, 0; 0, 14, 3; 0, 3, 17]);
+            testCase.verifyEqual(obj.E_TrXtX, trace(obj.E_XtX));
         end
 
-        % obj.E_SNC
-        function testSquaredColumNorm_3(testCase)
-            % Test 1: 
-            % type: "DD"
-            % cols = true
-            % -----------------------------------
-
+        % Test 3: 
+        % type: "DD"
+        % cols = true
+        function testFormatDependentProperties_3(testCase)
             % Setup
             %   dist1: standard normal
             %   dist2: mu = 1, cov: diag([2, 2])
@@ -651,18 +659,44 @@ classdef GaussianContainerTest < matlab.unittest.TestCase
             cov(:, :, 3) = [10, 1; 1, 2];
 
             obj.updateDistributionsCovariance(cov);
+            
+            % Test 1
+            testCase.verifyEqual(size(obj.E), [dim, obj.Size]);
+            testCase.verifyTrue(Utility.isSymmetricMatrix(obj.E_XtX));
+            testCase.verifyTrue(Utility.isSymmetricMatrix(obj.E_XXt));
 
-            % -------------------------------------------------------
+            testCase.verifyEqual(obj.E, mu);
+            testCase.verifyEqual(obj.E_Xt, mu');
+
             testCase.verifyEqual(obj.E_SNC, [2; 6; 17]);
+            testCase.verifyEqual(obj.E_XtX, [[2, 0, 0]; [0, 6, 3]; [0, 3, 17]]);
+            testCase.verifyEqual(obj.E_XXt, [15, 4; 4, 10])
+            testCase.verifyEqual(obj.E_TrXtX, trace(obj.E_XtX));
+
+            % Test 2
+            % Update mu and cov
+            newMu = [[5; 7], [1; 1], [1; 2]];
+            obj.updateDistributionsMu(newMu);
+            cov(:, :, 1) = [3, 4; 4, 7];
+            obj.updateDistributionsCovariance(cov);
+
+            testCase.verifyEqual(size(obj.E), [dim, obj.Size]);
+            testCase.verifyTrue(Utility.isSymmetricMatrix(obj.E_XtX));
+            testCase.verifyTrue(Utility.isSymmetricMatrix(obj.E_XXt));
+
+            testCase.verifyEqual(obj.E, newMu);
+            testCase.verifyEqual(obj.E_Xt, newMu');
+
+            testCase.verifyEqual(obj.E_SNC, [84; 6; 17]);
+            testCase.verifyEqual(obj.E_XtX, [[84, 12, 19]; [12, 6, 3]; [19, 3, 17]]);
+            testCase.verifyEqual(obj.E_XXt, [42, 43; 43, 65]);
+            testCase.verifyEqual(obj.E_TrXtX, trace(obj.E_XtX));
         end
 
-        % obj.E_SNC
-        function testSquaredColumNorm_4(testCase)
-            % Test 1: 
-            % type: "DD"
-            % cols = true
-            % -----------------------------------
-
+        % Test 4: 
+        % type: "DD"
+        % cols = false
+        function testFormatDependentProperties_4(testCase)
             % Setup
             %   dist1: standard normal
             %   dist2: mu = 1, cov: diag([2, 2])
@@ -681,8 +715,37 @@ classdef GaussianContainerTest < matlab.unittest.TestCase
 
             obj.updateDistributionsCovariance(cov);
 
-            % -------------------------------------------------------
+            % Test 1
+            testCase.verifyEqual(size(obj.E), [obj.Size, dim]);
+            testCase.verifyTrue(Utility.isSymmetricMatrix(obj.E_XtX));
+            testCase.verifyTrue(Utility.isSymmetricMatrix(obj.E_XXt));
+
+            testCase.verifyEqual(obj.E, mu');
+            testCase.verifyEqual(obj.E_Xt, mu);
+ 
             testCase.verifyEqual(obj.E_SNC, [15; 10]);
+            testCase.verifyEqual(obj.E_XtX, [[15, 4]; [4, 10]]);
+            testCase.verifyEqual(obj.E_XXt, [[2, 0, 0]; [0, 6, 3]; [0, 3, 17]]);
+            testCase.verifyEqual(obj.E_TrXtX, trace(obj.E_XtX));
+
+
+            % Test 2
+            newMu = [[5; 7], [1; 1], [1; 2]];
+            obj.updateDistributionsMu(newMu);
+            cov(:, :, 1) = [3, 4; 4, 7];
+            obj.updateDistributionsCovariance(cov);
+           
+            testCase.verifyEqual(size(obj.E), [obj.Size, dim]);
+            testCase.verifyTrue(Utility.isSymmetricMatrix(obj.E_XtX));
+            testCase.verifyTrue(Utility.isSymmetricMatrix(obj.E_XXt));
+
+            testCase.verifyEqual(obj.E, newMu');
+            testCase.verifyEqual(obj.E_Xt, newMu);
+
+            testCase.verifyEqual(obj.E_SNC, [42; 65]);
+            testCase.verifyEqual(obj.E_XtX, [[42, 43]; [43, 65]]);
+            testCase.verifyEqual(obj.E_XXt, [84, 12, 19; 12, 6, 3; 19, 3, 17]);
+            testCase.verifyEqual(obj.E_TrXtX, trace(obj.E_XtX));
         end
 
         
@@ -747,36 +810,7 @@ classdef GaussianContainerTest < matlab.unittest.TestCase
         %     testCase.verifyTrue(Utility.isSymmetricMatrix(obj.E_CCt));
         % end
         % 
-        % function testExpectationOfColumnsNormSq(testCase)
-        %     dim = 2;
-        %     cols = false;
-        %     numDistributions = 3;
-        % 
-        %     prior = GaussianDistribution(zeros(dim, 1), eye(dim));
-        % 
-        %     obj = GaussianContainer(numDistributions, prior, cols);
-        % 
-        %     % Size
-        %     testCase.verifyEqual(obj.Size, numDistributions);
-        % 
-        %     cov = Utility.generateRandomSPDMatrix(2);
-        %     % Setup
-        %     %   mu = 0, cov
-        %     %   mu = 1, cov
-        %     %   mu = [1; 2], cov
-        %     obj.updateDistributionParams(1, zeros(dim, 1), cov);
-        %     obj.updateDistributionParams(2, ones(dim, 1), cov);
-        %     obj.updateDistributionParams(3, [1; 2], cov);
-        % 
-        %     % Test: non-vectorized version
-        %     colSqNorm = obj.getExpectationOfColumnsNormSq();
-        % 
-        %     % Test: vectorized version
-        %     MU = [obj.ds(1).mu, obj.ds(2).mu, obj.ds(3).mu];
-        %     colSqNorm_Vect = diag(MU * MU') + obj.Size * diag(obj.ds(1).cov);
-        % 
-        %     testCase.verifyTrue(norm(colSqNorm - colSqNorm_Vect) < 1e-12);
-        % end
+
         % 
         % % cols = true
         % function testDependentPropertiesColumnFormat2(testCase)

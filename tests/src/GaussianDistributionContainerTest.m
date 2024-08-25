@@ -85,7 +85,7 @@ classdef GaussianDistributionContainerTest < matlab.unittest.TestCase
 
             % Test 2: Same test when none of the ds are st. normal
             obj.updateDistributionParams(1, [5; 7], [3, 4; 4, 7]);
-            testCase.verifyEqual(obj.E_CtC, [[84, 12, 19]; [12, 6, 3]; [19, 3, 17]]);
+             
 
             colSqNorm = obj.getExpectationOfColumnsNormSq();
             testCase.verifyEqual(colSqNorm, [84; 6; 17]);
@@ -94,6 +94,7 @@ classdef GaussianDistributionContainerTest < matlab.unittest.TestCase
             testCase.verifyTrue(Utility.isSymmetricMatrix(obj.E_CCt));
         end
         
+        % Test of vectorization
         function testExpectationOfColumnsNormSq(testCase)
             dim = 2;
             cols = false;
@@ -265,6 +266,9 @@ classdef GaussianDistributionContainerTest < matlab.unittest.TestCase
             testCase.verifyTrue(Utility.isSymmetricMatrix(obj.E_CCt));
         end
 
+
+
+
         % TODO (high): Implement this properly, for now it works for cols
         % format only!
         function testTraceDependentProperties(testCase)
@@ -285,6 +289,10 @@ classdef GaussianDistributionContainerTest < matlab.unittest.TestCase
 
             testCase.verifyEqual(obj.Tr_CtC, trace(obj.E_CtC));
         end
+
+
+
+
 
         
 
