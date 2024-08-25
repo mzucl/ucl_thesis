@@ -8,12 +8,12 @@
 classdef GammaContainer < handle
     properties
         type   
-        % 'SS': shared 'a', shared 'b'
-        % 'SD': shared 'a', different 'b'
-        % 'DS': different 'a', shared 'b'
-        % 'DD': different 'a', different 'b'
+        % "SS": shared 'a', shared 'b'
+        % "SD": shared 'a', different 'b'   -> IMPLEMENTED!
+        % "DS": different 'a', shared 'b'
+        % "DD": different 'a', different 'b'
 
-        % [NOTE]: For now only 'SD' type is supported, thus 'a' is a
+        % [NOTE]: For now only "SD" type is supported, thus 'a' is a
         % scalar, and 'b' is a vector
         a
         b
@@ -34,7 +34,8 @@ classdef GammaContainer < handle
             'E', NaN, ...
             'E_Diag', NaN, ...
             'H', NaN, ...
-            'E_LnP', NaN);
+            'E_LnP', NaN, ...
+            'E_LnX', NaN);
     end
     
     properties (Dependent)   
@@ -43,6 +44,7 @@ classdef GammaContainer < handle
         E_Diag              % Diagonal matrix of expectations of all components
         H                   % Entropy of the collection (sum of components entropies)
         E_LnP               % Sum of 'E_LnP' of all components
+        E_LnX               % Sum of 'E_LnX' of all components
 
         Val           
     end
@@ -64,6 +66,14 @@ classdef GammaContainer < handle
                     isValid = false;
                     break;
                 end
+            end
+        end
+
+        function clearCache(obj)
+            fields = fieldnames(obj.cache);
+            
+            for i = 1:length(fields)
+                obj.cache.(fields{i}) = NaN;
             end
         end
     end
@@ -160,6 +170,9 @@ classdef GammaContainer < handle
             end
 
             obj.a = a;
+
+            % Clear cache
+            obj.clearCache();
         end
 
         % [NOTE]: 'type' dependent
@@ -181,11 +194,14 @@ classdef GammaContainer < handle
             else
                 obj.b = b;
             end
+
+            % Clear cache
+            obj.clearCache();
         end
 
 
         % Remove distributions from the container with idx in 'indices'
-        function obj = removeDistributions(obj, indices)
+        function obj = removeDimensions(obj, indices)
             if nargin < 2 || isempty(indices)
                 return; % No change
             end
@@ -193,6 +209,9 @@ classdef GammaContainer < handle
                 error(['##### ERROR IN THE CLASS ' class(obj) ': Index out of range.']); 
             end
             obj.b(indices) = [];
+
+            % Clear cache
+            obj.clearCache();
         end
 
 
@@ -230,30 +249,53 @@ classdef GammaContainer < handle
         %% Dependent properties
         % [NOTE]: 'type' dependent
         function value = get.Size(obj)
-            value = length(obj.b);
+            if isnan(obj.cache.Size)
+                obj.cache.Size = length(obj.b);
+            end
+            value = obj.cache.Size;
         end
 
         function value = get.E(obj)
-            value = obj.a ./ obj.b;
+            if isnan(obj.cache.E)
+                obj.cache.E = obj.a ./ obj.b;
+            end
+            value = obj.cache.E;
         end
 
         function value = get.E_Diag(obj)
-            value = diag(obj.E);
+            if isnan(obj.cache.E_Diag)
+                obj.cache.E_Diag = diag(obj.E);
+            end
+            value = obj.cache.E_Diag;
         end
 
         % [NOTE]: 'type' dependent
         function value = get.H(obj)
-            value = obj.Size * (gammaln(obj.a) - (obj.a - 1) * psi(obj.a) + obj.a) - sum(log(obj.b));
+            if isnan(obj.cache.H)
+                obj.cache.H = obj.Size * (gammaln(obj.a) - (obj.a - 1) * psi(obj.a) + obj.a) - sum(log(obj.b));
+            end
+            value = obj.cache.H;
         end
-       
+
         % [NOTE]: 'type' dependent
         function value = get.E_LnP(obj)
-            if Gamma.VALIDATE && ~isa(obj.prior, 'Gamma')
-                error(['##### ERROR IN THE CLASS ' class(obj) ': Prior must be defined.']);
+            if isnan(obj.cache.E_LnP)
+                if isa(obj.prior, 'Gamma') % The value is set only when prior is defined
+                    obj.cache.E_LnP = obj.Size * (-gammaln(obj.prior.a) + obj.prior.a * log(obj.prior.b) + ...
+                        (obj.prior.a - 1) * psi(obj.a)) - (obj.prior.a - 1) * sum(log(obj.b)) - ...
+                        obj.prior.b * obj.a * sum(1 ./ obj.b);
+                else 
+                    obj.cache.E_LnP = NaN;
+                end
             end
-            value = obj.Size * (-gammaln(obj.prior.a) + obj.prior.a * log(obj.prior.b) + ...
-                (obj.prior.a - 1) * psi(obj.a)) - (obj.prior.a - 1) * sum(log(obj.b)) - ...
-                obj.prior.b * obj.prior.a * sum(1 ./ obj.b);
+            value = obj.cache.E_LnP;
+        end
+
+        function value = get.E_LnX(obj)
+            if isnan(obj.cache.E_LnX)
+                obj.cache.E_LnX = obj.Size * psi(obj.a) - sum(log(obj.b));
+            end
+            value = obj.cache.E_LnX;
         end
         
         function value = get.Val(obj)

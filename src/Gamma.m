@@ -113,7 +113,7 @@ classdef Gamma < handle
         % -> default values for 'a' and 'b'; prior = NaN;
         %
         % 1 PARAMETER: a
-        % OPTION 1: 'a' is an instane of Gamma
+        % OPTION 1: 'a' is an instance of Gamma
         %       -> set 'obj' and 'prior' to that value
         % OPTION 2: 'a' is a scalar
         %       -> set 'a' and 'b' to that value
