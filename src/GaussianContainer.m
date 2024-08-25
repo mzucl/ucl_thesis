@@ -77,36 +77,26 @@ classdef GaussianContainer < handle
             end
         end
 
-        % [!!!] Dependent on 'cols'
-        function value = getContainerExpectations(obj, CtC)
-            if (obj.cols && CtC) || (~obj.cols && ~CtC)
-                value = zeros(obj.Size, obj.Size);
-                % MATLAB stores data in column-major order
-                for j = 1:obj.Size
-                    for i = 1:obj.Size
-                        % 
-                        % [NOTE] E[Wt * W] is a matrix where each entry is e.g. E[w1^T *
-                        % w2] (w1 and w2 are columns of the matrix W and there
-                        % are independent random variable). Given the
-                        % independence this is E[w1^T]E[w2], but when i == j
-                        % then the independence doesn't hold and in that case
-                        % we should use E_XtX from the GaussianDistribution class.
-                        %
-                        if i < j
-                            value(i, j) = value(j, i); % Matrix is symmetric
-                        elseif i ~= j
-                            value(i, j) = obj.ds(i).E_Xt * ...
-                            obj.ds(j).E;
-                        else 
-                            value(i, j) = obj.ds(i).E_XtX;
-                        end
-                    end
+        % [NOTE] E[Z^T * Z] is a matrix where each entry is e.g. E[z1^T *
+        % z2] (z1 and z2 are columns of the matrix Z and there
+        % are independent random variable). Given the
+        % independence this is E[z1^T]E[z2], but when i == j
+        % then the independence doesn't hold, so for diagonal elements we
+        % need to correct with trace(covariance).
+        function value = getContainerExpectations(obj, XtX)
+            if (obj.cols && XtX) || (~obj.cols && ~XtX)
+                value = obj.mu' * obj.mu;
+                if obj.type == "DS"
+                    value = value + diag(repmat(trace(obj.cov), obj.Size, 1));
+                elseif obj.type == "DD"
+                    value = value + diag(squeeze(sum(obj.cov .* eye(obj.dim), [1, 2]))); % returns trace for each covariance matrix
                 end
             else
-                dim = obj.ds(1).dim; % They are all of the same dimension
-                value = zeros(dim, dim);
-                for i = 1:obj.Size
-                    value = value + obj.ds(i).E_XXt;
+                value = obj.mu * obj.mu';
+                if obj.type == "DS"
+                    value = value + obj.Size * obj.cov;
+                elseif obj.type == "DD"
+                    value = value + sum(obj.cov, 3);
                 end
             end
         end
@@ -320,12 +310,7 @@ classdef GaussianContainer < handle
 
 
 
-
-
-
-
-
-
+        
         %% Dependent properties
         function value = get.Size(obj)
             value = size(obj.mu, 2);
@@ -359,6 +344,7 @@ classdef GaussianContainer < handle
                     value = value + trace(obj.cov);
                 elseif obj.type == "DD"
                     value = value + squeeze(sum(obj.cov .* eye(obj.dim), [1, 2])); % returns trace for each covariance matrix
+                    % TODO: cache the trace of each cov matrix?
                 end
 
             % cols = false
@@ -377,43 +363,33 @@ classdef GaussianContainer < handle
             end
         end
 
+        function value = get.E_XXt(obj)
+            value = obj.getContainerExpectations(false);
+        end
 
-        % //// Tr
+        function value = get.E_XtX(obj)
+            value = obj.getContainerExpectations(true);
+        end
+
+        function value = get.E_TrXtX(obj)
+            if obj.cols
+                value = sum(sum(obj.mu.^2, 2));
+                if obj.type == "DD"
+                    value = value + sum(squeeze(sum(obj.cov .* eye(obj.dim), [1, 2])));
+                elseif obj.type == "DS"
+                    value = value + obj.Size * trace(obj.cov);
+                end
+            else % Optimization not possible
+                value = trace(obj.E_XtX);
+            end
+        end
+
+
         % [NOTE] Only implemented for the "DS" type that was needed for the
         % Z;
         function value = get.E_LnP(obj)
             value = obj.Size * obj.dim / 2 * log (obj.priorPrec/(2 * pi)) ...
                 - 1/2 * obj.E_TrXtX;
         end
-
-
-
-
-        function value = get.E_XXt(obj)
-            value = obj.getContainerExpectations(false); % CtC
-        end
-
-        function value = get.E_XtX(obj)
-            value = obj.getContainerExpectations(true); % CtC
-        end
-
-        % TODO (high): This is implemented just for the cols format as it
-        % was needed for the Tr(<Z^TZ>). Implement this properly and add
-        % tests; The purpose of it is to optimize the calculation, where we
-        % don't calculate all elements of the Z^TZ product, just diagonal
-        % function value = get.Tr_CtC(obj)
-        %     value = 0;
-        %     for i = 1:obj.Size
-        %         value = value + obj.ds(i).E_XtX;
-        %     end
-        % end
-
-
-
-
-        % % TODO: Can the obj.Size change??? What about dim?
-        % function value = get.E_LnPC(obj)
-        %     value = (-obj.Size * obj.ds(1).dim/2) * log(2 * pi) - 1/2 * obj.Tr_CtC; 
-        % end
     end
 end
