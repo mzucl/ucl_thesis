@@ -163,7 +163,7 @@ classdef GammaTest < matlab.unittest.TestCase
             testCase.verifyEqual(obj.E, exp(-1));
             testCase.verifyEqual(obj.Var, exp(-2));
             testCase.verifyEqual(obj.H, 0);
-            testCase.verifyTrue(obj.E_LnX - psi(obj.a) - log(obj.b) < 1e-12);
+            testCase.verifyTrue(abs(obj.E_LnX - psi(obj.a) - log(obj.b)) < 1e-12);
             testCase.verifyEqual(obj.E_LnP, NaN);
 
             a = 14; b = 7;

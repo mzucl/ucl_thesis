@@ -110,7 +110,7 @@ classdef GammaContainerTest < matlab.unittest.TestCase
                 E_LnP = E_LnP + ds.E_LnP;
             end
             testCase.verifyEqual(obj.H, H);
-            testCase.verifyTrue(obj.E_LnP - E_LnP < 1e-12);
+            testCase.verifyTrue(abs(obj.E_LnP - E_LnP) < 1e-12);
 
             % E_LnP (special test)
             a = 14; b = 7;
@@ -122,7 +122,7 @@ classdef GammaContainerTest < matlab.unittest.TestCase
 
             % E_LnX
             obj.updateAllDistributionsB([exp(1); exp(2); exp(6); exp(10)]);
-            testCase.verifyTrue(obj.E_LnX - (4 * psi(a) - 19) < 1e-12);
+            testCase.verifyTrue(abs(obj.E_LnX - (4 * psi(a) - 19)) < 1e-12);
         end
 
 

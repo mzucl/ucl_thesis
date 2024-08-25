@@ -533,10 +533,11 @@ classdef GaussianContainerTest < matlab.unittest.TestCase
 
             newCov = Utility.generateRandomSPDMatrix(dim);
             obj.updateDistributionsCovariance(newCov);
-            testCase.verifyEqual(obj.cov, newCov);
+            testCase.verifyEqual(obj.cov, eye(dim));
 
-            H = obj.Size/2 * log(det(newCov)) + obj.Size * obj.dim/2 * (1 + log(2*pi));
-            testCase.verifyTrue(abs(obj.H - H) < 1e-12);
+
+
+            testCase.verifyEqual(obj.H, obj.Size * obj.dim/2 * (1 + log(2*pi)));
         end
 
 
