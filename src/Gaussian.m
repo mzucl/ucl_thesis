@@ -130,7 +130,7 @@ classdef Gaussian < handle
                     end
                     cov = eye(dim);
 
-                    if nargin > 3 % dim, mu, cov
+                    if nargin > 2 % dim, mu, cov
                         covParam = varargin{3};
 
                         if Utility.isSingleNumber(covParam)
@@ -142,19 +142,22 @@ classdef Gaussian < handle
                         elseif Utility.isArray(covParam)
                             if Gaussian.VALIDATE && (length(covParam) ~= dim || ~Utility.isValidCovarianceMatrix(diag(covParam)))
                                 error(['##### ERROR IN THE CLASS ' mfilename ': Parameter is either not a valid covariance matrix or' ...
-                                    'dimensionality doesn''t match.']);
+                                    ' dimensionality doesn''t match.']);
                             end
                             cov = diag(covParam); % Diagonal
 
                         elseif Utility.isMatrix(covParam)
-                            if Gaussian.VALIDATE && (~isequal(size(covParam, 1), [dim, dim]) || ~Utility.isValidCovarianceMatrix(covParam))
+                            if Gaussian.VALIDATE && (~isequal(size(covParam), [dim, dim]) || ~Utility.isValidCovarianceMatrix(covParam))
                                 error(['##### ERROR IN THE CLASS ' mfilename ': Parameter is either not a valid covariance matrix or' ...
                                     'dimensionality doesn''t match.']);
                             end
                             cov = covParam; % Full
                         end
 
-                        if nargin == 4 % dim, mu, cov, priorPrec
+                        if nargin > 3 % dim, mu, cov, priorPrec
+                            if Gaussian.VALIDATE && (~Utility.isSingleNumber(varargin{4}) || varargin{4} <= 0)
+                                error(['##### ERROR IN THE CLASS ' mfilename ': Invalid precision parameter.']);
+                            end
                             priorPrec = varargin{4};
                         end
                     end
@@ -195,8 +198,8 @@ classdef Gaussian < handle
             end
                 
             % Both are set - compare them!    
-            isEqual = all(obj1.mu == obj2.mu, 'all') && ...
-                all(obj1.cov == obj2.cov, 'all') && obj1.dim == obj2.dim;
+            isEqual =  obj1.dim == obj2.dim && isequal(obj1.mu, obj2.mu) && isequal(obj1.cov, obj2.cov) && ...
+                obj1.priorPrec == obj2.priorPrec;
         end
 
         function isNotEqual = ne(obj1, obj2)
@@ -224,6 +227,20 @@ classdef Gaussian < handle
         
 
         %% Update methods
+        function obj = updateMu(obj, mu)
+            if obj.VALIDATE
+                if nargin < 2
+                    error(['##### ERROR IN THE THE CLASS ' class(obj) ': Too few arguments passed.']);
+                end
+    
+                if size(mu, 1) ~= obj.dim % 'mu' is a column vector
+                    error(['##### ERROR IN THE THE CLASS ' class(obj) ': Dimension cannot be changed via update method.']);
+                end
+            end
+           
+            obj.mu = mu;
+        end
+
         function obj = updateCovariance(obj, cov)
             if obj.VALIDATE
                 if nargin < 2
@@ -243,20 +260,6 @@ classdef Gaussian < handle
             obj.cov = cov;
         end
         
-        function obj = updateMu(obj, mu)
-            if obj.VALIDATE
-                if nargin < 2
-                    error(['##### ERROR IN THE THE CLASS ' class(obj) ': Too few arguments passed.']);
-                end
-    
-                if size(mu, 1) ~= obj.dim % 'mu' is a column vector
-                    error(['##### ERROR IN THE THE CLASS ' class(obj) ': Dimension cannot be changed via update method.']);
-                end
-            end
-           
-            obj.mu = mu;
-        end
-
         function removeDimensions(obj, indices)
             if nargin < 2 || isempty(indices)
                 return; % No change
