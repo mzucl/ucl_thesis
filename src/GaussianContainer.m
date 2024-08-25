@@ -16,6 +16,9 @@ classdef GaussianContainer < handle
 
         cov                 % Matrix for the "DS" type
                             % Multidimensional array for the "DD" type
+          
+        priorPrec           % scalar or array, only valid if the prior covariance for each covariance is spherical
+                            % -> E_LnP
     end
 
     properties (Constant)
@@ -32,7 +35,8 @@ classdef GaussianContainer < handle
             'E_XXt', NaN, ...
             'E_XtX', NaN, ...
             'E_TrXtX', NaN, ...
-            'E_LnP', NaN);
+            'E_LnP', NaN, ...
+            'E_SNC', NaN);
     end
     
     properties (Dependent)
@@ -43,7 +47,8 @@ classdef GaussianContainer < handle
         E_XXt               
         E_XtX   
         E_TrXtX             % Tr(E[X^TX]), e.g. Tr(Z^TZ)
-        E_LnP               
+        E_LnP              
+        E_SNC               % E[squared norm of a column] for each column
     end
 
     methods(Access = private)
@@ -111,26 +116,35 @@ classdef GaussianContainer < handle
 
 
 
-
-
     methods
         %% Options for the constructor GaussianContainer
         % 4 PARAMETERS
-        % -> default values for 'a' and 'b'; prior = NaN;
+        % -> obj.mu is set to all zeros; covariance for all dimensions is
+        % identity matrix
+        %
         %
         % 5 PARAMETER: mu
-        % OPTION 1: 'a' is an instance of Gamma
-        %       -> set 'obj' and 'prior' to that value
-        % OPTION 2: 'a' is a scalar
-        %       -> set 'a' and 'b' to that value
-        % 
-        % 6 PARAMETERS: cov
-        % -> Gamma(a, b)
+        % OPTION 1: scalar
+        %       -> all entries in obj.mu are set to that value
+        % OPTION 2: array
+        %       -> all columns in obj.mu are set to that value
+        % OPTION 3: matrix
+        %       -> obj.mu is set to that matrix
         %
-        % TOTOTOTOTOTOTODODOD
+        % [NOTE] cov is the same for all distributions!
+        % 6 PARAMETERS: mu, cov
+        % OPTION 1: scalar
+        %       -> all covariance matrices are spherical
+        % OPTION 2: array
+        %       -> all covariance matrices are diagonal
+        % OPTION 3: matrix
+        %       -> all covariance matrices set to that value
         %
-        %%
-        function obj = GaussianContainer(type, size_, cols, dim, mu, cov)
+        % 7 PARAMETERS: mu, cov, priorPrec
+        % -> same as previous constructor + prior precision is set
+        %
+        %
+        function obj = GaussianContainer(type, size_, cols, dim, mu, cov, priorPrec)
             % Non-optional parameters: type, size_, cols, dim: 'size_' is the
             % size of the container, and 'dim' is the Gaussian dimension 
             if obj.VALIDATE
@@ -145,6 +159,7 @@ classdef GaussianContainer < handle
             obj.type = type;
             obj.cols = cols;
             obj.dim = dim;
+            obj.priorPrec = Constants.DEFAULT_GAUSS_PRECISION;
 
             % Preallocate + default values
             obj.mu = zeros(obj.dim, size_);
@@ -200,34 +215,24 @@ classdef GaussianContainer < handle
                     elseif type == "DD"
                         obj.cov = repmat(compCov, 1, 1, size_);
                     end
+
+                    if nargin > 6 % priorPrec
+                        if Utility.isSingleNumber(priorPrec)
+                            if obj.VALIDATE && (priorPrec <= 0 || obj.type ~= "DS")
+                                error(['##### ERROR IN THE CLASS ' mfilename ': Invalid precision parameter.']);
+                            end
+                            obj.priorPrec = priorPrec; % Spherical shared covariance
+                            
+                        elseif Utility.isArray(priorPrec)
+                            if obj.VALIDATE && (length(priorPrec) ~= size_ || any(priorPrec < 0) || obj.type ~= "DD")
+                                error(['##### ERROR IN THE CLASS ' mfilename ': Parameter is either not a valid precision or' ...
+                                    ' dimensionality doesn''t match.']);
+                            end
+                            obj.priorPrec = priorPrec;
+                        end
+                    end
                 end
             end
-
-            
-            % 
-            % 
-            % % [NOTE] 'priors' can't be NaN because it is used to infer the
-            % % information about the distributions!
-            % if nargin < 3
-            %     error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
-            % else
-            %     validParams = isnumeric(size_) && islogical(cols) && ...
-            %         Utility.areAllInstancesOf(priors, 'GaussianDistribution') && ...
-            %         (isscalar(priors) || length(priors) == size_);
-            % 
-            %     if ~validParams
-            %         error(['##### ERROR IN THE CLASS ' class(obj) ': Invalid parameters.']);
-            %     end
-            % 
-            %     obj.cols = cols;
-            %     obj.ds = repmat(GaussianDistribution(), size_, 1); % Preallocate
-            %     for i = 1:size_
-            %         obj.ds(i) = Utility.ternaryOpt(isscalar(priors), ...
-            %                 @() GaussianDistribution(priors), @() GaussianDistribution(priors(i)));
-            %     end
-            % end
-            % 
-
 
             % Set initial expectation to the actual expectation
             obj.setExpCInit(obj.E);
@@ -316,43 +321,6 @@ classdef GaussianContainer < handle
 
 
 
-        % TODO (medium): This can maybe be optimized if we have a different
-        % structure to store stuff! 
-        % [NOTE] This is used in the scenario when e.g. W is stored in the rows
-        % format, but we need expectation of the squared norm of a column
-        function res = getExpectationOfColumnsNormSq(obj)
-            if obj.cols == true
-                numOfCols = obj.Size;
-                res = zeros(numOfCols, 1);
-                for idx = 1:numOfCols
-                    res(idx) = obj.E_XtX{idx};
-                end
-            else
-                numOfCols = obj.ds(1).dim;
-                res = zeros(numOfCols, 1);
-                for k = 1:numOfCols
-                    for d = 1:obj.Size
-                        res(k) = res(k) + obj.ds(d).mu(k) ^ 2 + obj.ds(d).cov(k, k);
-                    end
-                end
-            end
-        end
-
-
-
-
-        
-
-        
-
-       
-
-
-
-
-
-
-
 
 
 
@@ -383,7 +351,40 @@ classdef GaussianContainer < handle
             end
         end
 
+        function value = get.E_SNC(obj)
+            % cols = true
+            if obj.cols == true
+                value = (sum(obj.mu.^2, 1))';
+                if obj.type == "DS"
+                    value = value + trace(obj.cov);
+                elseif obj.type == "DD"
+                    value = value + squeeze(sum(obj.cov .* eye(obj.dim), [1, 2])); % returns trace for each covariance matrix
+                end
 
+            % cols = false
+            else
+                value = sum(obj.mu.^2, 2);
+                if obj.type == "DS"
+                    value = value + obj.Size * diag(obj.cov);
+                
+                % Sum diagonals of different cov matrices
+                elseif obj.type == "DD"
+                    diagIdx = 1:size(obj.cov, 1) + 1:size(obj.cov, 1)^2;
+                    covReshaped = reshape(obj.cov, size(obj.cov, 1) * size(obj.cov, 2), size(obj.cov, 3));
+                    diags = covReshaped(diagIdx, :);
+                    value = value + sum(diags, 2);
+                end
+            end
+        end
+
+
+        % //// Tr
+        % [NOTE] Only implemented for the "DS" type that was needed for the
+        % Z;
+        function value = get.E_LnP(obj)
+            value = obj.Size * obj.dim / 2 * log (obj.priorPrec/(2 * pi)) ...
+                - 1/2 * obj.E_TrXtX;
+        end
 
 
 
@@ -408,12 +409,7 @@ classdef GaussianContainer < handle
         % end
 
 
-        function value = get.E_LnP(obj)
-            value = cell(1, obj.Size);
-            for i = 1:obj.Size
-                value{i} = obj.ds(i).E_LnP;
-            end
-        end
+
 
         % % TODO: Can the obj.Size change??? What about dim?
         % function value = get.E_LnPC(obj)

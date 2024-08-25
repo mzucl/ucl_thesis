@@ -282,13 +282,50 @@ classdef GaussianContainerTest < matlab.unittest.TestCase
             obj = GaussianContainer(type, size_, cols, dim, mu, cov);
 
             testCase.verifyEqual(obj.mu, mu);
+            testCase.verifyEqual(obj.priorPrec, Constants.DEFAULT_GAUSS_PRECISION);
             
             for i = 1:size_
                 testCase.verifyEqual(obj.cov(:, :, i), cov);
             end
         end
+   
+        function testSevenParameterConstructor(testCase)
+            % Test 1
+            type = "DS";
+            dim = 5;
+            size_ = 2;
+            cols = false;
+            priorPrec = 100;
+           
+            mu = 5;
+            cov = 6;
+            obj = GaussianContainer(type, size_, cols, dim, mu, cov, priorPrec);
 
+            testCase.verifyEqual(obj.mu, mu * ones(dim, size_));
+            testCase.verifyEqual(obj.cov, cov * eye(dim));
+            testCase.verifyEqual(obj.priorPrec, priorPrec);
 
+            % --------------------------------------------------------
+            % Test 2
+            type = "DD";
+            dim = 5;
+            size_ = 2;
+            cols = true;
+            priorPrec = [10, 100];
+
+            mu = 5;
+            cov = 6;
+            obj = GaussianContainer(type, size_, cols, dim, mu, cov, priorPrec);
+          
+            testCase.verifyEqual(size(obj.cov), [dim, dim, size_])
+            testCase.verifyEqual(obj.mu, mu * ones(dim, size_));
+            testCase.verifyEqual(obj.priorPrec, priorPrec);
+
+            for i = 1:size_
+                testCase.verifyEqual(obj.cov(:, :, i), cov * eye(dim));
+            end
+
+        end
         
 
 
@@ -492,6 +529,7 @@ classdef GaussianContainerTest < matlab.unittest.TestCase
 
         %% Dependent properties
         % Independent of cols
+        % obj.H
         function testEntropyProperties(testCase)
             % Test 1: type = "DS"; cov is spherical
             type = "DS";
@@ -539,7 +577,115 @@ classdef GaussianContainerTest < matlab.unittest.TestCase
             testCase.verifyTrue(abs(obj.H - H) < 1e-12);
         end
 
+        % obj.E_SNC
+        function testSquaredColumNorm_1(testCase)
+            % Test 2: 
+            % type: "DS"
+            % cols = true
+            % -----------------------------------
 
+            % Setup
+            %   dist1: standard normal
+            %   dist2: mu = 1, cov: diag([2, 2])
+            %   dist3: mu = [1; 2], cov: newCov
+            type = "DS";
+            size_ = 3;
+            dim = 2;
+            cols = true;
+            mu = [[0; 0], [1; 1], [1; 2]];
+
+            cov = [10, 1; 1, 2];
+
+            obj = GaussianContainer(type, size_, cols, dim, mu, cov);
+
+            % -------------------------------------------------------
+            testCase.verifyEqual(obj.E_SNC, [12; 14; 17]);
+        end
+
+        % obj.E_SNC
+        function testSquaredColumNorm_2(testCase)
+            % Test 1: 
+            % type: "DS"
+            % cols = false
+            % -----------------------------------
+
+            % Setup
+            %   dist1: standard normal
+            %   dist2: mu = 1, cov: diag([2, 2])
+            %   dist3: mu = [1; 2], cov: newCov
+            type = "DS";
+            size_ = 3;
+            dim = 2;
+            cols = false;
+            mu = [[0; 0], [1; 1], [1; 2]];
+
+            cov = [10, 1; 1, 2];
+
+            obj = GaussianContainer(type, size_, cols, dim, mu, cov);
+
+            % -------------------------------------------------------
+            testCase.verifyEqual(obj.E_SNC, [32; 11]);
+        end
+
+        % obj.E_SNC
+        function testSquaredColumNorm_3(testCase)
+            % Test 1: 
+            % type: "DD"
+            % cols = true
+            % -----------------------------------
+
+            % Setup
+            %   dist1: standard normal
+            %   dist2: mu = 1, cov: diag([2, 2])
+            %   dist3: mu = [1; 2], cov: newCov
+            type = "DD";
+            size_ = 3;
+            dim = 2;
+            cols = true;
+            mu = [[0; 0], [1; 1], [1; 2]];
+
+            obj = GaussianContainer(type, size_, cols, dim, mu);
+           
+            cov = repmat(eye(dim), 1, 1, size_);
+            cov(:, :, 2) = diag([2, 2]);
+            cov(:, :, 3) = [10, 1; 1, 2];
+
+            obj.updateDistributionsCovariance(cov);
+
+            % -------------------------------------------------------
+            testCase.verifyEqual(obj.E_SNC, [2; 6; 17]);
+        end
+
+        % obj.E_SNC
+        function testSquaredColumNorm_4(testCase)
+            % Test 1: 
+            % type: "DD"
+            % cols = true
+            % -----------------------------------
+
+            % Setup
+            %   dist1: standard normal
+            %   dist2: mu = 1, cov: diag([2, 2])
+            %   dist3: mu = [1; 2], cov: newCov
+            type = "DD";
+            size_ = 3;
+            dim = 2;
+            cols = false;
+            mu = [[0; 0], [1; 1], [1; 2]];
+
+            obj = GaussianContainer(type, size_, cols, dim, mu);
+           
+            cov = repmat(eye(dim), 1, 1, size_);
+            cov(:, :, 2) = diag([2, 2]);
+            cov(:, :, 3) = [10, 1; 1, 2];
+
+            obj.updateDistributionsCovariance(cov);
+
+            % -------------------------------------------------------
+            testCase.verifyEqual(obj.E_SNC, [15; 10]);
+        end
+
+        
 
 
 
@@ -792,54 +938,5 @@ classdef GaussianContainerTest < matlab.unittest.TestCase
         % 
         %     testCase.verifyEqual(obj.Tr_CtC, trace(obj.E_CtC));
         % end
-        % 
-        % 
-        % 
-      
-        % 
-        % function testPriorPrecisionProperty(testCase)
-        %     % Test 1: spherical covariance
-        %     dim = 10;
-        %     numDistributions = 2;
-        % 
-        %     prior = GaussianDistribution(zeros(dim, 1), 5 * eye(dim));
-        %     obj = GaussianContainer(numDistributions, prior, true);
-        % 
-        %     testCase.verifyEqual(obj.PPrec{1}, 1/5);
-        % 
-        %     % Test 2: diagonal covariance
-        %     dim = 10;
-        %     numDistributions = 2;
-        % 
-        %     precisions = [2, 2, 2, 2, 2, 4, 4, 4, 4, 4]';
-        %     prior = GaussianDistribution(zeros(dim, 1), diag(precisions));
-        %     obj = GaussianContainer(numDistributions, prior, true);
-        % 
-        %     for i = 1:numDistributions
-        %         testCase.verifyEqual(obj.PPrec{i}, 1./precisions);
-        %     end
-        % 
-        %     % Test 3: full covariance
-        %     dim = 10;
-        %     numDistributions = 2;
-        % 
-        %     prior = GaussianDistribution(zeros(dim, 1), Utility.generateRandomSPDMatrix(dim));
-        %     obj = GaussianContainer(numDistributions, prior, true);
-        % 
-        %     for i = 1:numDistributions
-        %         testCase.verifyEqual(obj.PPrec{i}, NaN);
-        %     end
-        % end
-        % 
-        % 
-        % 
-       
-        
-        
-        
-        
-        
-        
-
     end
 end
