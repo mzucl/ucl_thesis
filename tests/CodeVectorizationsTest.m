@@ -233,7 +233,7 @@ classdef CodeVectorizationsTest < matlab.unittest.TestCase
             K = 3;
             N = 10;
 
-            [X, ~, T] = CodeVectorizationsTest.generateViewMatrices(D, N, K);
+            [~, ~, T] = CodeVectorizationsTest.generateViewMatrices(D, N, K);
             Z = Utility.generateRandomIntMatrix(K, N);
             alpha = diag(Utility.generateRandomIntMatrix(K, K));
 
@@ -251,9 +251,6 @@ classdef CodeVectorizationsTest < matlab.unittest.TestCase
 
             % Convert cell array to multidimensional matrix
             SIGMA_inv = cat(3, SIGMA_inv{:});
-
-            % Vectorized code
-            V = reshape(Z * X' * T, K, 1, D); % Columns of the matrix will be in the third dimension
 
             % Non-vectorized code
             for d = 1:D

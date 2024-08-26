@@ -28,7 +28,7 @@ classdef GammaContainer < handle
     end
 
     properties(Access = private)
-        expCInit
+        expInit
         cache = struct(...
             'Size', NaN, ...
             'E', NaN, ...
@@ -147,7 +147,7 @@ classdef GammaContainer < handle
             end
             
             % Set initial expectation to the actual expectation
-            obj.setExpCInit(obj.E);
+            obj.setExpInit(obj.E);
         end
 
 
@@ -219,7 +219,7 @@ classdef GammaContainer < handle
 
 
         %% Setters
-        function obj = setExpCInit(obj, value)
+        function obj = setExpInit(obj, value)
             if obj.VALIDATE
                 if ~all(value > 0)
                     error(['##### ERROR IN THE CLASS ' class(obj) ': Expectation is a strictly positive number.']);
@@ -229,7 +229,7 @@ classdef GammaContainer < handle
                         'components. ']);
                 end
             end
-            obj.expCInit = value;
+            obj.expInit = value;
         end
 
 
@@ -237,9 +237,11 @@ classdef GammaContainer < handle
 
 
         %% Getters
-        % 'expInit' is a private property -> needs a getter for the access
-        function value = getExpCInit(obj)
-            value = obj.expCInit;
+        function value = getExpInit(obj, d)
+            if nargin < 2
+                d = false;
+            end
+            value = Utility.ternary(d, diag(obj.expInit), obj.expInit);
         end
 
 

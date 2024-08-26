@@ -22,6 +22,9 @@ classdef BPCA < handle
         maxIter
         tol
 
+        % TODO (high): Check if there is a better way to define these
+        % inside this class - they are initialized in the constructor and
+        % shouldn't be changed!
         %% Dependent properties
         %   They are not declared as dependent because they never change upon the initialization
         N   % Number of observations/latent variables
@@ -75,15 +78,15 @@ classdef BPCA < handle
             %                  dim, mu,    cov,  priorPrec
             obj.mu = Gaussian(obj.D, 0, eye(obj.D), 10^3);
 
+            %                           type, size_, a, b, prior
             obj.alpha = GammaContainer("SD", obj.K);
             
             % % Use PPCA result as an initial point
             [W_PPCA, sigmaSq] = PPCA(obj.view.X', obj.D - 1);
             
-            %                         type, size_, cols,   dim, mu, cov, priorPrec
-            obj.W = GaussianContainer("DS", obj.D, false, obj.K);
+            %                         type, size_, cols,   dim,   mu, cov, priorPrec
+            obj.W = GaussianContainer("DS", obj.D, false, obj.K, W_PPCA');
             
-
             tauPrior = Gamma(Constants.DEFAULT_GAMMA_A, Constants.DEFAULT_GAMMA_B);
             obj.tau = Gamma(tauPrior);
 
@@ -92,11 +95,11 @@ classdef BPCA < handle
             % everything that is used in those two equations and those
             % initilizations are given below.
             %   obj.tau.expInit
-            %   obj.alpha.expCInit
+            %   obj.alpha.ExpInit
             %   obj.mu.expInit
             % ----------------------------------------------------------------
             obj.tau.setExpInit(1 / sigmaSq);
-            obj.alpha.setExpCInit(repmat(1e-3, obj.K, 1));
+            obj.alpha.setExpInit(repmat(1e-3, obj.K, 1));
             obj.mu.setExpInit(randn(obj.D, 1));
 
             % Performed only once
@@ -127,11 +130,11 @@ classdef BPCA < handle
 
         
         function obj = qWUpdate(obj, it)
-            alphaExp = Utility.ternary(it == 1, obj.alpha.getExpCInit(), obj.alpha.E);
+            alphaExp = Utility.ternary(it == 1, obj.alpha.getExpInit(), obj.alpha.E);
             tauExp = Utility.ternary(it == 1, obj.tau.getExpInit(), obj.tau.E);
             muExp = Utility.ternary(it == 1, obj.mu.getExpInit(), obj.mu.E);
 
-            covNew = Utility.choleskyInverse(diag(alphaExp) + tauExp * obj.Z.E_XXt);
+            covNew = Utility.matrixInverse(diag(alphaExp) + tauExp * obj.Z.E_XXt);
     
             obj.W.updateDistributionsCovariance(covNew);
 
@@ -181,8 +184,8 @@ classdef BPCA < handle
             elboVals = -Inf(1, obj.maxIter);
             
             for it = 1:obj.maxIter
-                obj.qWUpdate(it);
                 obj.qZUpdate(it);
+                obj.qWUpdate(it);
                 obj.qMuUpdate();
                 obj.qAlphaUpdate();
                 obj.qTauUpdate();

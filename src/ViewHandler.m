@@ -164,11 +164,12 @@ classdef ViewHandler < handle
         % end
         % 
         function value = get.XXt(obj)
-            if obj.controller.isDirty('XXt')
-                obj.XXt_Cached = obj.X * obj.X';
-                obj.controller.clearDirtyFlag('XXt');
-            end
-            value = obj.XXt_Cached;
+            value = obj.X * obj.X';
+            % if obj.controller.isDirty('XXt')
+            %     obj.XXt_Cached = obj.X * obj.X';
+            %     obj.controller.clearDirtyFlag('XXt');
+            % end
+            % value = obj.XXt_Cached;
         end
     end
 end

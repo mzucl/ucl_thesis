@@ -208,13 +208,13 @@ classdef GammaContainerTest < matlab.unittest.TestCase
             obj = GammaContainer("SD", size, a, b);
 
             % Init value is actual expectation
-            testCase.verifyTrue(isequal(obj.getExpCInit(), obj.E));
+            testCase.verifyTrue(isequal(obj.getExpInit(), obj.E));
             
             % randomArray = minValue + (maxValue - minValue) * rand(1, n);
-            newExpC = (0.1 + (5 - 0.1) * rand(1, obj.Size))';
-            obj.setExpCInit(newExpC);
+            newExp = (0.1 + (5 - 0.1) * rand(1, obj.Size))';
+            obj.setExpInit(newExp);
 
-            testCase.verifyTrue(isequal(obj.getExpCInit(), newExpC));
+            testCase.verifyTrue(isequal(obj.getExpInit(), newExp));
         end
     end
 end

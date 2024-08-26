@@ -186,22 +186,22 @@ classdef GFA < handle
                 % p
                 pX = pX + obj.views(i).getExpectationLnPX();
                 pW = pW + obj.views(i).getExpectationLnW();
-                pAlpha = pAlpha + obj.views(i).alpha.E_LnPC;
-                pTau = pTau + obj.views(i).T.E_LnPC;
+                pAlpha = pAlpha + obj.views(i).alpha.E_LnP;
+                pTau = pTau + obj.views(i).T.E_LnP;
                 % q
-                qW = qW + obj.views(i).W.HC;
-                qAlpha = qAlpha + obj.views(i).alpha.HC;
-                qTau = qTau + obj.views(i).T.HC;
+                qW = qW + obj.views(i).W.H;
+                qAlpha = qAlpha + obj.views(i).alpha.H;
+                qTau = qTau + obj.views(i).T.H;
             end
             
             % Store to 'res'
-            res.qZ = obj.Z.HC; 
+            res.qZ = obj.Z.H; 
             res.qW = qW; 
             res.qAlpha = qAlpha; 
             res.qTau = qTau;
             % p
             res.pX = pX;
-            res.pZ = obj.Z.E_LnPC; 
+            res.pZ = obj.Z.E_LnP; 
             res.pW = pW;
             res.pAlpha = pAlpha; 
             res.pTau = pTau;
@@ -232,7 +232,10 @@ classdef GFA < handle
                 return;
             end
 
+            % if obj.DEBUG
             disp(['Removed ', num2str(length(removeIdx)), ' factors in iteration ', num2str(it)]);
+            % end
+            
             % Update number of factors
             obj.K.Val = obj.K.Val - length(removeIdx);
         

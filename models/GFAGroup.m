@@ -20,9 +20,15 @@ classdef GFAGroup < handle
         Z
         K
     end
+    
+    properties(Access = private)
+        cache = struct(...
+            'D', NaN, ...
+            'N', NaN);
+    end
 
-    % TODO: ternaryOpt use!
-
+    % D and N are Dependent properties that don't change after
+    % initialization, so we cache them and never clear the cache!
     properties (Dependent)
         D
         N
@@ -123,12 +129,12 @@ classdef GFAGroup < handle
 
         function value = getExpectationLnW(obj)
             % The sum in the eq implemented as a dot product
-            value = obj.W.getExpectationOfColumnsNormSq()' * obj.alpha.E;
-            value = -1/2 * value + obj.D/2 * (obj.alpha.E_LnC - obj.K.Val * log(2*pi));
+            value = obj.W.E_SNC' * obj.alpha.E;
+            value = -1/2 * value + obj.D/2 * (obj.alpha.E_LnX - obj.K.Val * log(2*pi));
         end
 
         function value = getExpectationLnPX(obj)
-            value = obj.N/2 * obj.T.E_LnC - obj.N * obj.D/2 * log(2 * pi) - 1/2 * ...
+            value = obj.N/2 * obj.T.E_LnX - obj.N * obj.D/2 * log(2 * pi) - 1/2 * ...
                 obj.T.E' * diag( ...
                 obj.X.XXt ...
                 - 2 * obj.W.E * obj.Z.E * obj.X.X' ...
@@ -149,11 +155,17 @@ classdef GFAGroup < handle
 
         %% Getters
         function value = get.D(obj)
-            value = obj.X.D;
+            if isnan(obj.cache.D)
+                obj.cache.D = obj.X.D;
+            end
+            value = obj.cache.D;
         end
 
         function value = get.N(obj)
-            value = obj.X.N;
+            if isnan(obj.cache.N)
+                obj.cache.N = obj.X.N;
+            end
+            value = obj.cache.N;
         end
     end
 end

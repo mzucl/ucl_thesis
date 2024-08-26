@@ -7,7 +7,7 @@ classdef Constants
         % Gaussian distribution
         DEFAULT_GAUSS_MU = 0;
         DEFAULT_GAUSS_DIM = 1;
-        DEFAULT_GAUSS_PRECISION = 10^2;
+        DEFAULT_GAUSS_PRECISION = 1; % spherical prior covariance
 
         % Default optimization parameters
         DEFAULT_MAX_ITER = 100;
@@ -17,8 +17,8 @@ classdef Constants
 
         LATENT_FACTORS_THRESHOLD = 1e-6;
 
-        VALIDATE = true; % Validate inputs in classes
+        VALIDATE = false; % Validate inputs in classes
 
-        DEBUG = true;
+        DEBUG = false;
     end
 end

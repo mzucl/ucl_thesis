@@ -26,7 +26,7 @@ classdef GaussianContainer < handle
     end
 
     properties(Access = private)
-        expCInit
+        expInit
         cache = struct(...
             'Size', NaN, ...
             'E', NaN, ...
@@ -227,7 +227,7 @@ classdef GaussianContainer < handle
             end
 
             % Set initial expectation to the actual expectation
-            obj.setExpCInit(obj.E);
+            obj.setExpInit(obj.E);
         end
        
 
@@ -235,7 +235,7 @@ classdef GaussianContainer < handle
 
 
         %% Setters
-        function obj = setExpCInit(obj, value)
+        function obj = setExpInit(obj, value)
             if obj.VALIDATE
                 if ~(obj.cols && isequal(size(value), [obj.dim, obj.Size]) || ...
                         ~obj.cols && isequal(size(value), [obj.Size, obj.dim]))
@@ -244,7 +244,7 @@ classdef GaussianContainer < handle
                 end
             end
             
-            obj.expCInit = value;
+            obj.expInit = value;
         end
 
 
@@ -253,8 +253,8 @@ classdef GaussianContainer < handle
 
         %% Getters
         % 'expInit' is a private property -> needs a getter for the access
-        function value = getExpCInit(obj)
-            value = obj.expCInit;
+        function value = getExpInit(obj)
+            value = obj.expInit;
         end
 
 

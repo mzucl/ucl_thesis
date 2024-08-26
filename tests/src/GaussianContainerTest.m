@@ -496,13 +496,13 @@ classdef GaussianContainerTest < matlab.unittest.TestCase
             cov = Utility.generateRandomSPDMatrix(dim);
             obj = GaussianContainer(type, size_, cols, dim, mu, cov);
 
-            testCase.verifyTrue(isequal(obj.getExpCInit(), obj.E));
+            testCase.verifyTrue(isequal(obj.getExpInit(), obj.E));
 
             % Set init expectation
-            newExpC = Utility.generateRandomIntMatrix(dim, size_);
-            obj.setExpCInit(newExpC);
+            newExp = Utility.generateRandomIntMatrix(dim, size_);
+            obj.setExpInit(newExp);
 
-            testCase.verifyTrue(isequal(obj.getExpCInit(), newExpC));
+            testCase.verifyTrue(isequal(obj.getExpInit(), newExp));
             
 
             % Test 2: cols = false
@@ -514,13 +514,13 @@ classdef GaussianContainerTest < matlab.unittest.TestCase
             cov = Utility.generateRandomSPDMatrix(dim);
             obj = GaussianContainer(type, size_, cols, dim, mu, cov);
 
-            testCase.verifyTrue(isequal(obj.getExpCInit(), obj.E));
+            testCase.verifyTrue(isequal(obj.getExpInit(), obj.E));
 
             % Set init expectation
-            newExpC = Utility.generateRandomIntMatrix(size_, dim);
-            obj.setExpCInit(newExpC);
+            newExp = Utility.generateRandomIntMatrix(size_, dim);
+            obj.setExpInit(newExp);
 
-            testCase.verifyTrue(isequal(obj.getExpCInit(), newExpC));
+            testCase.verifyTrue(isequal(obj.getExpInit(), newExp));
         end
 
 
