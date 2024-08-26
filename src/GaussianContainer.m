@@ -28,7 +28,6 @@ classdef GaussianContainer < handle
     properties(Access = private)
         expInit
         cache = struct(...
-            'Size', NaN, ...
             'E', NaN, ...
             'H', NaN, ...
             'E_Xt', NaN, ...
@@ -38,6 +37,10 @@ classdef GaussianContainer < handle
             'E_LnP', NaN, ...
             'Cov_Tr', NaN, ...
             'E_SNC', NaN);
+
+        cacheSize = 0; % Cached value for 'Size' is invalidated only when 'removeDimensions'
+                       % is called, so it make sense for it to have a separate cache! 
+                       % 0 is used because == 0 is much faster than isnan().
     end
     
     properties (Dependent)
@@ -62,11 +65,7 @@ classdef GaussianContainer < handle
         end
 
         function clearCache(obj)
-            fields = fieldnames(obj.cache);
-            
-            for i = 1:length(fields)
-                obj.cache.(fields{i}) = NaN;
-            end
+            obj.cache = structfun(@(x) NaN, obj.cache, 'UniformOutput', false);
         end
 
         function isValid = validateDimIndices(obj, indices)
@@ -262,6 +261,7 @@ classdef GaussianContainer < handle
 
         
         %% Update methods
+        % TODO (medium): Validate inputs!
         % Independent of the type (currently implemented)
         function obj = updateDistributionsMu(obj, mu)
             if obj.VALIDATE && nargin < 2
@@ -280,6 +280,18 @@ classdef GaussianContainer < handle
                 error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
             end
             
+            obj.cov = cov;
+
+            % Clear cache
+            obj.clearCache();
+        end
+
+        function obj = updateDistributionsParameters(obj, mu, cov)
+            if obj.VALIDATE && nargin < 3
+                error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
+            end
+            
+            obj.mu = mu;
             obj.cov = cov;
 
             % Clear cache
@@ -316,6 +328,7 @@ classdef GaussianContainer < handle
 
             % Clear cache
             obj.clearCache();
+            obj.cacheSize = 0;
         end
 
 
@@ -324,10 +337,10 @@ classdef GaussianContainer < handle
         
         %% Dependent properties
         function value = get.Size(obj)
-            if isnan(obj.cache.Size)
-                obj.cache.Size = size(obj.mu, 2);
+            if obj.cacheSize == 0
+                obj.cacheSize = size(obj.mu, 2);
             end
-            value = obj.cache.Size;
+            value = obj.cacheSize;
         end        
 
         function value = get.E(obj)

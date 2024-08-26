@@ -19,6 +19,8 @@ gfaModel =  GFA({X1', X2'}, K, maxIter);
 profile off;
 profile viewer;
 
+return;
+
 %% Visualize model training
 % Visualization.plotStructVariables(resArr);
 

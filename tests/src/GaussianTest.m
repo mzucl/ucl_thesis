@@ -363,6 +363,20 @@ classdef GaussianTest < matlab.unittest.TestCase
             testCase.verifyEqual(obj.cov, eye(dim));
 
             newCov = Utility.generateRandomSPDMatrix(dim);
+            newMu = 5 * ones(dim, 1);
+
+            obj.updateParameters(newMu, newCov);
+
+            GaussianTest.verifyObject(testCase, obj, newMu, newCov, Constants.DEFAULT_GAUSS_PRECISION, dim);
+        end
+
+        function testUpdateParameters(testCase)
+            dim = 10;
+            obj = Gaussian(dim, 0);
+
+            testCase.verifyEqual(obj.cov, eye(dim));
+
+            newCov = Utility.generateRandomSPDMatrix(dim);
 
             obj.updateCovariance(newCov);
 

@@ -19,20 +19,15 @@ classdef GFAGroup < handle
 
         Z
         K
-    end
-    
-    properties(Access = private)
-        cache = struct(...
-            'D', NaN, ...
-            'N', NaN);
-    end
 
-    % D and N are Dependent properties that don't change after
-    % initialization, so we cache them and never clear the cache!
-    properties (Dependent)
+        % CONSTANT (don't change after initialization) dependent properties
         D
         N
     end
+    
+
+    
+
 
     methods
         %% Constructors
@@ -46,7 +41,10 @@ classdef GFAGroup < handle
             obj.X = ViewHandler(data, featuresInCols);
             obj.Z = Z;
             obj.K = K;
-            
+
+            % Dependent properties
+            obj.D = obj.X.D;
+            obj.N = obj.X.N;
 
             %% Model setup and initialization
             %                          type, size_, a, b, prior
@@ -119,12 +117,10 @@ classdef GFAGroup < handle
             % Convert cell array to multidimensional matrix
             newCov = cat(3, newCov{:});
 
-            obj.W.updateDistributionsCovariance(newCov);
-
-            % Update mu
             V = reshape(obj.Z.E * obj.X.X' * diag(TExp), obj.K.Val, 1, obj.D); % Columns of the matrix will be in the third dimension
             newMu = squeeze(pagemtimes(newCov, V));
-            obj.W.updateDistributionsMu(newMu);
+            
+            obj.W.updateDistributionsParameters(newMu, newCov);
         end
 
         function value = getExpectationLnW(obj)
@@ -139,33 +135,6 @@ classdef GFAGroup < handle
                 obj.X.XXt ...
                 - 2 * obj.W.E * obj.Z.E * obj.X.X' ...
                 + obj.W.E * obj.Z.E_XXt * obj.W.E');
-            % ans1 == ans2
-            % ans1 = obj.T.E' * diag( ...
-            %     obj.X.XXt ...
-            %     - 2 * obj.W.E * obj.Z.E * obj.X.X' ...
-            %     + obj.W.E * obj.Z.E_XXt * obj.W.E');
-            % ans2 = trace(obj.T.E_Diag * (obj.X.XXt ...
-            %     - 2 * obj.W.E * obj.Z.E * obj.X.X' ...
-            %     + obj.W.E * obj.Z.E_XXt * obj.W.E'));
-        end
-        
-
-
-
-
-        %% Getters
-        function value = get.D(obj)
-            if isnan(obj.cache.D)
-                obj.cache.D = obj.X.D;
-            end
-            value = obj.cache.D;
-        end
-
-        function value = get.N(obj)
-            if isnan(obj.cache.N)
-                obj.cache.N = obj.X.N;
-            end
-            value = obj.cache.N;
         end
     end
 end

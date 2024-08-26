@@ -12,7 +12,7 @@ profile on;
 % BPCA constructor expects data in [D x N] format
 obj = BPCA(X', numIter); 
 
-obj.fit();
+[elboVals, it] = obj.fit();
 % [elboVals, convIt, resArr] = obj.fit();
 
 profile off;

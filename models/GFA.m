@@ -16,13 +16,12 @@ classdef GFA < handle
         maxIter
         tol
 
+        % CONSTANT (don't change after initialization) dependent properties
+        D % Array containing dimensions for each view
+
         doRotation
     end
 
-    properties (Dependent)
-        D   % Array containing dimensions of each view
-    end
-    
     % TODO (high): Implement
     % methods(Access = private)
     %     function [M, N] = validateSources(obj, idx)
@@ -90,6 +89,8 @@ classdef GFA < handle
             for i = 1:obj.M
                 obj.views(i) = GFAGroup(data{i}, obj.Z, obj.K, false); % featuresInCols = false;
             end
+
+            obj.D = [obj.views.D];
         end
 
 
@@ -106,10 +107,9 @@ classdef GFA < handle
             end
 
             covNew = Utility.matrixInverse(eye(obj.K.Val) + covNew);
-            obj.Z.updateDistributionsCovariance(covNew);
-
             newMu = covNew * sum_WtTX;
-            obj.Z.updateDistributionsMu(newMu);
+
+            obj.Z.updateDistributionsParameters(newMu, covNew);
         end
 
         function obj = qWUpdate(obj, it)

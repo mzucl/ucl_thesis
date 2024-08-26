@@ -30,12 +30,15 @@ classdef GammaContainer < handle
     properties(Access = private)
         expInit
         cache = struct(...
-            'Size', NaN, ...
             'E', NaN, ...
             'E_Diag', NaN, ...
             'H', NaN, ...
             'E_LnP', NaN, ...
             'E_LnX', NaN);
+
+        cacheSize = 0; % Cached value for 'Size' is invalidated only when 'removeDimensions'
+                       % is called, so it make sense for it to have a separate cache! 
+                       % 0 is used because == 0 is much faster than isnan().
     end
     
     properties (Dependent)   
@@ -70,11 +73,7 @@ classdef GammaContainer < handle
         end
 
         function clearCache(obj)
-            fields = fieldnames(obj.cache);
-            
-            for i = 1:length(fields)
-                obj.cache.(fields{i}) = NaN;
-            end
+            obj.cache = structfun(@(x) NaN, obj.cache, 'UniformOutput', false);
         end
     end
 
@@ -212,6 +211,7 @@ classdef GammaContainer < handle
 
             % Clear cache
             obj.clearCache();
+            obj.cacheSize = 0;
         end
 
 
@@ -251,10 +251,10 @@ classdef GammaContainer < handle
         %% Dependent properties
         % [NOTE]: 'type' dependent
         function value = get.Size(obj)
-            if isnan(obj.cache.Size)
-                obj.cache.Size = length(obj.b);
+            if obj.cacheSize == 0
+                obj.cacheSize = length(obj.b);
             end
-            value = obj.cache.Size;
+            value = obj.cacheSize;
         end
 
         function value = get.E(obj)

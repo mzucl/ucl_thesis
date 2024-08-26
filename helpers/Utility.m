@@ -11,8 +11,11 @@
 %   isnan(obj) -> ERROR
 %   isnan([]) -> returns elements wise isnan check!
 %%
-
 classdef Utility
+    properties (Constant)
+        VALIDATE = Constants.VALIDATE;
+    end
+
     methods (Static)
         function res = isSingleNumber(x)
             res = isscalar(x) && isnumeric(x) && ~isnan(x);
@@ -128,7 +131,7 @@ classdef Utility
         end
 
         function res = isSemiPositiveDefinite(matrix)
-            if ~Utility.isSquareMatrix(matrix)
+            if Utility.VALIDATE && ~Utility.isSquareMatrix(matrix)
                 error(['##### ERROR IN THE CLASS ' mfilename('class') ': Input must be a square matrix.']);
             end
   
@@ -157,7 +160,7 @@ classdef Utility
         end
 
         function invA = choleskyInverse(A)
-            if ~Utility.isSquareMatrix(A)
+            if Utility.VALIDATE && ~Utility.isSquareMatrix(A)
                 error(['##### ERROR IN THE CLASS ' mfilename('class') ': Matrix must be square for inversion.']);
             end
             
@@ -172,13 +175,12 @@ classdef Utility
             invA = invL' * invL;
         end
 
+        % Compute the inverse of matrix A using LU decomposition
         function invA = matrixInverse(A)
-            % Compute the inverse of matrix A using LU decomposition
-            if ~Utility.isSquareMatrix(A)
+            if Utility.VALIDATE && ~Utility.isSquareMatrix(A)
                 error(['##### ERROR IN THE CLASS ' mfilename('class') ': Matrix must be square for inversion.']);
             end
             
-            % Compute the inverse using LU decomposition
             [L, U, P] = lu(A);
             invA = U \ (L \ P);
         end

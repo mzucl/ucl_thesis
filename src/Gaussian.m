@@ -50,11 +50,7 @@ classdef Gaussian < handle
         end
 
         function clearCache(obj)
-            fields = fieldnames(obj.cache);
-            
-            for i = 1:length(fields)
-                obj.cache.(fields{i}) = NaN;
-            end
+            obj.cache = structfun(@(x) NaN, obj.cache, 'UniformOutput', false);
         end
     end
 
@@ -169,6 +165,20 @@ classdef Gaussian < handle
 
 
 
+    methods (Access = private)
+        function value = validateMu(obj, mu)
+            value = size(mu, 1) == obj.dim; % 'mu' is a column vector
+        end
+
+        function value = validateCovariance(obj, cov)
+            value = size(cov, 1) == obj.dim && Utility.isValidCovarianceMatrix(cov);
+        end
+    end
+
+
+
+
+
     methods
         %% Deep copy and operators overloading
         function newObj = copy(obj)
@@ -233,8 +243,9 @@ classdef Gaussian < handle
                     error(['##### ERROR IN THE THE CLASS ' class(obj) ': Too few arguments passed.']);
                 end
     
-                if size(mu, 1) ~= obj.dim % 'mu' is a column vector
-                    error(['##### ERROR IN THE THE CLASS ' class(obj) ': Dimension cannot be changed via update method.']);
+                if ~obj.validateMu(mu)
+                    error(['##### ERROR IN THE THE CLASS ' class(obj) ': Invalid update parameter. ' ...
+                        'Ensure the sizes are correct and that parameter is in a column vector format.']);
                 end
             end
            
@@ -250,16 +261,31 @@ classdef Gaussian < handle
                     error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
                 end
     
-                if ~Utility.isValidCovarianceMatrix(cov)
-                    error(['##### ERROR IN THE CLASS ' class(obj) ': Argument is not a valid covariance matrix.']);
-                end
-    
-                if  size(cov, 1) ~= obj.dim
-                    error(['##### ERROR IN THE CLASS ' class(obj) ': The dimensionality of new covariance doesn' ...
-                        't match the distribution dimensionality.']);
+                if ~obj.validateCovariance(cov)
+                    error(['##### ERROR IN THE THE CLASS ' class(obj) ': Invalid update parameter. ' ...
+                        'Ensure the sizes are correct and the covariance matrix is positive definite.']);
                 end
             end
             
+            obj.cov = cov;
+
+            % Clear cache
+            obj.clearCache();
+        end
+
+        function updateParameters(obj, mu, cov)
+            if obj.VALIDATE
+                if nargin < 3
+                    error(['##### ERROR IN THE THE CLASS ' class(obj) ': Too few arguments passed.']);
+                end
+                
+                if ~obj.validateMu(mu) || ~obj.validateCovariance(cov)
+                    error(['##### ERROR IN THE THE CLASS ' class(obj) ': Invalid update parameters. ' ...
+                        'Ensure the sizes are correct and the covariance matrix is positive definite.']);
+                end
+            end
+            
+            obj.mu = mu;
             obj.cov = cov;
 
             % Clear cache

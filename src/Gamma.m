@@ -44,11 +44,7 @@ classdef Gamma < handle
 
     methods(Access = private)
         function clearCache(obj)
-            fields = fieldnames(obj.cache);
-            
-            for i = 1:length(fields)
-                obj.cache.(fields{i}) = NaN;
-            end
+            obj.cache = structfun(@(x) NaN, obj.cache, 'UniformOutput', false);
         end
     end
 

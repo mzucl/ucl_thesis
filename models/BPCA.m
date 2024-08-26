@@ -122,10 +122,9 @@ classdef BPCA < handle
             muExp = Utility.ternary(it == 1, obj.mu.getExpInit(), obj.mu.E);
 
             covNew = Utility.matrixInverse(eye(obj.K) + tauExp * obj.W.E_XtX);
-            obj.Z.updateDistributionsCovariance(covNew);
-    
-            obj.Z.updateDistributionsMu(tauExp * covNew * obj.W.E_Xt * ...
-                (obj.view.X - muExp));
+            muNew = tauExp * covNew * obj.W.E_Xt * (obj.view.X - muExp);
+
+            obj.Z.updateDistributionsParameters(muNew, covNew);
         end
 
         
@@ -135,11 +134,9 @@ classdef BPCA < handle
             muExp = Utility.ternary(it == 1, obj.mu.getExpInit(), obj.mu.E);
 
             covNew = Utility.matrixInverse(diag(alphaExp) + tauExp * obj.Z.E_XXt);
-    
-            obj.W.updateDistributionsCovariance(covNew);
-
-            obj.W.updateDistributionsMu(tauExp * covNew * obj.Z.E * ...
-                (obj.view.X' - muExp'));
+            muNew = tauExp * covNew * obj.Z.E * (obj.view.X' - muExp');
+            
+            obj.W.updateDistributionsParameters(muNew, covNew);
         end
 
 
@@ -154,11 +151,8 @@ classdef BPCA < handle
 
             newCov = (1/(obj.mu.priorPrec + obj.N * tauExp)) * eye(obj.D);
             newMu = tauExp * newCov * (obj.view.X - obj.W.E * obj.Z.E) * ones(obj.N, 1);
-
-            obj.mu.updateMu(newMu);
-            obj.mu.updateCovariance(newCov);
-
-            % obj.mu.clearCache();
+            
+            obj.mu.updateParameters(newMu, newCov);
         end
 
 
@@ -177,11 +171,20 @@ classdef BPCA < handle
         
 
         %% fit() and ELBO
-        function [elboVals, it, resArr] = fit(obj, elboIterStep)
+        % elboIterStep - specifies the interval at which the ELBO should 
+        % be computed; e.g. if elboIterStep = 2 elbo will be computed every
+        % second iteration.
+        function [elboVals, it] = fit(obj, elboIterStep)
             if nargin < 2
                 elboIterStep = 1;
             end
+
             elboVals = -Inf(1, obj.maxIter);
+            % When elboIterStep ~= 1, indexing into elbo array is not done
+            % using 'iter'; iter / elboIterStep + 1, but having independent
+            % counter is cleaner; '+ 1' because we compute elbo in the
+            % first iteration.
+            elboIdx = 1;
             
             for it = 1:obj.maxIter
                 obj.qZUpdate(it);
@@ -190,64 +193,39 @@ classdef BPCA < handle
                 obj.qAlphaUpdate();
                 obj.qTauUpdate();
 
-                if mod(it, elboIterStep) ~= 0
+                if it ~= 1 && mod(it, elboIterStep) ~= 0
                     continue;
                 end
 
-                % Compute elbo
+                currElbo = obj.computeELBO();
+                elboVals(elboIdx) = currElbo;
+                
                 if obj.DEBUG
-                    resArr = cell(1, obj.maxIter);
-                    [currElbo, res] = obj.computeELBO();
-                    resArr{it} = res;
-
-                    if it ~= 1
-                        disp(['======= ELBO increased by: ', num2str(currElbo - elboVals(it - 1))]);
+                    if elboIdx ~= 1
+                        disp(['======= ELBO increased by: ', num2str(currElbo - elboVals(elboIdx - 1))]);
                     end
-                else
-                    currElbo = obj.computeELBO();
                 end
 
                 % ELBO has to increase from iteration to iteration
-                if it ~= 1 && currElbo < elboVals(it - 1)
+                if elboIdx ~= 1 && currElbo < elboVals(elboIdx - 1)
                     fprintf(2, 'ELBO decreased in iteration %d\n!!!', it);
                 end 
 
-                elboVals(it) = currElbo;
-
                 % Check for convergence
-                if it ~= 1 && abs(currElbo - elboVals(it - 1)) / abs(currElbo) < obj.tol
+                if elboIdx ~= 1 && abs(currElbo - elboVals(elboIdx - 1)) / abs(currElbo) < obj.tol
                     disp(['Convergence at iteration: ', num2str(it)]);
-                    elboVals = elboVals(1:it); % cut the -Inf values at the end
-                    if obj.DEBUG
-                        resArr = resArr(1:it);
-                    end
+                    elboVals = elboVals(1:elboIdx); % cut the -Inf values at the end
                     break;
                 end
+                elboIdx = elboIdx + 1;
             end
         end
         
 
-        function [elbo, res] = computeELBO(obj)
+        function elbo = computeELBO(obj)
             elbo = obj.getExpectationLnPX() + obj.Z.E_LnP + obj.getExpectationLnPW() + ... % p(.)
                 obj.alpha.E_LnP + obj.mu.E_LnP + obj.tau.E_LnP + ... % p(.)
                 obj.Z.H + obj.W.H + obj.alpha.H + obj.mu.H + obj.tau.H; % q(.)
-            if obj.DEBUG
-                res = {};
-                res.pX = obj.getExpectationLnPX();
-                res.pZ = obj.Z.E_LnP;
-                res.pW = obj.getExpectationLnPW();
-                res.pAlpha = obj.alpha.E_LnP;
-                res.pMu = obj.mu.E_LnP;
-                res.pTau = obj.tau.E_LnP;
-                
-                res.qZ = obj.Z.H;
-                res.qW = obj.W.H;
-                res.qAlpha = obj.alpha.H;
-                res.qMu = obj.mu.H;
-                res.qTau = obj.tau.H;
-
-                res.elbo = elbo;
-            end
         end
 
 

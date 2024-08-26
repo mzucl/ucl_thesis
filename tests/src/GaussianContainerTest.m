@@ -416,6 +416,55 @@ classdef GaussianContainerTest < matlab.unittest.TestCase
             testCase.verifyEqual(obj.cov, newCov);
         end
 
+        function testUpdateDistributionsParameters(testCase)
+            % Test 1: type = "DS"
+            type = "DS";
+            dim = 5;
+            size_ = 2;
+            cols = true;
+
+            obj = GaussianContainer(type, size_, cols, dim);
+
+            testCase.verifyEqual(obj.mu, zeros(dim, size_));
+            testCase.verifyEqual(obj.cov, eye(dim));
+
+            newMu = Utility.generateRandomIntMatrix(dim, size_);
+            newCov = Utility.generateRandomSPDMatrix(dim);
+
+            % Update
+            obj.updateDistributionsParameters(newMu, newCov);
+
+            testCase.verifyEqual(obj.mu, newMu);
+            testCase.verifyEqual(obj.cov, newCov); 
+
+            % Test 2: type = "DD"
+            type = "DD";
+            dim = 5;
+            size_ = 2;
+            cols = true;
+
+            obj = GaussianContainer(type, size_, cols, dim);
+
+            testCase.verifyEqual(obj.mu, zeros(dim, size_));
+            for i = 1:size_
+                testCase.verifyEqual(obj.cov(:, :, i), eye(dim));
+            end
+
+            newMu = Utility.generateRandomIntMatrix(dim, size_);
+
+            newCov = zeros(dim, dim, size_); % Preallocate
+            newCov1 = Utility.generateRandomSPDMatrix(dim);
+            newCov2 = Utility.generateRandomSPDMatrix(dim);
+            newCov(:, :, 1) = newCov1;
+            newCov(:, :, 2) = newCov2;
+
+            % Update
+            obj.updateDistributionsParameters(newMu, newCov);
+
+            testCase.verifyEqual(obj.mu, newMu);
+            testCase.verifyEqual(obj.cov, newCov);
+        end
+
         function testRemoveDimensions(testCase)
             % Test 1: type = "DS"
             type = "DS";
