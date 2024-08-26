@@ -139,7 +139,7 @@ classdef GFA < handle
         
             for it = 1:obj.maxIter
                 obj.removeFactors(it);
-                % obj.qWUpdate(it);
+                obj.qWUpdate(it);
                 obj.qZUpdate();
                 % if it > 0
                 %     obj.updateRotation();
@@ -147,29 +147,29 @@ classdef GFA < handle
                 obj.qAlphaUpdate();
                 obj.qTauUpdate();
 
-                % [currElbo, res] = obj.computeELBO();
+                [currElbo, res] = obj.computeELBO();
 
-                % resArr{it} = res;
-                % 
-                % % CHECK: ELBO has to increase from iteration to iteration
-                % if it ~= 1 && currElbo < elboVals(it - 1)
-                %     fprintf(2, 'ELBO decreased in iteration %d\n', it);
-                % end 
-                % 
-                % elboVals(it) = currElbo;
-                % 
-                % if it ~= 1
-                %     disp(['======= ELBO increased in iteration ', num2str(it), ' by: ', ...
-                %         num2str(currElbo - elboVals(it - 1))]);
-                % end
-                % 
-                % % Check for convergence
-                % if it ~= 1 && abs(currElbo - elboVals(it - 1)) / abs(currElbo) < obj.tol
-                %     disp(['Convergence at iteration: ', num2str(it)]);
-                %     elboVals = elboVals(1:it); % cut the -Inf values at the end
-                %     resArr = resArr(1:it);
-                %     break;
-                % end
+                resArr{it} = res;
+
+                % CHECK: ELBO has to increase from iteration to iteration
+                if it ~= 1 && currElbo < elboVals(it - 1)
+                    fprintf(2, 'ELBO decreased in iteration %d\n', it);
+                end 
+
+                elboVals(it) = currElbo;
+
+                if it ~= 1
+                    disp(['======= ELBO increased in iteration ', num2str(it), ' by: ', ...
+                        num2str(currElbo - elboVals(it - 1))]);
+                end
+
+                % Check for convergence
+                if it ~= 1 && abs(currElbo - elboVals(it - 1)) / abs(currElbo) < obj.tol
+                    disp(['Convergence at iteration: ', num2str(it)]);
+                    elboVals = elboVals(1:it); % cut the -Inf values at the end
+                    resArr = resArr(1:it);
+                    break;
+                end
             end
         end
 

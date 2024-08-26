@@ -57,14 +57,16 @@ classdef GFAGroup < handle
             % everything that is used in those two equations and those
             % initilizations are given below.
             %   obj.T.expInit
-            %   obj.alpha.expCInit
+            %   obj.alpha.ExpInit
             % ----------------------------------------------------------------
-            obj.T.setExpCInit(1000 * ones(obj.D, 1));        
-            obj.alpha.setExpCInit(repmat(1e-1, obj.K.Val, 1));
+            obj.T.setExpInit(1000 * ones(obj.D, 1));        
+            obj.alpha.setExpInit(repmat(1e-1, obj.K.Val, 1));
 
             % Performed only once
             obj.qConstantUpdates();
         end
+
+
 
 
 
@@ -93,18 +95,30 @@ classdef GFAGroup < handle
     
 
         function obj = qWUpdate(obj, it)
-            alphaExp = Utility.ternary(it == 1, obj.alpha.getExpCInit(), obj.alpha.E);
+            alphaExp = Utility.ternary(it == 1, obj.alpha.getExpInit(true), obj.alpha.E_Diag);
             TExp = Utility.ternary(it == 1, obj.T.getExpInit(), obj.T.E);
 
-            for d = 1:obj.D
-                covNew = Utility.matrixInverse(TExp{d} * obj.Z.E_XXt * eye(obj.K.Val) + ...
-                    diag(alphaExp));
-            
-                muNew = covNew * TExp{d} * obj.Z.E * obj.X.getRow(d, true);
+            % Update cov
+            T_3D = reshape(TExp, 1, 1, []);
 
-                obj.W.updateDistributionMu(d, muNew);
-                obj.W.updateDistributionCovariance(d, covNew);
-            end
+            ZZt_3D = repmat(obj.Z.E_XXt, 1, 1, obj.D);
+            
+            alpha_3D = repmat(alphaExp, 1, 1, obj.D);
+
+            cov_inv = pagemtimes(ZZt_3D, T_3D) + alpha_3D;
+
+            newCov = arrayfun(@(i) Utility.matrixInverse(cov_inv(:,:,i)), ...
+                1:size(cov_inv, 3), 'UniformOutput', false);
+
+            % Convert cell array to multidimensional matrix
+            newCov = cat(3, newCov{:});
+
+            obj.W.updateDistributionsCovariance(newCov);
+
+            % Update mu
+            V = reshape(obj.Z.E * obj.X.X' * diag(TExp), obj.K.Val, 1, obj.D); % Columns of the matrix will be in the third dimension
+            newMu = squeeze(pagemtimes(newCov, V));
+            obj.W.updateDistributionsMu(newMu);
         end
 
         function value = getExpectationLnW(obj)
@@ -129,6 +143,9 @@ classdef GFAGroup < handle
             %     + obj.W.E * obj.Z.E_XXt * obj.W.E'));
         end
         
+
+
+
 
         %% Getters
         function value = get.D(obj)
