@@ -100,6 +100,7 @@ classdef MatrixTransformationsTest < matlab.unittest.TestCase
         end
 
 
+
         % Expectation in q(tau) - part 1
         function testIdentityGFA2_1(testCase)
             % Setup
@@ -120,7 +121,6 @@ classdef MatrixTransformationsTest < matlab.unittest.TestCase
 
             testCase.verifyEqual(sum, expr);
         end
-
 
         % Expectation in q(tau) - part 2
         function testIdentityGFA2_2(testCase)
@@ -145,6 +145,6 @@ classdef MatrixTransformationsTest < matlab.unittest.TestCase
             end
 
             testCase.verifyEqual(sum1, sum2);
-        end     
+        end  
     end
 end

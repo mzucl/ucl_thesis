@@ -135,10 +135,35 @@ classdef CodeVectorizationsTest < matlab.unittest.TestCase
 
 
         %% Code vectorization GFA model
-
-
         % Vectorization for qZUpdate: mu
         function testIdentityGFAVectorization1(testCase)
+            % Setup
+            Ds = [5, 10, 12]; % View dimensions
+            K = 10;
+            N = 100;
+
+            [X1, W1, T1] = CodeVectorizationsTest.generateViewMatrices(Ds(1), N, K);
+            [X2, W2, T2] = CodeVectorizationsTest.generateViewMatrices(Ds(2), N, K);
+            [X3, W3, T3] = CodeVectorizationsTest.generateViewMatrices(Ds(3), N, K);
+
+            sigmaZ = Utility.generateRandomIntMatrix(K, K);
+            
+            % Vectorized code
+            MU = sigmaZ * (W1' * T1 * X1 + W2' * T2 * X2 + W3' * T3 * X3);
+
+            % Non-vectorized code
+            for n = 1:N
+                mu = W1' * T1 * X1(:, n) + W2' * T2 * X2(:, n) + W3' * T3 * X3(:, n);
+                mu = sigmaZ * mu;
+
+                % Compare
+                testCase.verifyEqual(MU(:, n), mu);
+            end
+        end
+
+        % Vectorization for qZUpdate: mu - full vectorization over the
+        % views as well!
+        function testIdentityGFAVectorization1_2(testCase)
             % Setup
             Ds = [5, 10, 12]; % View dimensions
             K = 10;
@@ -171,40 +196,117 @@ classdef CodeVectorizationsTest < matlab.unittest.TestCase
             end
         end
 
-        % Vectorization for qZUpdate: sigma
-        function testIdentityGFAVectorization2(testCase)
+        % Vectorization for qWUpdate: mu
+        function testIdentityGFAVectorization2_1(testCase)
             % Setup
-            Ds = [5, 10, 12]; % View dimensions
-            K = 80;
-            N = 10000;
-            M = length(Ds);
+            D = 5; % View dimensions
+            K = 10;
+            N = 100;
 
-            [X1, W1, T1] = CodeVectorizationsTest.generateViewMatrices(Ds(1), N, K);
-            [X2, W2, T2] = CodeVectorizationsTest.generateViewMatrices(Ds(2), N, K);
-            [X3, W3, T3] = CodeVectorizationsTest.generateViewMatrices(Ds(3), N, K);
+            [X, ~, T] = CodeVectorizationsTest.generateViewMatrices(D, N, K);
+            Z = Utility.generateRandomIntMatrix(K, N);
 
-            W = blkdiag(W1, W2, W3, W1, W2, W3, W1, W2, W3, W1, W2, W3, W1, W2, W3, W1, W2, W3);
-            T = blkdiag(T1, T2, T3, T1, T2, T3, T1, T2, T3, T1, T2, T3, T1, T2, T3, T1, T2, T3);
-
+            sigma = repmat(Utility.generateRandomSPDMatrix(K), 1, 1, D);
+            
             % Vectorized code
-            tic;
-            temp = W' * T * W;
-            % sigmaZ_Vect = Utility.matrixInverse(eye(K) + temp(1:K, 1:K) + temp(K + 1:2 * K, K + 1:  2 * K) + ...
-            %     temp(2 * K + 1:end, 2 * K + 1:end));
+            V = reshape(Z * X' * T, K, 1, D); % Columns of the matrix will be in the third dimension
 
-            elapsedTime = toc;
-            fprintf('Elapsed time : %.4f seconds\n', elapsedTime);
+            MU = squeeze(pagemtimes(sigma, V));
 
             % Non-vectorized code
-            tic;
-            sigmaZ = Utility.matrixInverse(eye(K) + W1' * T1 * W1 + W2' * T2 * W2 + W3' * T3 * W3 + ...
-                W1' * T1 * W1 + W2' * T2 * W2 + W3' * T3 * W3 + W1' * T1 * W1 + W2' * T2 * W2 + W3' * T3 * W3 + ...
-                W1' * T1 * W1 + W2' * T2 * W2 + W3' * T3 * W3 + W1' * T1 * W1 + W2' * T2 * W2 + W3' * T3 * W3 + ...
-                W1' * T1 * W1 + W2' * T2 * W2 + W3' * T3 * W3);
-            elapsedTime = toc;
-            fprintf('Elapsed time : %.4f seconds\n', elapsedTime);
-            
-            % testCase.verifyEqual(sigmaZ, sigmaZ_Vect);
+            for d = 1:D
+                mu = sigma(:, :, d) * T(d, d) * Z * X(d, :)'; 
+
+                % Compare
+                diffSqNorm = norm(MU(:, d) - mu);
+                testCase.verifyTrue(diffSqNorm < 1e-9);
+            end
         end
+
+        % Vectorization for qWUpdate: sigma
+        % Step 1: Vectorize the equation with the inverse
+        % Step 2: Inverse each of the matrices inside the multidimensional
+        % array
+        function testIdentityGFAVectorization2_2(testCase)
+            % Setup
+            D = 5; % View dimensions
+            K = 3;
+            N = 10;
+
+            [X, ~, T] = CodeVectorizationsTest.generateViewMatrices(D, N, K);
+            Z = Utility.generateRandomIntMatrix(K, N);
+            alpha = diag(Utility.generateRandomIntMatrix(K, K));
+
+            T_3D = reshape(diag(T), 1, 1, []);
+
+            ZZt_3D = repmat(Z * Z', 1, 1, D);
+            
+            alpha_3D = repmat(alpha, 1, 1, D);
+
+            SIGMA = pagemtimes(ZZt_3D, T_3D) + alpha_3D;
+
+            % Matrix inverse
+            SIGMA_inv = arrayfun(@(i) Utility.matrixInverse(SIGMA(:,:,i)), ...
+                1:size(SIGMA, 3), 'UniformOutput', false);
+
+            % Convert cell array to multidimensional matrix
+            SIGMA_inv = cat(3, SIGMA_inv{:});
+
+            % Vectorized code
+            V = reshape(Z * X' * T, K, 1, D); % Columns of the matrix will be in the third dimension
+
+            % Non-vectorized code
+            for d = 1:D
+                sigma = T(d, d) * (Z * Z') + alpha;
+
+                % Compare without inverse
+                diffSqNorm = norm(SIGMA(:, :, d) - sigma);
+                testCase.verifyTrue(diffSqNorm < 1e-9);
+
+                % Compare inverse
+                diffSqNorm = norm(SIGMA_inv(:, :, d) - Utility.matrixInverse(sigma));
+                testCase.verifyTrue(diffSqNorm < 1e-9);
+            end
+        end
+
+
+
+
+
+        % % Vectorization for qZUpdate: sigma
+        % function testIdentityGFAVectorization2(testCase)
+        %     % Setup
+        %     Ds = [5, 10, 12]; % View dimensions
+        %     K = 80;
+        %     N = 10000;
+        %     M = length(Ds);
+        % 
+        %     [X1, W1, T1] = CodeVectorizationsTest.generateViewMatrices(Ds(1), N, K);
+        %     [X2, W2, T2] = CodeVectorizationsTest.generateViewMatrices(Ds(2), N, K);
+        %     [X3, W3, T3] = CodeVectorizationsTest.generateViewMatrices(Ds(3), N, K);
+        % 
+        %     W = blkdiag(W1, W2, W3, W1, W2, W3, W1, W2, W3, W1, W2, W3, W1, W2, W3, W1, W2, W3);
+        %     T = blkdiag(T1, T2, T3, T1, T2, T3, T1, T2, T3, T1, T2, T3, T1, T2, T3, T1, T2, T3);
+        % 
+        %     % Vectorized code
+        %     tic;
+        %     temp = W' * T * W;
+        %     % sigmaZ_Vect = Utility.matrixInverse(eye(K) + temp(1:K, 1:K) + temp(K + 1:2 * K, K + 1:  2 * K) + ...
+        %     %     temp(2 * K + 1:end, 2 * K + 1:end));
+        % 
+        %     elapsedTime = toc;
+        %     fprintf('Elapsed time : %.4f seconds\n', elapsedTime);
+        % 
+        %     % Non-vectorized code
+        %     tic;
+        %     sigmaZ = Utility.matrixInverse(eye(K) + W1' * T1 * W1 + W2' * T2 * W2 + W3' * T3 * W3 + ...
+        %         W1' * T1 * W1 + W2' * T2 * W2 + W3' * T3 * W3 + W1' * T1 * W1 + W2' * T2 * W2 + W3' * T3 * W3 + ...
+        %         W1' * T1 * W1 + W2' * T2 * W2 + W3' * T3 * W3 + W1' * T1 * W1 + W2' * T2 * W2 + W3' * T3 * W3 + ...
+        %         W1' * T1 * W1 + W2' * T2 * W2 + W3' * T3 * W3);
+        %     elapsedTime = toc;
+        %     fprintf('Elapsed time : %.4f seconds\n', elapsedTime);
+        % 
+        %     % testCase.verifyEqual(sigmaZ, sigmaZ_Vect);
+        % end
     end
 end
