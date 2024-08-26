@@ -8,7 +8,7 @@ classdef GFA < handle
 
         M               % Number of groups
 
-        Z               % [K x N] GaussianDistributionContainer [size: N; for each latent variable zn]
+        Z               % [K x N] GaussianContainer [size: N; for each latent variable zn]
         
         views           % An array of GFAGroup instances
 
@@ -80,8 +80,9 @@ classdef GFA < handle
             % that we should set some values for all the moments that are
             % in those update equations.
             initZMu = randn(obj.K.Val, 1);
-            zPrior = GaussianDistribution(initZMu, eye(obj.K.Val));
-            obj.Z = GaussianDistributionContainer(obj.N, zPrior, true);
+
+            %                         type, size_, cols, dim,     mu, cov, priorPrec
+            obj.Z = GaussianContainer("DS", obj.N, true, obj.K.Val, initZMu);
 
             % Initialize views
             obj.views = GFAGroup.empty(obj.M, 0);
@@ -94,47 +95,36 @@ classdef GFA < handle
 
 
         %% Update methods
-        % obj.Z is GaussianDistributionContainer(cols = true)
         function obj = qZUpdate(obj)
-            % disp('qZUpdate');
-            % Update covariance
-            % All latent variables have the same covariance
             covNew = zeros(obj.K.Val);
-            for m = 1:obj.M
-                covNew = covNew + obj.views(m).W.E_Ct * ...
-                    obj.views(m).T.E_Diag * obj.views(m).W.EC;
-            end
-            covNew = Utility.matrixInverse(eye(obj.K.Val) + covNew);
-            obj.Z.updateAllDistributionsCovariance(covNew);
+            sum_WtTX = zeros(obj.K.Val, obj.N); % for mu update
 
-            % Update mu
-            for n = 1:obj.N
-                muNew = zeros(obj.K.Val, 1);
-                for m = 1:obj.M
-                    muNew = muNew + obj.views(m).W.E_Ct * ...
-                        obj.views(m).T.E_Diag * obj.views(m).X.getObservation(n);
-                end
-                muNew = covNew * muNew;
-                obj.Z.updateDistributionMu(n, muNew);
+            for m = 1:obj.M
+                WtT = obj.views(m).W.E_Xt * obj.views(m).T.E_Diag;
+                covNew = covNew + WtT * obj.views(m).W.E;
+                sum_WtTX = sum_WtTX + WtT * obj.views(m).X.X;
             end
+
+            covNew = Utility.matrixInverse(eye(obj.K.Val) + covNew);
+            obj.Z.updateDistributionsCovariance(covNew);
+
+            newMu = covNew * sum_WtTX;
+            obj.Z.updateDistributionsMu(newMu);
         end
 
         function obj = qWUpdate(obj, it)
-            % disp('qWUpdate');
             for i = 1:obj.M
                 obj.views(i).qWUpdate(it);
             end
         end
 
         function obj = qAlphaUpdate(obj)
-            % disp('qAlphaUpdate');
             for i = 1:obj.M
                 obj.views(i).qAlphaUpdate();
             end
         end
 
         function obj = qTauUpdate(obj)
-            % disp('qTauUpdate');
             for i = 1:obj.M
                 obj.views(i).qTauUpdate();
             end
@@ -149,7 +139,7 @@ classdef GFA < handle
         
             for it = 1:obj.maxIter
                 obj.removeFactors(it);
-                obj.qWUpdate(it);
+                % obj.qWUpdate(it);
                 obj.qZUpdate();
                 % if it > 0
                 %     obj.updateRotation();
@@ -157,29 +147,29 @@ classdef GFA < handle
                 obj.qAlphaUpdate();
                 obj.qTauUpdate();
 
-                [currElbo, res] = obj.computeELBO();
+                % [currElbo, res] = obj.computeELBO();
 
-                resArr{it} = res;
-
-                % CHECK: ELBO has to increase from iteration to iteration
-                if it ~= 1 && currElbo < elboVals(it - 1)
-                    fprintf(2, 'ELBO decreased in iteration %d\n', it);
-                end 
-
-                elboVals(it) = currElbo;
-
-                if it ~= 1
-                    disp(['======= ELBO increased in iteration ', num2str(it), ' by: ', ...
-                        num2str(currElbo - elboVals(it - 1))]);
-                end
-
-                % Check for convergence
-                if it ~= 1 && abs(currElbo - elboVals(it - 1)) / abs(currElbo) < obj.tol
-                    disp(['Convergence at iteration: ', num2str(it)]);
-                    elboVals = elboVals(1:it); % cut the -Inf values at the end
-                    resArr = resArr(1:it);
-                    break;
-                end
+                % resArr{it} = res;
+                % 
+                % % CHECK: ELBO has to increase from iteration to iteration
+                % if it ~= 1 && currElbo < elboVals(it - 1)
+                %     fprintf(2, 'ELBO decreased in iteration %d\n', it);
+                % end 
+                % 
+                % elboVals(it) = currElbo;
+                % 
+                % if it ~= 1
+                %     disp(['======= ELBO increased in iteration ', num2str(it), ' by: ', ...
+                %         num2str(currElbo - elboVals(it - 1))]);
+                % end
+                % 
+                % % Check for convergence
+                % if it ~= 1 && abs(currElbo - elboVals(it - 1)) / abs(currElbo) < obj.tol
+                %     disp(['Convergence at iteration: ', num2str(it)]);
+                %     elboVals = elboVals(1:it); % cut the -Inf values at the end
+                %     resArr = resArr(1:it);
+                %     break;
+                % end
             end
         end
 
@@ -234,7 +224,7 @@ classdef GFA < handle
                 threshold = Constants.LATENT_FACTORS_THRESHOLD;
             end
             % Calculate the average of the square of elements for each row of Z
-            avgSquare = mean(obj.Z.EC.^2, 2);
+            avgSquare = mean(obj.Z.E.^2, 2);
         
             removeIdx = find(avgSquare < threshold);
 
@@ -249,118 +239,10 @@ classdef GFA < handle
             % Remove those rows from Z, corresponding columns from W, and elements from alpha
             obj.Z.removeDimensions(removeIdx);
             for m = 1:obj.M
-                obj.views(m).alpha.removeDistributions(removeIdx);
+                obj.views(m).alpha.removeDimensions(removeIdx);
                 obj.views(m).W.removeDimensions(removeIdx);
             end
         end
-    
-
-        
-        %% Rotations
-        % TODO (high): Move helper methods to the private section
-        % Helper function to compute the cost and gradient
-        function [cost, grad] = costAndGrad(r, obj)
-            R = reshape(r, obj.K.Val, obj.K.Val);
-            cost = obj.Er(R);
-            grad = obj.gradEr(r);
-        end
-
-        function val = Er(obj, r)
-            % Reshape the input vector `r` into a matrix `R`
-            R = reshape(r, obj.K.Val, obj.K.Val);
-            
-            % Perform Singular Value Decomposition (SVD) on R
-            [U, S, ~] = svd(R);
-            
-            % Calculate tmp as described in the original function
-            tmp = U.* (ones(1, obj.K.Val) ./ diag(S))';
-
-            % tmp = U.* (ones(1, obj.K.Val)' * diag(S)');
-            
-            % Calculate the negative cost function value
-            val = -0.5 * sum(sum(obj.Z.E_CCt .* (tmp * tmp')));
-            
-            % Add the second term to the value
-            val = val + (sum(obj.D) - obj.N) * sum(log(diag(S)));
-            
-            % Loop over each `i` to add the third term
-            for m = 1:obj.M
-                tmp = R.* (obj.views(m).W.E_XXt{m} * R);
-                val = val - obj.D(m) * sum(log(sum(tmp, 1))) / 2;
-            end
-            
-            % Negate the value to return the final result
-            val = -val;
-        end
-
-        function grad = gradEr(obj, r)
-
-            % Evaluates the (negative) gradient of the cost function Er().
-        
-            % Parameters
-            % ----------
-            % r : array-like
-            %     Flattened transformation matrix R.                   
-        
-            % Reshape the input vector `r` into a square matrix `R`
-            R = reshape(r, obj.K.Val, obj.K.Val);
-            
-            % Perform Singular Value Decomposition (SVD) on R
-            [U, S, V] = svd(R);
-            
-            % Calculate the inverse of R using the SVD components
-            Rinv = V * (diag(1 ./ diag(S)) * U');
-            
-            % Calculate tmp using SVD components and element-wise operations
-            tmp = U * diag(1 ./ (diag(S) .^ 2));
-            
-            % Compute tmp1 based on tmp and the E_zz matrix
-            tmp1 = tmp * U' * obj.Z.E_CCt + diag((sum(obj.D) - obj.N) * ones(1, obj.K.Val));
-            
-            % Calculate the gradient before looping through the remaining operations
-            grad = tmp1 * Rinv';
-
-            grad = reshape(grad, [], 1);
-            
-            % Loop over each `i` to accumulate the gradient
-            for m = 1:obj.M
-                A = obj.views(m).W.E_XXt{m} * R;
-                B = 1 ./ sum(R .* A, 1);
-                tmp2 = obj.D(m) * reshape(A * diag(B), [], 1);
-                grad = grad - tmp2;
-            end
-            
-            % Flatten the gradient matrix and negate it
-            grad = -reshape(grad, [], 1);
-        end
-
-        function updateRotation(obj)
-            % Optimization of the rotation
-            r = reshape(eye(obj.K.Val), [], 1);
-            options = optimoptions('fmincon', 'Algorithm', 'trust-region-reflective', 'SpecifyObjectiveGradient', true, 'Display', 'off');
-            [r_opt, ~, exitflag] = fmincon(@(r)costAndGrad(r, obj), r, [], [], [], [], [], [], [], options);
-            
-            if exitflag > 0
-                % Update transformation matrix R
-                R = reshape(r_opt, obj.K.Val, obj.K.Val);
-                [U, S, V] = svd(R);
-                RInv = V * diag(1 ./ diag(S)) * U';
-
-                obj.Z.rotateAllDistributionsMu(RInv');
-                obj.Z.rotateAllDistributionsCovariance(RInv, false);
-        
-                % Update W
-                for m = 1:obj.M
-                    obj.views(m).W.rotateAllDistributionsMu(R);
-                    obj.views(m).W.rotateAllDistributionsCovariance(R, true);
-                end
-            else
-                obj.doRotation = false;
-                disp('Rotation stopped!');
-            end
-        end
-        
-
     
         %% Getters
         function value = get.D(obj)

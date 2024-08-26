@@ -2,7 +2,7 @@ classdef GFAGroup < handle
     properties         
         X               % ViewHandler instance to hold the data
 
-        W               % [D x K] GaussianDistributionContainer      
+        W               % [D x K] GaussianContainer      
                         %       --- [size: D; for each row in W matrix]
 
                         % Prior over W is defined per columns (each column
@@ -11,21 +11,17 @@ classdef GFAGroup < handle
                         % representing W as a size D container in a row
                         % format.
 
-        alpha           % [K x 1] GammaDistributionContainer         
+        alpha           % [K x 1] GammaContainer         
                         %       --- [size: K]
 
-        T               % [D x 1] GammaDistributionContainer         
+        T               % [D x 1] GammaContainer         
                         %       --- [size: D]
 
-        % TODO (high): Check if there is a better way to define these
-        % inside this class - they are initialized in the constructor and
-        % shouldn't be changed!
         Z
         K
     end
 
-    % properties (Dependent, SetAccess = private)
-    % end
+    % TODO: ternaryOpt use!
 
     properties (Dependent)
         D
@@ -47,19 +43,14 @@ classdef GFAGroup < handle
             
 
             %% Model setup and initialization
-            % alpha
-            alphaPrior = GammaDistribution(Constants.DEFAULT_GAMMA_A, Constants.DEFAULT_GAMMA_B);
-            obj.alpha = GammaDistributionContainer(repmat(alphaPrior, obj.K.Val, 1));
+            %                          type, size_, a, b, prior
+            obj.alpha = GammaContainer("SD", obj.K.Val, Constants.DEFAULT_GAMMA_A, Constants.DEFAULT_GAMMA_B);
 
-            % tau
-            tauPrior = GammaDistribution(Constants.DEFAULT_GAMMA_A, Constants.DEFAULT_GAMMA_B);
-            obj.T = GammaDistributionContainer(repmat(tauPrior, obj.D, 1));
+            %                      type, size_, a, b, prior
+            obj.T = GammaContainer("SD", obj.D, Constants.DEFAULT_GAMMA_A, Constants.DEFAULT_GAMMA_B);
 
-            % W; sample from obj.alpha for the prior
-            %       Should we do this? The values for alpha are so small!!!
-            % wPrior = GaussianDistribution(0, diag(1./obj.alpha.Value));
-            wPrior = GaussianDistribution(0, eye(obj.K.Val));
-            obj.W = GaussianDistributionContainer(obj.D, wPrior, false);
+            %                         type, size_, cols,   dim,   mu, cov, priorPrec
+            obj.W = GaussianContainer("DD", obj.D, false, obj.K.Val);
 
             % Model initialization - second part
             % The first update equation is for W, so we need to initialize
@@ -70,89 +61,72 @@ classdef GFAGroup < handle
             % ----------------------------------------------------------------
             obj.T.setExpCInit(1000 * ones(obj.D, 1));        
             obj.alpha.setExpCInit(repmat(1e-1, obj.K.Val, 1));
+
+            % Performed only once
+            obj.qConstantUpdates();
         end
 
 
 
         %% Update methods
-        % obj.alpha is GammaDistributionContainer
+        function obj = qConstantUpdates(obj)
+            % alpha.a
+            obj.alpha.updateAllDistributionsA(obj.alpha.prior.a + obj.D/2);
+            % T.a
+            obj.T.updateAllDistributionsA(obj.T.prior.a + obj.N/2);
+        end
+
+
         function obj = qAlphaUpdate(obj)
-            newAVal = obj.alpha.ds(1).prior.a + obj.D/2; % All 'a' values are the same
-            newBVals = obj.alpha.ds(1).prior.b + 1/2 * obj.W.getExpectationOfColumnsNormSq();
-
-            obj.alpha.updateAllDistributionsParams(newAVal, newBVals);
+            newBVals = obj.alpha.prior.b + 1/2 * obj.W.E_SNC;
+            obj.alpha.updateAllDistributionsB(newBVals);
         end
 
-        % obj.T is GammaDistributionContainer
+
         function obj = qTauUpdate(obj)
-            newAVal = obj.T.ds(1).prior.a + obj.N/2; % All 'a' values are the same
-            newBVals = obj.T.ds(1).prior.b + 1/2 * diag( ...
-                obj.X.XXt ...
-                - 2 * obj.W.EC * obj.Z.EC * obj.X.X' ...
-                + obj.W.EC * obj.Z.E_CCt * obj.W.EC');
+            newBVals = obj.T.prior.b + 1/2 * diag( ...
+                obj.X.XXt - 2 * obj.W.E * obj.Z.E * obj.X.X' ...
+                + obj.W.E * obj.Z.E_XXt * obj.W.E');
 
-            obj.T.updateAllDistributionsParams(newAVal, newBVals);
+            obj.T.updateAllDistributionsB(newBVals);
         end
     
+
         function obj = qWUpdate(obj, it)
-            % In the first iteration we perform the update based on the
-            % initialized moments of T and alpha, and in every
-            % subsequent iteration we use the 'normal' update equations
+            alphaExp = Utility.ternary(it == 1, obj.alpha.getExpCInit(), obj.alpha.E);
+            TExp = Utility.ternary(it == 1, obj.T.getExpInit(), obj.T.E);
 
-            % TODO (medium): DRY this code: define the vars for the values
-            % that are different based on the value of 'it' before the
-            % update equations. Use Utility.ternary(it == 1, ...)
-            %   obj.alpha.expCInit
-            %   obj.T.expInit
-            % disp(['Min W value: ', num2str(min(obj.W.EC, [], 'all'))]);
-            % disp(['Max W value: ', num2str(max(obj.W.EC, [], 'all'))]);
-            if it > 1
-                for d = 1:obj.D
-                    covNew = Utility.matrixInverse(obj.T.E{d} * obj.Z.E_CCt * eye(obj.K.Val) + ...
-                        diag(obj.alpha.EC));
-                
-                    muNew = covNew * obj.T.E{d} * obj.Z.EC * obj.X.getRow(d, true);
-    
-                    % TODO (low): Can be done in one call
-                    obj.W.updateDistributionMu(d, muNew);
-                    obj.W.updateDistributionCovariance(d, covNew);
-                end
-            else
-                expInitT = obj.T.getExpCInit();
-                expInitAlpha = obj.alpha.getExpCInit();
+            for d = 1:obj.D
+                covNew = Utility.matrixInverse(TExp{d} * obj.Z.E_XXt * eye(obj.K.Val) + ...
+                    diag(alphaExp));
+            
+                muNew = covNew * TExp{d} * obj.Z.E * obj.X.getRow(d, true);
 
-                for d = 1:obj.D
-                    covNew = Utility.matrixInverse(expInitT(d) * obj.Z.E_CCt * eye(obj.K.Val) + ...
-                        diag(expInitAlpha));
-                
-                    muNew = covNew * expInitT(d) * obj.Z.EC * obj.X.getRow(d, true);
-    
-                    obj.W.updateDistributionMu(d, muNew);
-                    obj.W.updateDistributionCovariance(d, covNew);
-                end
+                obj.W.updateDistributionMu(d, muNew);
+                obj.W.updateDistributionCovariance(d, covNew);
             end
         end
 
         function value = getExpectationLnW(obj)
             % The sum in the eq implemented as a dot product
-            value = obj.W.getExpectationOfColumnsNormSq()' * obj.alpha.EC;
+            value = obj.W.getExpectationOfColumnsNormSq()' * obj.alpha.E;
             value = -1/2 * value + obj.D/2 * (obj.alpha.E_LnC - obj.K.Val * log(2*pi));
         end
 
         function value = getExpectationLnPX(obj)
             value = obj.N/2 * obj.T.E_LnC - obj.N * obj.D/2 * log(2 * pi) - 1/2 * ...
-                obj.T.EC' * diag( ...
+                obj.T.E' * diag( ...
                 obj.X.XXt ...
-                - 2 * obj.W.EC * obj.Z.EC * obj.X.X' ...
-                + obj.W.EC * obj.Z.E_CCt * obj.W.EC');
+                - 2 * obj.W.E * obj.Z.E * obj.X.X' ...
+                + obj.W.E * obj.Z.E_XXt * obj.W.E');
             % ans1 == ans2
-            % ans1 = obj.T.EC' * diag( ...
+            % ans1 = obj.T.E' * diag( ...
             %     obj.X.XXt ...
-            %     - 2 * obj.W.EC * obj.Z.EC * obj.X.X' ...
-            %     + obj.W.EC * obj.Z.E_CCt * obj.W.EC');
+            %     - 2 * obj.W.E * obj.Z.E * obj.X.X' ...
+            %     + obj.W.E * obj.Z.E_XXt * obj.W.E');
             % ans2 = trace(obj.T.E_Diag * (obj.X.XXt ...
-            %     - 2 * obj.W.EC * obj.Z.EC * obj.X.X' ...
-            %     + obj.W.EC * obj.Z.E_CCt * obj.W.EC'));
+            %     - 2 * obj.W.E * obj.Z.E * obj.X.X' ...
+            %     + obj.W.E * obj.Z.E_XXt * obj.W.E'));
         end
         
 
