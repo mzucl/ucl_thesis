@@ -1,0 +1,8 @@
+# Ignore macOS metadata files
+.DS_Store
+
+# Ignore figures folder
+figures/
+
+# Ignore any .asv files
+*.asv
