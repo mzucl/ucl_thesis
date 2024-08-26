@@ -36,6 +36,7 @@ classdef GaussianContainer < handle
             'E_XtX', NaN, ...
             'E_TrXtX', NaN, ...
             'E_LnP', NaN, ...
+            'Cov_Tr', NaN, ...
             'E_SNC', NaN);
     end
     
@@ -49,6 +50,7 @@ classdef GaussianContainer < handle
         E_TrXtX             % Tr(E[X^TX]), e.g. Tr(Z^TZ)
         E_LnP              
         E_SNC               % E[squared norm of a column] for each column
+        Cov_Tr              % Trace for the covariance
     end
 
     methods(Access = private)
@@ -89,7 +91,7 @@ classdef GaussianContainer < handle
                 if obj.type == "DS"
                     value = value + diag(repmat(trace(obj.cov), obj.Size, 1));
                 elseif obj.type == "DD"
-                    value = value + diag(squeeze(sum(obj.cov .* eye(obj.dim), [1, 2]))); % returns trace for each covariance matrix
+                    value = value + diag(obj.Cov_Tr); % returns trace for each covariance matrix
                 end
             else
                 value = obj.mu * obj.mu';
@@ -267,6 +269,9 @@ classdef GaussianContainer < handle
             end
 
             obj.mu = mu;
+
+            % Clear cache
+            obj.clearCache();
         end
 
         % For "DD" type 'cov' parameter must be a multidimensional array
@@ -276,6 +281,9 @@ classdef GaussianContainer < handle
             end
             
             obj.cov = cov;
+
+            % Clear cache
+            obj.clearCache();
         end
 
         function removeDimensions(obj, indices)
@@ -305,6 +313,9 @@ classdef GaussianContainer < handle
                 end
                 obj.cov = newCov;
             end
+
+            % Clear cache
+            obj.clearCache();
         end
 
 
@@ -313,83 +324,117 @@ classdef GaussianContainer < handle
         
         %% Dependent properties
         function value = get.Size(obj)
-            value = size(obj.mu, 2);
+            if isnan(obj.cache.Size)
+                obj.cache.Size = size(obj.mu, 2);
+            end
+            value = obj.cache.Size;
         end        
 
         function value = get.E(obj)
-            value = Utility.ternary(obj.cols, obj.mu, obj.mu'); % 'mu' is always stored in columns format
+            if isnan(obj.cache.E)
+                obj.cache.E = Utility.ternary(obj.cols, obj.mu, obj.mu'); % 'mu' is always stored in columns format
+            end
+            value = obj.cache.E;
         end
 
         function value = get.E_Xt(obj)
-            value = Utility.ternary(obj.cols, obj.mu', obj.mu);
+            if isnan(obj.cache.E_Xt)
+                obj.cache.E_Xt = Utility.ternary(obj.cols, obj.mu', obj.mu);
+            end
+            value = obj.cache.E_Xt;
         end
 
         function value = get.H(obj)
-            value = obj.Size * obj.dim/2 * (1 + log(2 * pi));
-            if obj.type == "DS"
-                value = value + obj.Size/2 * Utility.logDetUsingCholesky(obj.cov);
-
-            elseif obj.type == "DD"
-                for k = 1:obj.Size
-                    value = value + 1/2 * Utility.logDetUsingCholesky(obj.cov(:, :, k));
+            if isnan(obj.cache.H)
+                value = obj.Size * obj.dim/2 * (1 + log(2 * pi));
+                if obj.type == "DS"
+                    obj.cache.H = value + obj.Size/2 * Utility.logDetUsingCholesky(obj.cov);
+    
+                elseif obj.type == "DD"
+                    for k = 1:obj.Size
+                        value = value + 1/2 * Utility.logDetUsingCholesky(obj.cov(:, :, k));
+                    end
+                    obj.cache.H = value;
                 end
             end
+            value = obj.cache.H;
         end
 
         function value = get.E_SNC(obj)
-            % cols = true
-            if obj.cols == true
-                value = (sum(obj.mu.^2, 1))';
-                if obj.type == "DS"
-                    value = value + trace(obj.cov);
-                elseif obj.type == "DD"
-                    value = value + squeeze(sum(obj.cov .* eye(obj.dim), [1, 2])); % returns trace for each covariance matrix
-                    % TODO: cache the trace of each cov matrix?
-                end
-
-            % cols = false
-            else
-                value = sum(obj.mu.^2, 2);
-                if obj.type == "DS"
-                    value = value + obj.Size * diag(obj.cov);
-                
-                % Sum diagonals of different cov matrices
-                elseif obj.type == "DD"
-                    diagIdx = 1:size(obj.cov, 1) + 1:size(obj.cov, 1)^2;
-                    covReshaped = reshape(obj.cov, size(obj.cov, 1) * size(obj.cov, 2), size(obj.cov, 3));
-                    diags = covReshaped(diagIdx, :);
-                    value = value + sum(diags, 2);
+            if isnan(obj.cache.E_SNC)
+                % cols = true
+                if obj.cols == true
+                    value = (sum(obj.mu.^2, 1))';
+                    if obj.type == "DS"
+                        obj.cache.E_SNC = value + trace(obj.cov);
+                    elseif obj.type == "DD"
+                        obj.cache.E_SNC = value + obj.Cov_Tr; % returns trace for each covariance matrix
+                    end
+    
+                % cols = false
+                else
+                    value = sum(obj.mu.^2, 2);
+                    if obj.type == "DS"
+                        obj.cache.E_SNC = value + obj.Size * diag(obj.cov);
+                    
+                    % Sum diagonals of different cov matrices
+                    elseif obj.type == "DD"
+                        diagIdx = 1:size(obj.cov, 1) + 1:size(obj.cov, 1)^2;
+                        covReshaped = reshape(obj.cov, size(obj.cov, 1) * size(obj.cov, 2), size(obj.cov, 3));
+                        diags = covReshaped(diagIdx, :);
+                        obj.cache.E_SNC = value + sum(diags, 2);
+                    end
                 end
             end
+            value = obj.cache.E_SNC;
         end
 
         function value = get.E_XXt(obj)
-            value = obj.getContainerExpectations(false);
+            if isnan(obj.cache.E_XXt)
+                obj.cache.E_XXt = obj.getContainerExpectations(false);
+            end
+            value = obj.cache.E_XXt;
         end
 
         function value = get.E_XtX(obj)
-            value = obj.getContainerExpectations(true);
+            if isnan(obj.cache.E_XtX)
+                obj.cache.E_XtX = obj.getContainerExpectations(true);
+            end
+            value = obj.cache.E_XtX;
         end
 
         function value = get.E_TrXtX(obj)
-            if obj.cols
-                value = sum(sum(obj.mu.^2, 2));
-                if obj.type == "DD"
-                    value = value + sum(squeeze(sum(obj.cov .* eye(obj.dim), [1, 2])));
-                elseif obj.type == "DS"
-                    value = value + obj.Size * trace(obj.cov);
+            if isnan(obj.cache.E_TrXtX)
+                if obj.cols
+                    value = sum(sum(obj.mu.^2, 2));
+                    if obj.type == "DD"
+                        obj.cache.E_TrXtX = value + sum(obj.Cov_Tr);
+                    elseif obj.type == "DS"
+                        obj.cache.E_TrXtX = value + obj.Size * trace(obj.cov);
+                    end
+                else % Optimization not possible
+                    obj.cache.E_TrXtX = trace(obj.E_XtX);
                 end
-            else % Optimization not possible
-                value = trace(obj.E_XtX);
             end
+            value = obj.cache.E_TrXtX;
         end
 
 
         % [NOTE] Only implemented for the "DS" type that was needed for the
         % Z;
         function value = get.E_LnP(obj)
-            value = obj.Size * obj.dim / 2 * log (obj.priorPrec/(2 * pi)) ...
-                - 1/2 * obj.E_TrXtX;
+            if isnan(obj.cache.E_LnP)
+                obj.cache.E_LnP = obj.Size * obj.dim / 2 * log (obj.priorPrec/(2 * pi)) ...
+                    - 1/2 * obj.E_TrXtX;
+            end
+            value = obj.cache.E_LnP;
+        end
+
+        function value = get.Cov_Tr(obj)
+            if isnan(obj.cache.Cov_Tr)
+                obj.cache.Cov_Tr = squeeze(sum(obj.cov .* eye(obj.dim), [1, 2]));
+            end
+            value = obj.cache.Cov_Tr;    
         end
     end
 end

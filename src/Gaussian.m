@@ -3,7 +3,7 @@ classdef Gaussian < handle
         dim
         mu 
         cov
-        priorPrec
+        priorPrec % scalar, only valid if the prior covariance is spherical (e.g. BPCA mu param) -> E_LnP
     end
 
     properties (Constant)
@@ -239,6 +239,9 @@ classdef Gaussian < handle
             end
            
             obj.mu = mu;
+
+            % Clear cache
+            obj.clearCache();
         end
 
         function obj = updateCovariance(obj, cov)
@@ -258,6 +261,9 @@ classdef Gaussian < handle
             end
             
             obj.cov = cov;
+
+            % Clear cache
+            obj.clearCache();
         end
         
         function removeDimensions(obj, indices)
@@ -273,6 +279,9 @@ classdef Gaussian < handle
             obj.cov(:, indices) = [];
             obj.cov(indices, :) = [];
             obj.dim = obj.dim - length(indices);
+
+            % Clear cache
+            obj.clearCache();
         end
 
 
@@ -303,26 +312,42 @@ classdef Gaussian < handle
         end
 
         function value = get.H(obj)
-            value = 1/2 * Utility.logDetUsingCholesky(obj.cov) + obj.dim/2 * (1 + log(2 * pi)); 
+            if isnan(obj.cache.H)
+                obj.cache.H = 1/2 * Utility.logDetUsingCholesky(obj.cov) + obj.dim/2 * (1 + log(2 * pi));
+            end
+            value = obj.cache.H;
         end
 
         function value = get.E_Xt(obj)
-            value = obj.mu';
+            if isnan(obj.cache.E_Xt)
+                obj.cache.E_Xt = obj.mu';
+            end
+            value = obj.cache.E_Xt;
         end
        
-         function value = get.E_XtX(obj)
-            value = dot(obj.mu, obj.mu) + trace(obj.cov);
+        function value = get.E_XtX(obj)
+            if isnan(obj.cache.E_XtX)
+                obj.cache.E_XtX = dot(obj.mu, obj.mu) + trace(obj.cov);
+            end
+            value = obj.cache.E_XtX;
         end
 
         function value = get.E_XXt(obj)
-            value = obj.mu * obj.mu' + obj.cov;
+            if isnan(obj.cache.E_XXt)
+                obj.cache.E_XXt = obj.mu * obj.mu' + obj.cov;
+            end
+            value = obj.cache.E_XXt;
         end
 
         % [NOTE]: This formula is only valid if the prior covariance is spherical!
-        % TODO (performance): use formula instead of obj.E_XtX
+        % TODO (performance): use formula instead of obj.E_XtX vs use
+        % cached value for it?
         function value = get.E_LnP(obj)
-            value = obj.dim/2 * log(obj.priorPrec / (2 * pi)) - ...
-                obj.priorPrec/2 * obj.E_XtX;
+            if isnan(obj.cache.E_LnP)
+                obj.cache.E_LnP = obj.dim/2 * log(obj.priorPrec / (2 * pi)) - ...
+                    obj.priorPrec/2 * obj.E_XtX;
+            end
+            value = obj.cache.E_LnP;
         end
 
         function value = get.Var(obj)
