@@ -27,7 +27,7 @@ classdef BPCA < handle
         N   % Number of observations/latent variables
         D   % Dimensionality
     end
-    
+
 
     properties (Constant)
         DEBUG = Constants.DEBUG;
@@ -63,27 +63,43 @@ classdef BPCA < handle
             end
 
             %% Model setup and initialization
+            % Z
+            % ------------------------------------------------------ %
             % Initialize the model - set random values for the 'mu'
             % This means we will run the update equation for W first and
             % that we should set some values for all the moments that are
             % in those update equations.
             initZMu = randn(obj.K, 1);
+            zPrior = Gaussian(obj.K, initZMu, eye(obj.K));
+            obj.Z = GaussianContainer(obj.N, zPrior, true);            % cols = true
 
-            %                         type, size_, cols, dim,     mu, cov, priorPrec
-            obj.Z = GaussianContainer("DS", obj.N, true, obj.K, initZMu);
+            % mu
+            % empiricalMean = mean(obj.view.X, 2);
+            muPrior = Gaussian(0, 1/Constants.DEFAULT_GAUSS_PRECISION * eye(obj.D));
+            obj.mu = Gaussian(obj.D, 0, eye(obj.D), );
 
-            %                  dim, mu,    cov,  priorPrec
-            obj.mu = Gaussian(obj.D, 0, eye(obj.D), 10^3);
-
+            % alpha
             obj.alpha = GammaContainer("SD", obj.K);
             
-            % % Use PPCA result as an initial point
+
+            % W 
+            % Sample from obj.alpha for the prior
+            %       Should we do this? The values for alpha are so small!!!
+            % wPrior = Gaussian(0, diag(1./obj.alpha.Val));
+
+            % Use PPCA result as an initial point
             [W_PPCA, sigmaSq] = PPCA(obj.view.X', obj.D - 1);
             
-            %                         type, size_, cols,   dim, mu, cov, priorPrec
-            obj.W = GaussianContainer("DS", obj.D, false, obj.K);
+            wPriors = repmat(Gaussian(), obj.D, 1); % Preallocate
+            wPrior = Gaussian(randn(obj.K, 1), 1e-3 * eye(obj.K));
+            for d = 1:obj.D
+                wPriors(d) = Gaussian(W_PPCA(d, :), 1e-3 * eye(obj.K));
+            end
+
+            obj.W = GaussianContainer(obj.D, wPrior, false);    % cols = false
             
 
+            % tau
             tauPrior = Gamma(Constants.DEFAULT_GAMMA_A, Constants.DEFAULT_GAMMA_B);
             obj.tau = Gamma(tauPrior);
 
@@ -118,10 +134,10 @@ classdef BPCA < handle
             tauExp = Utility.ternary(it == 1, obj.tau.getExpInit(), obj.tau.E);
             muExp = Utility.ternary(it == 1, obj.mu.getExpInit(), obj.mu.E);
 
-            covNew = Utility.matrixInverse(eye(obj.K) + tauExp * obj.W.E_XtX);
-            obj.Z.updateDistributionsCovariance(covNew);
+            covNew = Utility.matrixInverse(eye(obj.K) + tauExp * obj.W.E_CtC);
+            obj.Z.updateAllDistributionsCovariance(covNew);
     
-            obj.Z.updateDistributionsMu(tauExp * covNew * obj.W.E_Xt * ...
+            obj.Z.updateAllDistributionsMu(tauExp * covNew * obj.W.E_Ct * ...
                 (obj.view.X - muExp));
         end
 
@@ -131,38 +147,37 @@ classdef BPCA < handle
             tauExp = Utility.ternary(it == 1, obj.tau.getExpInit(), obj.tau.E);
             muExp = Utility.ternary(it == 1, obj.mu.getExpInit(), obj.mu.E);
 
-            covNew = Utility.choleskyInverse(diag(alphaExp) + tauExp * obj.Z.E_XXt);
+            covNew = Utility.choleskyInverse(diag(alphaExp) + tauExp * obj.Z.E_CCt);
     
-            obj.W.updateDistributionsCovariance(covNew);
+            obj.W.updateAllDistributionsCovariance(covNew);
 
-            obj.W.updateDistributionsMu(tauExp * covNew * obj.Z.E * ...
+            obj.W.updateAllDistributionsMu(tauExp * covNew * obj.Z.EC * ...
                 (obj.view.X' - muExp'));
         end
 
 
         function obj = qAlphaUpdate(obj)
             obj.alpha.updateAllDistributionsB(obj.alpha.prior.b + ...
-                1/2 * obj.W.E_SNC);
+                1/2 * obj.W.getExpectationOfColumnsNormSq());
         end
 
 
         function obj = qMuUpdate(obj)
             tauExp = obj.tau.E;
 
-            newCov = (1/(obj.mu.priorPrec + obj.N * tauExp)) * eye(obj.D);
-            newMu = tauExp * newCov * (obj.view.X - obj.W.E * obj.Z.E) * ones(obj.N, 1);
+            newCov = (1/(obj.mu.PPrec + obj.N * tauExp)) * eye(obj.D);
+            newMu = tauExp * newCov * (obj.view.X - obj.W.EC * obj.Z.EC) * ones(obj.N, 1);
 
-            obj.mu.updateMu(newMu);
-            obj.mu.updateCovariance(newCov);
+            obj.mu.updateParameters(newMu, newCov);
 
             % obj.mu.clearCache();
         end
 
 
         function obj = qTauUpdate(obj)
-            expWtW_tr = obj.W.E_XtX';
-            expZZt = obj.Z.E_XXt;
-            expWZ = obj.W.E * obj.Z.E;
+            expWtW_tr = obj.W.E_CtC';
+            expZZt = obj.Z.E_CCt;
+            expWZ = obj.W.EC * obj.Z.EC;
             
             newBVal = obj.tau.prior.b + 1/2 * obj.view.Tr_XtX + obj.N/2 * obj.mu.E_XtX + ...
                 1/2 * dot(expWtW_tr(:), expZZt(:)) - dot(obj.view.X(:), expWZ(:)) + ...
@@ -181,8 +196,8 @@ classdef BPCA < handle
             elboVals = -Inf(1, obj.maxIter);
             
             for it = 1:obj.maxIter
-                obj.qWUpdate(it);
                 obj.qZUpdate(it);
+                obj.qWUpdate(it);
                 obj.qMuUpdate();
                 obj.qAlphaUpdate();
                 obj.qTauUpdate();
@@ -225,20 +240,20 @@ classdef BPCA < handle
         
 
         function [elbo, res] = computeELBO(obj)
-            elbo = obj.getExpectationLnPX() + obj.Z.E_LnP + obj.getExpectationLnPW() + ... % p(.)
+            elbo = obj.getExpectationLnPX() + obj.Z.E_LnPC + obj.getExpectationLnPW() + ... % p(.)
                 obj.alpha.E_LnP + obj.mu.E_LnP + obj.tau.E_LnP + ... % p(.)
-                obj.Z.H + obj.W.H + obj.alpha.H + obj.mu.H + obj.tau.H; % q(.)
+                obj.Z.HC + obj.W.HC + obj.alpha.H + obj.mu.H + obj.tau.H; % q(.)
             if obj.DEBUG
                 res = {};
                 res.pX = obj.getExpectationLnPX();
-                res.pZ = obj.Z.E_LnP;
+                res.pZ = obj.Z.E_LnPC;
                 res.pW = obj.getExpectationLnPW();
                 res.pAlpha = obj.alpha.E_LnP;
                 res.pMu = obj.mu.E_LnP;
                 res.pTau = obj.tau.E_LnP;
                 
-                res.qZ = obj.Z.H;
-                res.qW = obj.W.H;
+                res.qZ = obj.Z.HC;
+                res.qW = obj.W.HC;
                 res.qAlpha = obj.alpha.H;
                 res.qMu = obj.mu.H;
                 res.qTau = obj.tau.H;
@@ -250,21 +265,21 @@ classdef BPCA < handle
 
         function value = getExpectationLnPX(obj)
             % Setup
-            expWtW_tr = obj.W.E_XtX';
-            expZZt = obj.Z.E_XXt;
-            expW_tr = obj.W.E';
-            expZXt = obj.Z.E * obj.view.X';
+            expWtW_tr = obj.W.E_CtC';
+            expZZt = obj.Z.E_CCt;
+            expW_tr = obj.W.EC';
+            expZXt = obj.Z.EC * obj.view.X';
 
             value = obj.N * obj.D/2 * (obj.tau.E_LnX - log(2 * pi)) - obj.tau.E/2 * ( ...
                 obj.view.Tr_XtX - 2 * dot(expW_tr(:), expZXt(:)) ...
                 - 2 * obj.mu.E_Xt * (obj.view.X * ones(obj.N, 1)) ...
-                + 2 * (expW_tr * obj.mu.E)' * (obj.Z.E * ones(obj.N, 1)) ...
+                + 2 * (expW_tr * obj.mu.E)' * (obj.Z.EC * ones(obj.N, 1)) ...
                 + dot(expWtW_tr(:), expZZt(:)) + obj.N * obj.mu.E_XtX);
         end
 
 
         function value = getExpectationLnPW(obj)
-            value = -1/2 * dot(obj.W.E_SNC, obj.alpha.E) + ...
+            value = -1/2 * dot(obj.W.getExpectationOfColumnsNormSq(), obj.alpha.E) + ...
                 + obj.D/2 * (obj.alpha.E_LnX - obj.K * log(2*pi));
         end
     end
