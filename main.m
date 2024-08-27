@@ -1,3 +1,21 @@
+% Clear the workspace
+close all; clear; clc;
+
+% Add folders to MATLAB path
+addpath('src');
+addpath('models');
+addpath('helpers');
+addpath('tests');
+addpath('tests/src');
+addpath('experiments');
+addpath('figures');
+
+% Uncomment to run tests
+testResults = runtests('tests');
+%% 
+
+
+
 lala = true;
 tic;
 mu = Utility.generateRandomIntMatrix(50, 1);
@@ -28,22 +46,7 @@ return;
 
 % profile viewer;
 
-% % % Clear the workspace
-% close all; clear; clc;
-% % 
-% % Add folders to MATLAB path
-% addpath('src');
-% addpath('models');
-% addpath('helpers');
-% addpath('tests');
-% addpath('tests/src');
-% addpath('experiments');
-% addpath('figures');
 
-% Uncomment to run tests
-% testResults = runtests('tests');
-
-%% 
 
 
 % % % Experiment 1

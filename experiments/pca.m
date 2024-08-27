@@ -17,13 +17,6 @@ obj = BPCA(X', numIter);
 profile off;
 profile viewer;
 
-% return;
-
 %% Visualize
-figure;
-
-ax1 = subplot(1, 2, 1);
-Visualization.hintonDiagram(W_PPCA, ax1, 'PPCA W matrix');
-
-ax2 = subplot(1, 2, 2);
-Visualization.hintonDiagram(obj.W.E, ax2, 'BPCA W matrix');
+Visualization.hintonDiagramPlot({W_PPCA, obj.W.E}, ...
+    {'PPCA $\mathbf{W}$ matrix', 'BPCA $\mathbf{W}$ matrix'}, 'figures/pca', 'W_ppca_bpca');

@@ -11,11 +11,12 @@ classdef Visualization
             
             % Set the current axis to ax
             axes(ax);
+            axis(ax, 'equal'); % same length in every direction
 
             maxWeight = max(abs(matrix(:)));
 
-            for i = 1:size(matrix, 1)
-                for j = 1:size(matrix, 2)
+            for i = 1:size(matrix, 1) % y
+                for j = 1:size(matrix, 2) % x
                     % Determine the size of the square
                     weight = matrix(i, j);
                     height = sqrt(abs(weight) / maxWeight);
@@ -27,13 +28,55 @@ classdef Visualization
                     rectangle('Position', [j - width / 2, i - height / 2, width, height], 'FaceColor', color, 'EdgeColor', 'none');
                 end
             end
-            set(ax, 'YDir', 'reverse', 'XAxisLocation', 'top');
-            colormap(ax, 'gray');
-            axis(ax, 'equal');
+
+            ylim(ax, [0, size(matrix, 1) + 1]);
+            xlim(ax, [0, size(matrix, 2) + 1]);
+
+            set(ax, 'YDir', 'reverse', 'XAxisLocation', 'top');            
             axis(ax, 'off');
             if ~isempty(figureTitle)
-                title(figureTitle);
+                title(ax, figureTitle);
             end
+        end
+
+        function hintonDiagramPlot(arrW, titles, folderName, figName)
+            if nargin < 4
+                error(['##### ERROR IN THE CLASS ' mfilename('class') ': Not enough input arguments provided.']);
+            end
+            hfig = figure;
+
+            ax1 = subplot(1, 2, 1);
+            Visualization.hintonDiagram(arrW{1}, ax1, titles{1});
+            
+            ax2 = subplot(1, 2, 2);
+            Visualization.hintonDiagram(arrW{2}, ax2, titles{2});
+           
+            picturewidth = 20;
+            hw_ratio = 0.65;
+            set(findall(hfig, '-property','FontSize'),'FontSize', 17);
+            % set(findall(hfig, '-property', 'Box'), 'Box', 'off');
+            set(findall(hfig, '-property', 'Interpreter'), 'Interpreter', 'latex');
+            set(findall(hfig, '-property', 'TickLabelInterpreter'), 'TickLabelInterpreter', 'latex');
+            
+            set(hfig, 'Units', 'centimeters', ...
+                      'Position', [3 3 picturewidth hw_ratio * picturewidth]);
+            
+            pos = get(hfig, 'Position');
+            
+            set(hfig, 'PaperPositionMode', 'Auto', ...
+                      'PaperUnits', 'centimeters', ...
+                      'PaperSize', [pos(3), pos(4)]);
+
+            % Save figure
+            if ~exist(folderName, 'dir')
+                mkdir(folderName);
+            end
+
+            filePath = fullfile(folderName, figName);
+
+            print(hfig, filePath, '-dpdf', '-vector', '-fillpage');
+            print(hfig, filePath, '-dpng', '-vector');
+
         end
 
         function plotStructVariables(resArr, offset)
@@ -77,7 +120,6 @@ classdef Visualization
                 grid on;
             end
             
-            % Adjust layout for better visibility
             sgtitle('Evolution of ELBO variables over iteration');
         end
 
