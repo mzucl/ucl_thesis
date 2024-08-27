@@ -31,12 +31,6 @@ classdef BPCA < handle
         D   % Dimensionality
     end
     
-
-    properties (Constant)
-        DEBUG = Constants.DEBUG;
-    end
-
-    
     methods
         function obj = BPCA(X, maxIter, tol)
             % Optional parameters: maxIter, tol
@@ -200,7 +194,7 @@ classdef BPCA < handle
                 currElbo = obj.computeELBO();
                 elboVals(elboIdx) = currElbo;
                 
-                if obj.DEBUG
+                if Constants.DEBUG
                     if elboIdx ~= 1
                         disp(['======= ELBO increased by: ', num2str(currElbo - elboVals(elboIdx - 1))]);
                     end

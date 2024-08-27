@@ -17,8 +17,8 @@ classdef Constants
 
         LATENT_FACTORS_THRESHOLD = 1e-6;
 
-        VALIDATE = true; % Validate inputs in classes
+        VALIDATE = false; % Validate inputs in classes
 
-        DEBUG = true;
+        DEBUG = false;
     end
 end

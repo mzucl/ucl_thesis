@@ -6,19 +6,16 @@ classdef Gaussian < handle
         priorPrec % scalar, only valid if the prior covariance is spherical (e.g. BPCA mu param) -> E_LnP
     end
 
-    properties (Constant)
-        VALIDATE = Constants.VALIDATE;
-    end
-
     properties(Access = private)
         expInit
         cache = struct(...
-            'E', NaN, ...
             'H', NaN, ...
             'E_Xt', NaN, ...
             'E_XtX', NaN, ...
             'E_XXt', NaN, ...
             'E_LnP', NaN);
+
+        cacheFlags = false(1, 5);
     end
     
     properties (Dependent)
@@ -50,7 +47,7 @@ classdef Gaussian < handle
         end
 
         function clearCache(obj)
-            obj.cache = structfun(@(x) NaN, obj.cache, 'UniformOutput', false);
+            obj.cacheFlags = false(1, 5);
         end
     end
 
@@ -119,7 +116,7 @@ classdef Gaussian < handle
                     if Utility.isSingleNumber(varargin{2})
                         mu = repmat(varargin{2}, dim, 1);
                     else
-                        if Gaussian.VALIDATE && size(varargin{2}, 1) ~= dim || size(varargin{2}, 2) ~= 1 % 'mu' is a column vector
+                        if Constants.VALIDATE && size(varargin{2}, 1) ~= dim || size(varargin{2}, 2) ~= 1 % 'mu' is a column vector
                             error(['##### ERROR IN THE CLASS ' mfilename('class') ': Length of mu doesn''t match dimension.']);
                         end
                         mu = varargin{2};
@@ -130,20 +127,20 @@ classdef Gaussian < handle
                         covParam = varargin{3};
 
                         if Utility.isSingleNumber(covParam)
-                            if Gaussian.VALIDATE && covParam <= 0
+                            if Constants.VALIDATE && covParam <= 0
                                 error(['##### ERROR IN THE CLASS ' mfilename ': Covariance parameter must be greater than 0.']);
                             end
                             cov = covParam * eye(dim); % Spherical
                             
                         elseif Utility.isArray(covParam)
-                            if Gaussian.VALIDATE && (length(covParam) ~= dim || ~Utility.isValidCovarianceMatrix(diag(covParam)))
+                            if Constants.VALIDATE && (length(covParam) ~= dim || ~Utility.isValidCovarianceMatrix(diag(covParam)))
                                 error(['##### ERROR IN THE CLASS ' mfilename ': Parameter is either not a valid covariance matrix or' ...
                                     ' dimensionality doesn''t match.']);
                             end
                             cov = diag(covParam); % Diagonal
 
                         elseif Utility.isMatrix(covParam)
-                            if Gaussian.VALIDATE && (~isequal(size(covParam), [dim, dim]) || ~Utility.isValidCovarianceMatrix(covParam))
+                            if Constants.VALIDATE && (~isequal(size(covParam), [dim, dim]) || ~Utility.isValidCovarianceMatrix(covParam))
                                 error(['##### ERROR IN THE CLASS ' mfilename ': Parameter is either not a valid covariance matrix or' ...
                                     'dimensionality doesn''t match.']);
                             end
@@ -151,7 +148,7 @@ classdef Gaussian < handle
                         end
 
                         if nargin > 3 % dim, mu, cov, priorPrec
-                            if Gaussian.VALIDATE && (~Utility.isSingleNumber(varargin{4}) || varargin{4} <= 0)
+                            if Constants.VALIDATE && (~Utility.isSingleNumber(varargin{4}) || varargin{4} <= 0)
                                 error(['##### ERROR IN THE CLASS ' mfilename ': Invalid precision parameter.']);
                             end
                             priorPrec = varargin{4};
@@ -238,7 +235,7 @@ classdef Gaussian < handle
 
         %% Update methods
         function obj = updateMu(obj, mu)
-            if obj.VALIDATE
+            if Constants.VALIDATE
                 if nargin < 2
                     error(['##### ERROR IN THE THE CLASS ' class(obj) ': Too few arguments passed.']);
                 end
@@ -256,7 +253,7 @@ classdef Gaussian < handle
         end
 
         function obj = updateCovariance(obj, cov)
-            if obj.VALIDATE
+            if Constants.VALIDATE
                 if nargin < 2
                     error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
                 end
@@ -274,7 +271,7 @@ classdef Gaussian < handle
         end
 
         function updateParameters(obj, mu, cov)
-            if obj.VALIDATE
+            if Constants.VALIDATE
                 if nargin < 3
                     error(['##### ERROR IN THE THE CLASS ' class(obj) ': Too few arguments passed.']);
                 end
@@ -297,7 +294,7 @@ classdef Gaussian < handle
                 return; % No change
             end
 
-            if obj.VALIDATE && ~obj.validateDimIndices(indices)
+            if Constants.VALIDATE && ~obj.validateDimIndices(indices)
                 error(['##### ERROR IN THE CLASS ' class(obj) ': Index out of range.']); 
             end
             
@@ -338,29 +335,33 @@ classdef Gaussian < handle
         end
 
         function value = get.H(obj)
-            if isnan(obj.cache.H)
+            if ~obj.cacheFlags(1)
                 obj.cache.H = 1/2 * Utility.logDetUsingCholesky(obj.cov) + obj.dim/2 * (1 + log(2 * pi));
+                obj.cacheFlags(1) = true;
             end
             value = obj.cache.H;
         end
 
         function value = get.E_Xt(obj)
-            if isnan(obj.cache.E_Xt)
+            if ~obj.cacheFlags(2)
                 obj.cache.E_Xt = obj.mu';
+                obj.cacheFlags(2) = true;
             end
             value = obj.cache.E_Xt;
         end
        
         function value = get.E_XtX(obj)
-            if isnan(obj.cache.E_XtX)
+            if ~obj.cacheFlags(3)
                 obj.cache.E_XtX = dot(obj.mu, obj.mu) + trace(obj.cov);
+                obj.cacheFlags(3) = true;
             end
             value = obj.cache.E_XtX;
         end
 
         function value = get.E_XXt(obj)
-            if isnan(obj.cache.E_XXt)
+            if ~obj.cacheFlags(4)
                 obj.cache.E_XXt = obj.mu * obj.mu' + obj.cov;
+                obj.cacheFlags(4) = true;
             end
             value = obj.cache.E_XXt;
         end
@@ -369,9 +370,10 @@ classdef Gaussian < handle
         % TODO (performance): use formula instead of obj.E_XtX vs use
         % cached value for it?
         function value = get.E_LnP(obj)
-            if isnan(obj.cache.E_LnP)
+            if ~obj.cacheFlags(5)
                 obj.cache.E_LnP = obj.dim/2 * log(obj.priorPrec / (2 * pi)) - ...
                     obj.priorPrec/2 * obj.E_XtX;
+                obj.cacheFlags(5) = true;
             end
             value = obj.cache.E_LnP;
         end

@@ -23,10 +23,6 @@ classdef GammaContainer < handle
         prior
     end
 
-    properties (Constant)
-        VALIDATE = Constants.VALIDATE;
-    end
-
     properties(Access = private)
         expInit
         cache = struct(...
@@ -35,6 +31,8 @@ classdef GammaContainer < handle
             'H', NaN, ...
             'E_LnP', NaN, ...
             'E_LnX', NaN);
+
+        cacheFlags = false(1, 5);
 
         cacheSize = 0; % Cached value for 'Size' is invalidated only when 'removeDimensions'
                        % is called, so it make sense for it to have a separate cache! 
@@ -73,7 +71,7 @@ classdef GammaContainer < handle
         end
 
         function clearCache(obj)
-            obj.cache = structfun(@(x) NaN, obj.cache, 'UniformOutput', false);
+            obj.cacheFlags = false(1, 5);
         end
     end
 
@@ -102,7 +100,7 @@ classdef GammaContainer < handle
         %
         %%
         function obj = GammaContainer(type, size_, a, b, prior)
-            if obj.VALIDATE
+            if Constants.VALIDATE
                 if nargin == 0
                     error(['##### ERROR IN THE CLASS ' class(obj) ': Too few argumentes passed in.']);
                 end
@@ -131,14 +129,14 @@ classdef GammaContainer < handle
                     if Utility.isSingleNumber(b)
                         obj.b = repmat(b, size_, 1);
                     else
-                        if obj.VALIDATE && size(b, 1) ~= size_ % 'b' must be a column vector
+                        if Constants.VALIDATE && size(b, 1) ~= size_ % 'b' must be a column vector
                             error(['##### ERROR IN THE CLASS ' class(obj) ': Length of b doesn''t match the size.']);
                         end
                         obj.b = b;
                     end
                     
                     if nargin > 4 % prior
-                        if obj.VALIDATE && ~Utility.isNaNOrInstanceOf(prior, 'Gamma')
+                        if Constants.VALIDATE && ~Utility.isNaNOrInstanceOf(prior, 'Gamma')
                             error(['##### ERROR IN THE CLASS ' class(obj) ': Invalid prior parameter.']);
                         end
                         obj.prior = prior.copy();
@@ -156,7 +154,7 @@ classdef GammaContainer < handle
         %% Update methods
         % [NOTE]: 'type' dependent
         function obj = updateAllDistributionsA(obj, a)
-            if obj.VALIDATE
+            if Constants.VALIDATE
                 if nargin < 2
                     error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
                 end
@@ -176,7 +174,7 @@ classdef GammaContainer < handle
 
         % [NOTE]: 'type' dependent
         function obj = updateAllDistributionsB(obj, b)
-            if obj.VALIDATE
+            if Constants.VALIDATE
                 if nargin < 2
                     error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
                 end
@@ -204,7 +202,7 @@ classdef GammaContainer < handle
             if nargin < 2 || isempty(indices)
                 return; % No change
             end
-            if obj.VALIDATE && ~obj.validateIndices(indices)
+            if Constants.VALIDATE && ~obj.validateIndices(indices)
                 error(['##### ERROR IN THE CLASS ' class(obj) ': Index out of range.']); 
             end
             obj.b(indices) = [];
@@ -220,7 +218,7 @@ classdef GammaContainer < handle
 
         %% Setters
         function obj = setExpInit(obj, value)
-            if obj.VALIDATE
+            if Constants.VALIDATE
                 if ~all(value > 0)
                     error(['##### ERROR IN THE CLASS ' class(obj) ': Expectation is a strictly positive number.']);
                 end
@@ -258,30 +256,34 @@ classdef GammaContainer < handle
         end
 
         function value = get.E(obj)
-            if isnan(obj.cache.E)
+            if ~obj.cacheFlags(1)
                 obj.cache.E = obj.a ./ obj.b;
+                obj.cacheFlags(1) = true;
             end
             value = obj.cache.E;
         end
 
         function value = get.E_Diag(obj)
-            if isnan(obj.cache.E_Diag)
+            if ~obj.cacheFlags(2)
                 obj.cache.E_Diag = diag(obj.E);
+                obj.cacheFlags(2) = true;
             end
             value = obj.cache.E_Diag;
         end
 
         % [NOTE]: 'type' dependent
         function value = get.H(obj)
-            if isnan(obj.cache.H)
-                obj.cache.H = obj.Size * (gammaln(obj.a) - (obj.a - 1) * psi(obj.a) + obj.a) - sum(log(obj.b));
+            if ~obj.cacheFlags(3)
+                obj.cache.H = obj.Size * (gammaln(obj.a) - (obj.a - 1) * psi(obj.a) ...
+                    + obj.a) - sum(log(obj.b));
+                obj.cacheFlags(3) = true;
             end
             value = obj.cache.H;
         end
 
         % [NOTE]: 'type' dependent
         function value = get.E_LnP(obj)
-            if isnan(obj.cache.E_LnP)
+            if ~obj.cacheFlags(4)
                 if isa(obj.prior, 'Gamma') % The value is set only when prior is defined
                     obj.cache.E_LnP = obj.Size * (-gammaln(obj.prior.a) + obj.prior.a * log(obj.prior.b) + ...
                         (obj.prior.a - 1) * psi(obj.a)) - (obj.prior.a - 1) * sum(log(obj.b)) - ...
@@ -289,13 +291,15 @@ classdef GammaContainer < handle
                 else 
                     obj.cache.E_LnP = NaN;
                 end
+                obj.cacheFlags(4) = true;
             end
             value = obj.cache.E_LnP;
         end
 
         function value = get.E_LnX(obj)
-            if isnan(obj.cache.E_LnX)
+            if ~obj.cacheFlags(5)
                 obj.cache.E_LnX = obj.Size * psi(obj.a) - sum(log(obj.b));
+                obj.cacheFlags(5) = true;
             end
             value = obj.cache.E_LnX;
         end

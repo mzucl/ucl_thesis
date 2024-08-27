@@ -13,12 +13,6 @@ classdef Gamma < handle
         prior
     end
     
-
-    properties (Constant)
-        VALIDATE = Constants.VALIDATE;
-    end
-
-
     properties (Access = private)
         expInit % Explicit expectation initialization
         cache = struct(...
@@ -26,6 +20,8 @@ classdef Gamma < handle
             'H', NaN, ...
             'E_LnX', NaN, ...
             'E_LnP', NaN);
+
+        cacheFlags = false(1, 4);
     end
 
 
@@ -44,7 +40,7 @@ classdef Gamma < handle
 
     methods(Access = private)
         function clearCache(obj)
-            obj.cache = structfun(@(x) NaN, obj.cache, 'UniformOutput', false);
+            obj.cacheFlags = false(1, 4);
         end
     end
 
@@ -149,7 +145,7 @@ classdef Gamma < handle
                     obj.updateParameters(a, b);
 
                     if nargin == 3 % prior
-                        if obj.VALIDATE && ~Utility.isNaNOrInstanceOf(prior, 'Gamma')
+                        if Constants.VALIDATE && ~Utility.isNaNOrInstanceOf(prior, 'Gamma')
                             error(['##### ERROR IN THE CLASS ' class(obj) ': Invalid prior parameter.']);
                         end
                         obj.prior = prior.copy();
@@ -164,7 +160,7 @@ classdef Gamma < handle
 
         %% Update methods
         function obj = updateParameters(obj, a, b)
-            if Gamma.VALIDATE
+            if Constants.VALIDATE
                 if nargin < 3
                     error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
                 end
@@ -184,7 +180,7 @@ classdef Gamma < handle
         end
         
         function obj = updateA(obj, a)
-            if Gamma.VALIDATE
+            if Constants.VALIDATE
                 if nargin < 2
                     error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
                 end
@@ -203,7 +199,7 @@ classdef Gamma < handle
         end
 
         function obj = updateB(obj, b)
-            if Gamma.VALIDATE
+            if Constants.VALIDATE
                 if nargin < 2
                     error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
                 end
@@ -225,7 +221,7 @@ classdef Gamma < handle
         
         %% Setters
         function obj = setExpInit(obj, value)
-            if Gamma.VALIDATE && value <= 0
+            if Constants.VALIDATE && value <= 0
                 error(['##### ERROR IN THE CLASS ' class(obj) ': Expectation is a strictly positive number.']);
             end
             obj.expInit = value;
@@ -242,8 +238,9 @@ classdef Gamma < handle
 
         %% Dependent properties
         function value = get.E(obj)
-            if isnan(obj.cache.E)
+            if ~obj.cacheFlags(1)
                 obj.cache.E = obj.a / obj.b;
+                obj.cacheFlags(1) = true;
             end
             value = obj.cache.E;
         end
@@ -253,27 +250,30 @@ classdef Gamma < handle
             % Y = gammaln(X) computes the natural logarithm of the gamma function for each element of X.
             % log(X) is the natural logarithm of the elements of X.
             % psi(X) evaluates the psi function (also know as the digamma function) for each element of X.
-            if isnan(obj.cache.H)
+            if ~obj.cacheFlags(2)
                 obj.cache.H = gammaln(obj.a) - (obj.a - 1) * psi(obj.a) - log(obj.b) + obj.a;
+                obj.cacheFlags(2) = true;
             end
             value = obj.cache.H;
         end
 
         function value = get.E_LnX(obj)
-            if isnan(obj.cache.E_LnX)
+            if ~obj.cacheFlags(3)
                 obj.cache.E_LnX = psi(obj.a) - log(obj.b);
+                obj.cacheFlags(3) = true;
             end
             value = obj.cache.E_LnX;
         end
 
         function value = get.E_LnP(obj)
-            if isnan(obj.cache.E_LnP)
+            if ~obj.cacheFlags(4)
                 if isa(obj.prior, 'Gamma') % The value is set only when prior is defined
                     obj.cache.E_LnP = -gammaln(obj.prior.a) + obj.prior.a * log(obj.prior.b) + ...
                         (obj.prior.a - 1) * (psi(obj.a) - log(obj.b)) - obj.prior.b * obj.a / obj.b;
                 else
                     obj.cache.E_LnP = NaN;
                 end
+                obj.cacheFlags(4) = true;
             end
             value = obj.cache.E_LnP;
         end

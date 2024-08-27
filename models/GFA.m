@@ -133,10 +133,18 @@ classdef GFA < handle
 
 
         %% fit() and ELBO
-        function [elboVals, it, resArr] = fit(obj)
+        function [elboVals, it] = fit(obj, elboIterStep)
+            if nargin < 2
+                elboIterStep = 1;
+            end
+
             elboVals = -Inf(1, obj.maxIter);
-            resArr = cell(1, obj.maxIter);
-        
+            % When elboIterStep ~= 1, indexing into elbo array is not done
+            % using 'iter'; iter / elboIterStep + 1, but having independent
+            % counter is cleaner; '+ 1' because we compute elbo in the
+            % first iteration.
+            elboIdx = 1;
+
             for it = 1:obj.maxIter
                 obj.removeFactors(it);
                 obj.qWUpdate(it);
@@ -147,73 +155,84 @@ classdef GFA < handle
                 obj.qAlphaUpdate();
                 obj.qTauUpdate();
 
-                [currElbo, res] = obj.computeELBO();
+                if it ~= 1 && mod(it, elboIterStep) ~= 0
+                    continue;
+                end
 
-                resArr{it} = res;
+                currElbo = obj.computeELBO();
+                elboVals(elboIdx) = currElbo;
 
-                % CHECK: ELBO has to increase from iteration to iteration
-                if it ~= 1 && currElbo < elboVals(it - 1)
-                    fprintf(2, 'ELBO decreased in iteration %d\n', it);
+                if Constants.DEBUG
+                    if elboIdx ~= 1
+                        disp(['======= ELBO increased by: ', num2str(currElbo - elboVals(elboIdx - 1))]);
+                    end
+                end
+
+                % ELBO has to increase from iteration to iteration
+                if elboIdx ~= 1 && currElbo - elboVals(elboIdx - 1) < 1e-12
+                    fprintf(2, 'ELBO decreased in iteration %d\n!!!', it);
                 end 
 
-                elboVals(it) = currElbo;
-
-                if it ~= 1
-                    disp(['======= ELBO increased in iteration ', num2str(it), ' by: ', ...
-                        num2str(currElbo - elboVals(it - 1))]);
-                end
-
                 % Check for convergence
-                if it ~= 1 && abs(currElbo - elboVals(it - 1)) / abs(currElbo) < obj.tol
+                if elboIdx ~= 1 && abs(currElbo - elboVals(elboIdx - 1)) / abs(currElbo) < obj.tol
                     disp(['Convergence at iteration: ', num2str(it)]);
-                    elboVals = elboVals(1:it); % cut the -Inf values at the end
-                    resArr = resArr(1:it);
+                    elboVals = elboVals(1:elboIdx); % cut the -Inf values at the end
                     break;
                 end
+                elboIdx = elboIdx + 1;
             end
         end
+        % 
+        % function [elboVals, it] = fit(obj)
+        %     elboVals = -Inf(1, obj.maxIter);
+        % 
+        % 
+        %     for it = 1:obj.maxIter
+        %         obj.removeFactors(it);
+        %         obj.qWUpdate(it);
+        %         obj.qZUpdate();
+        %         % if it > 0
+        %         %     obj.updateRotation();
+        %         % end  
+        %         obj.qAlphaUpdate();
+        %         obj.qTauUpdate();
+        % 
+        %         currElbo = obj.computeELBO();
+        % 
+        %         % resArr{it} = res;
+        % 
+        %         % CHECK: ELBO has to increase from iteration to iteration
+        %         if it ~= 1 && currElbo < elboVals(it - 1)
+        %             fprintf(2, 'ELBO decreased in iteration %d\n', it);
+        %         end 
+        % 
+        %         elboVals(it) = currElbo;
+        % 
+        %         if it ~= 1
+        %             disp(['======= ELBO increased in iteration ', num2str(it), ' by: ', ...
+        %                 num2str(currElbo - elboVals(it - 1))]);
+        %         end
+        % 
+        %         % Check for convergence
+        %         if it ~= 1 && abs(currElbo - elboVals(it - 1)) / abs(currElbo) < obj.tol
+        %             disp(['Convergence at iteration: ', num2str(it)]);
+        %             elboVals = elboVals(1:it); % cut the -Inf values at the end
+        % 
+        %             break;
+        %         end
+        %     end
+        % end
 
-        function [elbo, res] = computeELBO(obj)
-            % DEBUG
-            res = {};
-
-            % q
-            qW = 0; qAlpha = 0; qTau = 0;
-            % p
-            pX = 0; pW = 0; pAlpha = 0; pTau = 0; 
-
+        function elbo = computeELBO(obj)
+            elbo = 0;
             for i = 1:obj.M
                 % p
-                pX = pX + obj.views(i).getExpectationLnPX();
-                pW = pW + obj.views(i).getExpectationLnW();
-                pAlpha = pAlpha + obj.views(i).alpha.E_LnP;
-                pTau = pTau + obj.views(i).T.E_LnP;
-                % q
-                qW = qW + obj.views(i).W.H;
-                qAlpha = qAlpha + obj.views(i).alpha.H;
-                qTau = qTau + obj.views(i).T.H;
+                elbo = elbo + obj.views(i).getExpectationLnPX() + obj.views(i).getExpectationLnW() ...
+                    + obj.views(i).alpha.E_LnP + obj.views(i).T.E_LnP + obj.views(i).W.H ...
+                    + obj.views(i).alpha.H + obj.views(i).T.H;
             end
-            
-            % Store to 'res'
-            res.qZ = obj.Z.H; 
-            res.qW = qW; 
-            res.qAlpha = qAlpha; 
-            res.qTau = qTau;
-            % p
-            res.pX = pX;
-            res.pZ = obj.Z.E_LnP; 
-            res.pW = pW;
-            res.pAlpha = pAlpha; 
-            res.pTau = pTau;
 
-            % DEBUG
-
-            elbo = res.pX + res.pZ + res.pW + res.pAlpha + res.pTau + ... % p(.)
-                res.qZ + res.qW + res.qAlpha + res.qTau; % q(.)
-
-            % DEBUG
-            res.elbo = elbo;
-            % DEBUG
+            elbo = elbo + obj.Z.H + obj.Z.E_LnP;
         end
 
 

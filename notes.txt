@@ -55,3 +55,6 @@
 % newBVals = arrayfun(@(d) d.prior.b, obj.alpha.distributions) + 1/2 * obj.W.getExpectationOfColumnsNormSq();
 % 
 % obj.alpha.updateAllDistributionsParams(newAVals, newBVals);
+
+
+Next level of vectorization

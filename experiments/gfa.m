@@ -8,18 +8,16 @@ X2 = data.X_tr{2}; % [N x D2]
 % X1 = Datasets.standardScaler(X1);
 % X2 = Datasets.standardScaler(X2);
 
-maxIter = 1000;
+maxIter = 1500;
 K = 10;
 
 profile on;
 
 gfaModel =  GFA({X1', X2'}, K, maxIter);
-[elboVals, convIt, resArr] = gfaModel.fit();
+[elboVals, convIt] = gfaModel.fit(10);
 
 profile off;
 profile viewer;
-
-return;
 
 %% Visualize model training
 % Visualization.plotStructVariables(resArr);
