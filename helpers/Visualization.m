@@ -1,5 +1,9 @@
 classdef Visualization
     methods (Static)
+        function rgb = hexToRGB(hex)
+            rgb = sscanf(hex(2:end),'%2x%2x%2x',[1 3]) / 255;
+        end
+        
         function hintonDiagram(matrix, ax, figureTitle)
             if nargin < 2
                 % Use the current axis if none is provided
@@ -12,6 +16,7 @@ classdef Visualization
             % Set the current axis to ax
             axes(ax);
             axis(ax, 'equal'); % same length in every direction
+            set(ax, 'Color', Visualization.hexToRGB(Constants.BLUE));
 
             maxWeight = max(abs(matrix(:)));
 
@@ -33,33 +38,34 @@ classdef Visualization
             xlim(ax, [0, size(matrix, 2) + 1]);
 
             set(ax, 'YDir', 'reverse', 'XAxisLocation', 'top');            
-            axis(ax, 'off');
+            % axis(ax, 'off');
+            set(ax, 'XColor', 'none', 'YColor', 'none');
             if ~isempty(figureTitle)
                 title(ax, figureTitle);
             end
         end
 
-        function hintonDiagramPlot(arrW, titles, folderName, figName)
-            if nargin < 4
+        function hintonDiagramPlot(arrW, folderName, figName)
+            if nargin < 3
                 error(['##### ERROR IN THE CLASS ' mfilename('class') ': Not enough input arguments provided.']);
             end
             hfig = figure;
 
             ax1 = subplot(1, 2, 1);
-            Visualization.hintonDiagram(arrW{1}, ax1, titles{1});
-            
+            Visualization.hintonDiagram(arrW{1}, ax1);
+
             ax2 = subplot(1, 2, 2);
-            Visualization.hintonDiagram(arrW{2}, ax2, titles{2});
-           
-            picturewidth = 20;
-            hw_ratio = 0.65;
+            Visualization.hintonDiagram(arrW{2}, ax2);
+
+            width = 20;
+            ration = 0.65; % height/weight ratio
             set(findall(hfig, '-property','FontSize'),'FontSize', 17);
             % set(findall(hfig, '-property', 'Box'), 'Box', 'off');
             set(findall(hfig, '-property', 'Interpreter'), 'Interpreter', 'latex');
             set(findall(hfig, '-property', 'TickLabelInterpreter'), 'TickLabelInterpreter', 'latex');
             
             set(hfig, 'Units', 'centimeters', ...
-                      'Position', [3 3 picturewidth hw_ratio * picturewidth]);
+                      'Position', [3 3 width ration * width]);
             
             pos = get(hfig, 'Position');
             
@@ -72,11 +78,17 @@ classdef Visualization
                 mkdir(folderName);
             end
 
-            filePath = fullfile(folderName, figName);
+            % Export to .pdf
+            figNamePDF = [figName, '.pdf'];
+            filePath = fullfile(folderName, figNamePDF);
+            set(gcf, 'PaperPositionMode', 'auto');
+            exportgraphics(hfig, filePath, 'ContentType', 'vector');
 
-            print(hfig, filePath, '-dpdf', '-vector', '-fillpage');
-            print(hfig, filePath, '-dpng', '-vector');
-
+            % Export to .png
+            figNamePNG = [figName, '.png'];
+            filePath = fullfile(folderName, figNamePNG);
+            set(gcf, 'PaperPositionMode', 'auto');
+            exportgraphics(hfig, filePath, 'Resolution', 300);
         end
 
         function plotStructVariables(resArr, offset)

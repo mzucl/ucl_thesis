@@ -37,7 +37,8 @@ classdef GaussianContainer < handle
         cacheFlags = false(1, 9); % I invalidate all entries in the cache at the same time
                                   % but I don't store valid values at the
                                   % same time, so I need a flag for each
-                                  % entry
+                                  % entry.
+                                  % Hardcoded for optimization purposes!
 
         cacheSize = 0; % Cached value for 'Size' is invalidated only when 'removeDimensions'
                        % is called, so it make sense for it to have a separate cache! 

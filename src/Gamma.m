@@ -21,7 +21,7 @@ classdef Gamma < handle
             'E_LnX', NaN, ...
             'E_LnP', NaN);
 
-        cacheFlags = false(1, 4);
+        cacheFlags = false(1, 4); % Hardcoded for optimization purposes!
     end
 
 

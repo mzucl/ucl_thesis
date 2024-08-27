@@ -1,38 +1,19 @@
 classdef ViewHandler < handle
-    % TODO: I just added < handle -> check if that makes any issues for GFA
-    % model!!!
-
-    % THIS IS OVERKILL FOR THIS CLASS!
     properties
         X
 
+        %% Constant Dependent properties
+        % Defined like this because they never change after initialization
         N           % Number of samples
         D           % Dimensionality/number of features
         Tr_XtX      % Tr(X^TX)
         XXt         % XX^T
     end
+
+
+
+
     
-    % properties (Dependent)
-    %     N           % Number of samples
-    %     D           % Dimensionality/number of features
-    %     Tr_XtX      % Tr(X^TX)
-    %     XXt         % XX^T
-    % end
-
-    % Private properties for caching
-    properties (Access = private)
-        Tr_XtX_Cached
-        XXt_Cached
-    end
-
-    events
-        XChanged
-    end
-
-    properties (Access = private)
-        controller
-    end
-
     methods(Access = private)
         % Helper method that throws an error if index (of the observation) is not valid
         function validateIndex(obj, idx)
@@ -46,12 +27,11 @@ classdef ViewHandler < handle
                 error(['Error in ' class(obj) ': Index out of range.']); 
             end
         end
-    
-        function setFlags(obj)
-            obj.controller.setDirtyFlag('Tr_XtX');
-            obj.controller.setDirtyFlag('XXt');
-        end
     end
+
+
+
+
 
     methods
         function obj = ViewHandler(data, featuresInCols)
@@ -71,26 +51,20 @@ classdef ViewHandler < handle
 
             obj.X = Utility.ternary(featuresInCols, data', data);
 
+            % Set dependent properties
             obj.D = size(obj.X, 1);
-    
-      
             obj.N = size(obj.X, 2);
-        
             obj.Tr_XtX = dot(obj.X(:), obj.X(:));
             obj.XXt = obj.X * obj.X';
-    
-        
-
-
-            % obj.controller = Controller();
-            % addlistener(obj, 'XChanged', @(src, evt) obj.setFlags());
         end
         
+
+
         
 
         %% Retreive methods
         function observation = getObservation(obj, idx, tr)
-            if nargin < 2
+            if Constants.VALIDATE && nargin < 2
                 error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
             end
 
@@ -108,7 +82,7 @@ classdef ViewHandler < handle
         % Returns the row at index idx; if 'tr' is true then the row is
         % returned as a column vector
         function observation = getRow(obj, idx, tr)
-            if nargin < 2
+            if Constants.VALIDATE && nargin < 2
                 error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
             end
 
@@ -131,45 +105,12 @@ classdef ViewHandler < handle
         function el = getObservationEntry(obj, idx, d)
             % 'd' is the dimension we are interested in
             observation = obj.getObservation(idx);
-            if d > 0 && d <= length(observation)
-                el = observation(d);
-            else
-                error(['##### ERROR IN THE CLASS ' class(obj) ': Index out of bounds.']);
+            if Constants.VALIDATE
+                if ~d < 1 || d >= length(observation)
+                    error(['##### ERROR IN THE CLASS ' class(obj) ': Index out of bounds.']);
+                end
             end
-        end
-
-
-        %% Setters
-        % function set.X(obj, value)
-        %     obj.X = value;
-        %     notify(obj, 'XChanged');
-        % end
-
-
-        %% Getters
-        % function value = get.D(obj)
-        %     value = size(obj.X, 1);
-        % end
-        % 
-        % function value = get.N(obj)
-        %     value = size(obj.X, 2);
-        % end
-        % 
-        % function value = get.Tr_XtX(obj)
-        %     if obj.controller.isDirty('Tr_XtX')
-        %         obj.Tr_XtX_Cached = dot(obj.X(:), obj.X(:));
-        %         obj.controller.clearDirtyFlag('Tr_XtX');
-        %     end
-        %     value = obj.Tr_XtX_Cached;
-        % end
-        % 
-        function value = get.XXt(obj)
-            value = obj.X * obj.X';
-            % if obj.controller.isDirty('XXt')
-            %     obj.XXt_Cached = obj.X * obj.X';
-            %     obj.controller.clearDirtyFlag('XXt');
-            % end
-            % value = obj.XXt_Cached;
+            el = observation(d);
         end
     end
 end

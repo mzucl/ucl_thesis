@@ -20,6 +20,8 @@ classdef ViewHandlerTest < matlab.unittest.TestCase
 
 
 
+        
+
         %% Getters/Retrieval methods
         function testRetrievalMethods(testCase)
             data = [

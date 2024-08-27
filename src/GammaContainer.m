@@ -32,7 +32,7 @@ classdef GammaContainer < handle
             'E_LnP', NaN, ...
             'E_LnX', NaN);
 
-        cacheFlags = false(1, 5);
+        cacheFlags = false(1, 5); % Hardcoded for optimization purposes!
 
         cacheSize = 0; % Cached value for 'Size' is invalidated only when 'removeDimensions'
                        % is called, so it make sense for it to have a separate cache! 

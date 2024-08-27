@@ -15,7 +15,7 @@ classdef Gaussian < handle
             'E_XXt', NaN, ...
             'E_LnP', NaN);
 
-        cacheFlags = false(1, 5);
+        cacheFlags = false(1, 5); % Hardcoded for optimization purposes!
     end
     
     properties (Dependent)

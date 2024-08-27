@@ -18,5 +18,4 @@ profile off;
 profile viewer;
 
 %% Visualize
-Visualization.hintonDiagramPlot({W_PPCA, obj.W.E}, ...
-    {'PPCA $\mathbf{W}$ matrix', 'BPCA $\mathbf{W}$ matrix'}, 'figures/pca', 'W_ppca_bpca');
+Visualization.hintonDiagramPlot({W_PPCA, obj.W.E}, 'figures/pca', 'W_ppca_bpca');

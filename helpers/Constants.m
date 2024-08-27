@@ -1,5 +1,10 @@
 classdef Constants
     properties (Constant)
+        % Colors
+        BLUE = '#DAE8FC';
+        PURPLE = '#E1D5E7';
+        RED = '#F8CECC'; 
+
         % Gamma distribution
         DEFAULT_GAMMA_A = 10^-3; % 10^-14;
         DEFAULT_GAMMA_B = 10^-3; % 10^-14;

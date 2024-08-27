@@ -15,6 +15,8 @@ classdef GammaTest < matlab.unittest.TestCase
     end
 
 
+
+
     
     methods (Test)
         %% Deep copy and operators overloading
@@ -109,6 +111,8 @@ classdef GammaTest < matlab.unittest.TestCase
 
 
 
+
+
         %% Constructor
         function testConstructor(testCase)
             % Test 1: Default constructor
@@ -140,6 +144,8 @@ classdef GammaTest < matlab.unittest.TestCase
             GammaTest.verifyObject(testCase, obj, a, b, prior);
             GammaTest.verifyObject(testCase, obj.prior, aPrior, bPrior, NaN);
         end
+
+
 
 
 
@@ -176,6 +182,8 @@ classdef GammaTest < matlab.unittest.TestCase
         
 
 
+
+
         %% Private properties
         function testSetters(testCase)
             a = 2; b = 1;
@@ -187,6 +195,8 @@ classdef GammaTest < matlab.unittest.TestCase
             testCase.verifyTrue(obj.getExpInit() == expInit);
         end
 
+
+        
 
 
         %% Update methods

@@ -1,20 +1,52 @@
-% Clear the workspace
-close all; clear; clc;
+% % Clear the workspace
+% close all; clear; clc;
+% 
+% % Add folders to MATLAB path
+% addpath('src');
+% addpath('models');
+% addpath('helpers');
+% addpath('tests');
+% addpath('tests/src');
+% addpath('experiments');
+% addpath('figures');
+% 
+% % Uncomment to run tests
+% testResults = runtests('tests');
+% %% 
 
-% Add folders to MATLAB path
-addpath('src');
-addpath('models');
-addpath('helpers');
-addpath('tests');
-addpath('tests/src');
-addpath('experiments');
-addpath('figures');
+% Create a figure
+figure;
 
-% Uncomment to run tests
-testResults = runtests('tests');
-%% 
+% Set the figure background color
+set(gcf, 'Color', [1 1 1]); % White background
+
+% Create some sample data and plot
+x = 1:10;
+y = rand(1, 10);
+plot(x, y);
+
+% Get current axes handle
+ax = gca;
 
 
+% Set the axes background color
+set(ax, 'Color', Visualization.hexToRGB(Constants.BLUE)); % Light grey background
+set(gcf, 'PaperPositionMode', 'auto');
+% % Optionally, set the axes box to 'on' to see the background color clearly
+% set(ax, 'Box', 'on');
+
+% Ensure the figure's background color is preserved when saving
+set(gcf, 'PaperPositionMode', 'auto');
+
+% % Save the figure to a file (example: PNG format)
+% print(gcf, 'my_plot.png', '-dpng', '-r300'); % Save with 300 dpi resolution
+
+exportgraphics(gca, 'results.pdf', 'ContentType', 'vector');
+
+exportgraphics(gca, 'my_plot.png');
+
+
+return;
 
 lala = true;
 tic;

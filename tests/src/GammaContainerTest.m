@@ -150,7 +150,6 @@ classdef GammaContainerTest < matlab.unittest.TestCase
             testCase.verifyTrue(obj.prior == Gamma());
         end
 
-
         function testUpdateAllDistributionsB(testCase)
             % Setup
             size = 4;
@@ -180,7 +179,6 @@ classdef GammaContainerTest < matlab.unittest.TestCase
             % Update shouldn't affect prior
             testCase.verifyTrue(obj.prior == Gamma());
         end
-
 
         function testRemoveDimensions(testCase) 
             % Setup
