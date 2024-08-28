@@ -107,9 +107,9 @@ classdef GFA < handle
             end
 
             covNew = Utility.matrixInverse(eye(obj.K.Val) + covNew);
-            newMu = covNew * sum_WtTX;
+            muNew = covNew * sum_WtTX;
 
-            obj.Z.updateDistributionsParameters(newMu, covNew);
+            obj.Z.updateDistributionsParameters(muNew, covNew);
         end
 
         function obj = qWUpdate(obj, it)

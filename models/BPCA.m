@@ -143,10 +143,10 @@ classdef BPCA < handle
         function obj = qMuUpdate(obj)
             tauExp = obj.tau.E;
 
-            newCov = (1/(obj.mu.priorPrec + obj.N * tauExp)) * eye(obj.D);
-            newMu = tauExp * newCov * (obj.view.X - obj.W.E * obj.Z.E) * ones(obj.N, 1);
+            covNew = (1/(obj.mu.priorPrec + obj.N * tauExp)) * eye(obj.D);
+            muNew = tauExp * covNew * (obj.view.X - obj.W.E * obj.Z.E) * ones(obj.N, 1);
             
-            obj.mu.updateParameters(newMu, newCov);
+            obj.mu.updateParameters(muNew, covNew);
         end
 
 
@@ -155,11 +155,11 @@ classdef BPCA < handle
             expZZt = obj.Z.E_XXt;
             expWZ = obj.W.E * obj.Z.E;
             
-            newBVal = obj.tau.prior.b + 1/2 * obj.view.Tr_XtX + obj.N/2 * obj.mu.E_XtX + ...
+            bNew = obj.tau.prior.b + 1/2 * obj.view.Tr_XtX + obj.N/2 * obj.mu.E_XtX + ...
                 1/2 * dot(expWtW_tr(:), expZZt(:)) - dot(obj.view.X(:), expWZ(:)) + ...
                 obj.mu.E' * (expWZ - obj.view.X) * ones(obj.N, 1);
         
-            obj.tau.updateB(newBVal);
+            obj.tau.updateB(bNew);
         end
         
         

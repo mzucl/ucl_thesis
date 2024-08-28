@@ -205,21 +205,21 @@ classdef GammaTest < matlab.unittest.TestCase
             obj = Gamma(a, b);
 
             % updateA
-            newA = 10;
+            aNew = 10;
     
-            obj.updateA(newA);
-            GammaTest.verifyObject(testCase, obj, newA, b);
+            obj.updateA(aNew);
+            GammaTest.verifyObject(testCase, obj, aNew, b);
             
             a = obj.a;
 
             % updateB
-            newB = 100;
-            obj.updateB(newB);
-            GammaTest.verifyObject(testCase, obj, a, newB);
+            bNew = 100;
+            obj.updateB(bNew);
+            GammaTest.verifyObject(testCase, obj, a, bNew);
 
             % updateParameters
-            obj.updateParameters(newA, newB);
-            GammaTest.verifyObject(testCase, obj, newA, newB);
+            obj.updateParameters(aNew, bNew);
+            GammaTest.verifyObject(testCase, obj, aNew, bNew);
         end
     end
 end

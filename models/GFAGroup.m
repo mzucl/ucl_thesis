@@ -84,17 +84,17 @@ classdef GFAGroup < handle
 
 
         function obj = qAlphaUpdate(obj)
-            newBVals = obj.alpha.prior.b + 1/2 * obj.W.E_SNC;
-            obj.alpha.updateAllDistributionsB(newBVals);
+            bNew = obj.alpha.prior.b + 1/2 * obj.W.E_SNC;
+            obj.alpha.updateAllDistributionsB(bNew);
         end
 
 
         function obj = qTauUpdate(obj)
-            newBVals = obj.T.prior.b + 1/2 * diag( ...
+            bNew = obj.T.prior.b + 1/2 * diag( ...
                 obj.X.XXt - 2 * obj.W.E * obj.Z.E * obj.X.X' ...
                 + obj.W.E * obj.Z.E_XXt * obj.W.E');
 
-            obj.T.updateAllDistributionsB(newBVals);
+            obj.T.updateAllDistributionsB(bNew);
         end
     
 
@@ -111,16 +111,16 @@ classdef GFAGroup < handle
 
             cov_inv = pagemtimes(ZZt_3D, T_3D) + alpha_3D;
 
-            newCov = arrayfun(@(i) Utility.matrixInverse(cov_inv(:,:,i)), ...
+            covNew = arrayfun(@(i) Utility.matrixInverse(cov_inv(:,:,i)), ...
                 1:size(cov_inv, 3), 'UniformOutput', false);
 
             % Convert cell array to multidimensional matrix
-            newCov = cat(3, newCov{:});
+            covNew = cat(3, covNew{:});
 
             V = reshape(obj.Z.E * obj.X.X' * diag(TExp), obj.K.Val, 1, obj.D); % Columns of the matrix will be in the third dimension
-            newMu = squeeze(pagemtimes(newCov, V));
+            muNew = squeeze(pagemtimes(covNew, V));
             
-            obj.W.updateDistributionsParameters(newMu, newCov);
+            obj.W.updateDistributionsParameters(muNew, covNew);
         end
 
         function value = getExpectationLnW(obj)

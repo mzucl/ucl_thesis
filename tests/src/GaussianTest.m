@@ -349,11 +349,11 @@ classdef GaussianTest < matlab.unittest.TestCase
             dim = 10;
             obj = Gaussian(dim, 0, 1);
 
-            newMu = 5 * ones(dim, 1); % We want to keep the same dimension
+            muNew = 5 * ones(dim, 1); % We want to keep the same dimension
 
-            obj.updateMu(newMu);
+            obj.updateMu(muNew);
 
-            GaussianTest.verifyObject(testCase, obj, newMu, eye(dim), Constants.DEFAULT_GAUSS_PRECISION, dim);
+            GaussianTest.verifyObject(testCase, obj, muNew, eye(dim), Constants.DEFAULT_GAUSS_PRECISION, dim);
         end
 
         function testUpdateCovariance(testCase)
@@ -362,12 +362,12 @@ classdef GaussianTest < matlab.unittest.TestCase
 
             testCase.verifyEqual(obj.cov, eye(dim));
 
-            newCov = Utility.generateRandomSPDMatrix(dim);
-            newMu = 5 * ones(dim, 1);
+            covNew = Utility.generateRandomSPDMatrix(dim);
+            muNew = 5 * ones(dim, 1);
 
-            obj.updateParameters(newMu, newCov);
+            obj.updateParameters(muNew, covNew);
 
-            GaussianTest.verifyObject(testCase, obj, newMu, newCov, Constants.DEFAULT_GAUSS_PRECISION, dim);
+            GaussianTest.verifyObject(testCase, obj, muNew, covNew, Constants.DEFAULT_GAUSS_PRECISION, dim);
         end
 
         function testUpdateParameters(testCase)
@@ -376,11 +376,11 @@ classdef GaussianTest < matlab.unittest.TestCase
 
             testCase.verifyEqual(obj.cov, eye(dim));
 
-            newCov = Utility.generateRandomSPDMatrix(dim);
+            covNew = Utility.generateRandomSPDMatrix(dim);
 
-            obj.updateCovariance(newCov);
+            obj.updateCovariance(covNew);
 
-            GaussianTest.verifyObject(testCase, obj, zeros(dim, 1), newCov, Constants.DEFAULT_GAUSS_PRECISION, dim);
+            GaussianTest.verifyObject(testCase, obj, zeros(dim, 1), covNew, Constants.DEFAULT_GAUSS_PRECISION, dim);
         end
 
         function testRemoveDimensions(testCase)
