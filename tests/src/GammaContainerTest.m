@@ -1,4 +1,12 @@
 classdef GammaContainerTest < matlab.unittest.TestCase
+    properties(Access = private, Constant)
+        SETTINGS = ModelSettings.getInstance();
+    end
+
+
+
+
+
     methods (Test)
         %% Constructor tests
         function testConstructorWithOneParameter(testCase)
@@ -6,8 +14,8 @@ classdef GammaContainerTest < matlab.unittest.TestCase
 
             testCase.verifyEqual(obj.Size, 1);
 
-            testCase.verifyEqual(obj.a, Constants.DEFAULT_GAMMA_A);
-            testCase.verifyEqual(obj.b, Constants.DEFAULT_GAMMA_B);
+            testCase.verifyEqual(obj.a, GammaContainerTest.SETTINGS.DEFAULT_GAMMA_A);
+            testCase.verifyEqual(obj.b, GammaContainerTest.SETTINGS.DEFAULT_GAMMA_B);
             testCase.verifyTrue(obj.prior == Gamma());
         end
 
@@ -17,8 +25,8 @@ classdef GammaContainerTest < matlab.unittest.TestCase
 
             testCase.verifyEqual(obj.Size, size);
 
-            testCase.verifyEqual(obj.a, Constants.DEFAULT_GAMMA_A);
-            testCase.verifyEqual(obj.b, repmat(Constants.DEFAULT_GAMMA_B, size, 1));
+            testCase.verifyEqual(obj.a, GammaContainerTest.SETTINGS.DEFAULT_GAMMA_A);
+            testCase.verifyEqual(obj.b, repmat(GammaContainerTest.SETTINGS.DEFAULT_GAMMA_B, size, 1));
             testCase.verifyTrue(obj.prior == Gamma());
         end
 
@@ -30,7 +38,7 @@ classdef GammaContainerTest < matlab.unittest.TestCase
             testCase.verifyEqual(obj.Size, size);
 
             testCase.verifyEqual(obj.a, a);
-            testCase.verifyEqual(obj.b, repmat(Constants.DEFAULT_GAMMA_B, size, 1));
+            testCase.verifyEqual(obj.b, repmat(GammaContainerTest.SETTINGS.DEFAULT_GAMMA_B, size, 1));
             testCase.verifyTrue(obj.prior == Gamma());
         end
 

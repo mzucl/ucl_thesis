@@ -1,27 +1,34 @@
+% Clear the workspace
+close all; clear all; clc;
+
+% Logging
+logFileName = 'logs/gfa_2G.txt';
+if ~exist('logs', 'dir')
+    mkdir('logs');
+end
+
+diary(logFileName); % start logging
+
+% Model settings
+settings = ModelSettings.getInstance();
+settings.VALIDATE = false;
+settings.DEBUG = false;
+
+
 %% Generate data and train the model
 data = generateTwoViews();
 
 X1 = data.X_tr{1}; % [N x D1];
 X2 = data.X_tr{2}; % [N x D2]
 
-% Scale datasets
-% X1 = Datasets.standardScaler(X1);
-% X2 = Datasets.standardScaler(X2);
-
-maxIter = 1500;
-K = 10;
-
 profile on;
 
-gfaModel =  GFA({X1', X2'}, K, maxIter);
+K = 10;
+gfaModel =  GFA({X1', X2'}, K);
 [elboVals, convIt] = gfaModel.fit(10);
 
 profile off;
 profile viewer;
-
-%% Visualize model training
-% Visualization.plotStructVariables(resArr);
-
 
 
 %% Visualize true and recovered latent factors

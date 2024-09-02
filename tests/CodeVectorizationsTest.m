@@ -265,10 +265,32 @@ classdef CodeVectorizationsTest < matlab.unittest.TestCase
                 testCase.verifyTrue(diffSqNorm < 1e-9);
             end
         end
+    
+        % Vectorization for binary - Jaakkola bound
+        function testIdentityGFAVectorization3(testCase)
+            % Setup
+            D = 10; % View dimensions
+            K = 10;
+            N = 100;
 
+            [~, W, T] = CodeVectorizationsTest.generateViewMatrices(D, N, K);
+            Z = Utility.generateRandomIntMatrix(K, N);
+            Sigma = Utility.generateRandomSPDMatrix(D);
 
+            T_obs = Utility.generateRandomBinaryMatrix(D, N);
 
-
+            % Vectorized code
+            MU = Sigma * (T * W * Z + T_obs - 1/2 * ones(D, N));
+            
+            % Non-vectorized code
+            for n = 1:N
+                mu = Sigma * (T * W * Z(:, n) + T_obs(:, n) - 1/2 * ones(D, 1));
+                
+                % Compare
+                diffSqNorm = norm(MU(:, n) - mu);
+                testCase.verifyTrue(diffSqNorm < 1e-9);
+            end
+        end
 
         % % Vectorization for qZUpdate: sigma
         % function testIdentityGFAVectorization2(testCase)

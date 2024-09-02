@@ -7,10 +7,12 @@
 %%
 classdef GammaContainer < handle
     properties
+        % [NOTE]: Some types will affect obj.Size, check implementation if
+        % we add more types
         type   
         % "SS": shared 'a', shared 'b'
         % "SD": shared 'a', different 'b'   -> IMPLEMENTED!
-        % "DS": different 'a', shared 'b'
+        % "DS": different 'a', shared 'b'   
         % "DD": different 'a', different 'b'
 
         % [NOTE]: For now only "SD" type is supported, thus 'a' is a
@@ -21,6 +23,9 @@ classdef GammaContainer < handle
         % [NOTE]: They all have the same prior, thus we keep the
         % information here and not in the components distributions
         prior
+
+        % It is dependent, but it changes infrequently
+        Size                % Number of distributions in the container
     end
 
     properties(Access = private)
@@ -34,13 +39,17 @@ classdef GammaContainer < handle
 
         cacheFlags = false(1, 5); % Hardcoded for optimization purposes!
 
-        cacheSize = 0; % Cached value for 'Size' is invalidated only when 'removeDimensions'
-                       % is called, so it make sense for it to have a separate cache! 
-                       % 0 is used because == 0 is much faster than isnan().
+        % cacheSize = 0; % Cached value for 'Size' is invalidated only when 'removeDimensions'
+        %                % is called, so it make sense for it to have a separate cache! 
+        %                % 0 is used because == 0 is much faster than isnan().
+    end
+
+    properties(Access = private, Constant)
+        SETTINGS = ModelSettings.getInstance();
     end
     
     properties (Dependent)   
-        Size                % Number of distributions in the container
+        % Size                % Number of distributions in the container
         E                   % Array (column vector) of expectations of all components
         E_Diag              % Diagonal matrix of expectations of all components
         H                   % Entropy of the collection (sum of components entropies)
@@ -100,7 +109,7 @@ classdef GammaContainer < handle
         %
         %%
         function obj = GammaContainer(type, size_, a, b, prior)
-            if Constants.VALIDATE
+            if GammaContainer.SETTINGS.VALIDATE
                 if nargin == 0
                     error(['##### ERROR IN THE CLASS ' class(obj) ': Too few argumentes passed in.']);
                 end
@@ -112,36 +121,41 @@ classdef GammaContainer < handle
             obj.type = type;
 
             % Default values
-            obj.a = Constants.DEFAULT_GAMMA_A;
-            obj.b = Constants.DEFAULT_GAMMA_B; % scalar
+            obj.a = GammaContainer.SETTINGS.DEFAULT_GAMMA_A;
+            obj.b = GammaContainer.SETTINGS.DEFAULT_GAMMA_B; % scalar
             obj.prior = Gamma();
 
             switch nargin
                 case 2 % type, size
-                    obj.b = repmat(Constants.DEFAULT_GAMMA_B, size_, 1);
+                    obj.b = repmat(GammaContainer.SETTINGS.DEFAULT_GAMMA_B, size_, 1);
 
                 case 3 % type, size, a
                     obj.a = a;
-                    obj.b = repmat(Constants.DEFAULT_GAMMA_B, size_, 1);
+                    obj.b = repmat(GammaContainer.SETTINGS.DEFAULT_GAMMA_B, size_, 1);
                    
                 case {4, 5} % type, size, a, b
                     obj.a = a;
                     if Utility.isSingleNumber(b)
                         obj.b = repmat(b, size_, 1);
                     else
-                        if Constants.VALIDATE && size(b, 1) ~= size_ % 'b' must be a column vector
+                        if GammaContainer.SETTINGS.VALIDATE && size(b, 1) ~= size_ % 'b' must be a column vector
                             error(['##### ERROR IN THE CLASS ' class(obj) ': Length of b doesn''t match the size.']);
                         end
                         obj.b = b;
                     end
                     
                     if nargin > 4 % prior
-                        if Constants.VALIDATE && ~Utility.isNaNOrInstanceOf(prior, 'Gamma')
+                        if GammaContainer.SETTINGS.VALIDATE && ~Utility.isNaNOrInstanceOf(prior, 'Gamma')
                             error(['##### ERROR IN THE CLASS ' class(obj) ': Invalid prior parameter.']);
                         end
                         obj.prior = prior.copy();
                     end
             end
+
+            % Set obj.Size
+            % It is a dependent property, but it only changes when
+            % 'removeDimensions' is called
+            obj.Size = length(obj.b);
             
             % Set initial expectation to the actual expectation
             obj.setExpInit(obj.E);
@@ -154,7 +168,7 @@ classdef GammaContainer < handle
         %% Update methods
         % [NOTE]: 'type' dependent
         function obj = updateAllDistributionsA(obj, a)
-            if Constants.VALIDATE
+            if GammaContainer.SETTINGS.VALIDATE
                 if nargin < 2
                     error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
                 end
@@ -174,7 +188,7 @@ classdef GammaContainer < handle
 
         % [NOTE]: 'type' dependent
         function obj = updateAllDistributionsB(obj, b)
-            if Constants.VALIDATE
+            if GammaContainer.SETTINGS.VALIDATE
                 if nargin < 2
                     error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
                 end
@@ -202,14 +216,16 @@ classdef GammaContainer < handle
             if nargin < 2 || isempty(indices)
                 return; % No change
             end
-            if Constants.VALIDATE && ~obj.validateIndices(indices)
+            if GammaContainer.SETTINGS.VALIDATE && ~obj.validateIndices(indices)
                 error(['##### ERROR IN THE CLASS ' class(obj) ': Index out of range.']); 
             end
             obj.b(indices) = [];
 
             % Clear cache
             obj.clearCache();
-            obj.cacheSize = 0;
+            % obj.cacheSize = 0;
+
+            obj.Size = length(obj.b);
         end
 
 
@@ -218,7 +234,7 @@ classdef GammaContainer < handle
 
         %% Setters
         function obj = setExpInit(obj, value)
-            if Constants.VALIDATE
+            if GammaContainer.SETTINGS.VALIDATE
                 if ~all(value > 0)
                     error(['##### ERROR IN THE CLASS ' class(obj) ': Expectation is a strictly positive number.']);
                 end
@@ -248,12 +264,12 @@ classdef GammaContainer < handle
         
         %% Dependent properties
         % [NOTE]: 'type' dependent
-        function value = get.Size(obj)
-            if obj.cacheSize == 0
-                obj.cacheSize = length(obj.b);
-            end
-            value = obj.cacheSize;
-        end
+        % function value = get.Size(obj)
+        %     if obj.cacheSize == 0
+        %         obj.cacheSize = length(obj.b);
+        %     end
+        %     value = obj.cacheSize;
+        % end
 
         function value = get.E(obj)
             if ~obj.cacheFlags(1)

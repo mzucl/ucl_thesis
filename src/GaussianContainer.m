@@ -19,6 +19,12 @@ classdef GaussianContainer < handle
           
         priorPrec           % scalar or array, only valid if the prior covariance for each covariance is spherical
                             % -> E_LnP
+
+        Size                % Number of distributions in the container
+    end
+
+    properties(Access = private, Constant)
+        SETTINGS = ModelSettings.getInstance();
     end
 
     properties(Access = private)
@@ -40,13 +46,13 @@ classdef GaussianContainer < handle
                                   % entry.
                                   % Hardcoded for optimization purposes!
 
-        cacheSize = 0; % Cached value for 'Size' is invalidated only when 'removeDimensions'
-                       % is called, so it make sense for it to have a separate cache! 
-                       % 0 is used because == 0 is much faster than isnan().
+        % cacheSize = 0; % Cached value for 'Size' is invalidated only when 'removeDimensions'
+        %                % is called, so it make sense for it to have a separate cache! 
+        %                % 0 is used because == 0 is much faster than isnan().
     end
     
     properties (Dependent)
-        Size                % Number of distributions in the container
+        % Size                % Number of distributions in the container
         E                   % Matrix: expectation of the whole container
         H                   % Entropy of the collection
         E_Xt
@@ -90,7 +96,7 @@ classdef GaussianContainer < handle
             if (obj.cols && XtX) || (~obj.cols && ~XtX)
                 value = obj.mu' * obj.mu;
                 if obj.type == "DS"
-                    value = value + diag(repmat(trace(obj.cov), obj.Size, 1));
+                    value = value + trace(obj.cov) * eye(obj.Size); % diag(repmat(trace(obj.cov), obj.Size, 1));
                 elseif obj.type == "DD"
                     value = value + diag(obj.Cov_Tr); % returns trace for each covariance matrix
                 end
@@ -140,7 +146,7 @@ classdef GaussianContainer < handle
         function obj = GaussianContainer(type, size_, cols, dim, mu, cov, priorPrec)
             % Non-optional parameters: type, size_, cols, dim: 'size_' is the
             % size of the container, and 'dim' is the Gaussian dimension 
-            if Constants.VALIDATE
+            if GaussianContainer.SETTINGS.VALIDATE
                 if nargin < 4
                     error(['##### ERROR IN THE CLASS ' class(obj) ': Too few argumentes passed in.']);
                 end
@@ -152,7 +158,7 @@ classdef GaussianContainer < handle
             obj.type = type;
             obj.cols = cols;
             obj.dim = dim;
-            obj.priorPrec = Constants.DEFAULT_GAUSS_PRECISION;
+            obj.priorPrec = GaussianContainer.SETTINGS.DEFAULT_GAUSS_PRECISION;
 
             % Preallocate + default values
             obj.mu = zeros(obj.dim, size_);
@@ -167,13 +173,13 @@ classdef GaussianContainer < handle
                     obj.mu = mu * ones(obj.dim, size_);
                  
                 elseif Utility.isArray(mu)
-                    if Constants.VALIDATE && ~isequal(size(mu), [obj.dim, 1])
+                    if GaussianContainer.SETTINGS.VALIDATE && ~isequal(size(mu), [obj.dim, 1])
                         error(['##### ERROR IN THE CLASS ' mfilename ': Parameter mu dimensionality doesn''t match.']);
                     end
                     obj.mu = repmat(mu, 1, size_);
 
                 elseif Utility.isMatrix(mu)
-                    if Constants.VALIDATE && ~isequal(size(mu), [obj.dim, size_])
+                    if GaussianContainer.SETTINGS.VALIDATE && ~isequal(size(mu), [obj.dim, size_])
                         error(['##### ERROR IN THE CLASS ' mfilename ': Parameter mu dimensionality doesn''t match.']);
                     end
                     obj.mu = mu;
@@ -183,20 +189,20 @@ classdef GaussianContainer < handle
                     compCov = zeros(obj.dim, obj.dim); % Preallocate
 
                     if Utility.isSingleNumber(cov)
-                        if Constants.VALIDATE && cov <= 0
+                        if GaussianContainer.SETTINGS.VALIDATE && cov <= 0
                             error(['##### ERROR IN THE CLASS ' mfilename ': Covariance parameter must be greater than 0.']);
                         end
                         compCov = cov * eye(dim); % Spherical
                         
                     elseif Utility.isArray(cov)
-                        if Constants.VALIDATE && (length(cov) ~= dim || ~Utility.isValidCovarianceMatrix(diag(cov)))
+                        if GaussianContainer.SETTINGS.VALIDATE && (length(cov) ~= dim || ~Utility.isValidCovarianceMatrix(diag(cov)))
                             error(['##### ERROR IN THE CLASS ' mfilename ': Parameter is either not a valid covariance matrix or' ...
                                 ' dimensionality doesn''t match.']);
                         end
                         compCov = diag(cov); % Diagonal
 
                     elseif Utility.isMatrix(cov)
-                        if Constants.VALIDATE && (~isequal(size(cov), [dim, dim]) || ~Utility.isValidCovarianceMatrix(cov))
+                        if GaussianContainer.SETTINGS.VALIDATE && (~isequal(size(cov), [dim, dim]) || ~Utility.isValidCovarianceMatrix(cov))
                             error(['##### ERROR IN THE CLASS ' mfilename ': Parameter is either not a valid covariance matrix or' ...
                                 'dimensionality doesn''t match.']);
                         end
@@ -211,13 +217,13 @@ classdef GaussianContainer < handle
 
                     if nargin > 6 % priorPrec
                         if Utility.isSingleNumber(priorPrec)
-                            if Constants.VALIDATE && (priorPrec <= 0 || obj.type ~= "DS")
+                            if GaussianContainer.SETTINGS.VALIDATE && (priorPrec <= 0 || obj.type ~= "DS")
                                 error(['##### ERROR IN THE CLASS ' mfilename ': Invalid precision parameter.']);
                             end
                             obj.priorPrec = priorPrec; % Spherical shared covariance
                             
                         elseif Utility.isArray(priorPrec)
-                            if Constants.VALIDATE && (length(priorPrec) ~= size_ || any(priorPrec < 0) || obj.type ~= "DD")
+                            if GaussianContainer.SETTINGS.VALIDATE && (length(priorPrec) ~= size_ || any(priorPrec < 0) || obj.type ~= "DD")
                                 error(['##### ERROR IN THE CLASS ' mfilename ': Parameter is either not a valid precision or' ...
                                     ' dimensionality doesn''t match.']);
                             end
@@ -227,6 +233,9 @@ classdef GaussianContainer < handle
                 end
             end
 
+            % Set obj.Size
+            obj.Size = size(obj.mu, 2);
+            
             % Set initial expectation to the actual expectation
             obj.setExpInit(obj.E);
         end
@@ -237,7 +246,7 @@ classdef GaussianContainer < handle
 
         %% Setters
         function obj = setExpInit(obj, value)
-            if Constants.VALIDATE
+            if GaussianContainer.SETTINGS.VALIDATE
                 if ~(obj.cols && isequal(size(value), [obj.dim, obj.Size]) || ...
                         ~obj.cols && isequal(size(value), [obj.Size, obj.dim]))
                     error(['##### ERROR IN THE CLASS ' class(obj) ': Number of elements in the expectation must be equal to the number of ' ...
@@ -266,7 +275,7 @@ classdef GaussianContainer < handle
         % TODO (medium): Validate inputs!
         % Independent of the type (currently implemented)
         function obj = updateDistributionsMu(obj, mu)
-            if Constants.VALIDATE && nargin < 2
+            if GaussianContainer.SETTINGS.VALIDATE && nargin < 2
                 error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
             end
 
@@ -278,9 +287,13 @@ classdef GaussianContainer < handle
 
         % For "DD" type 'cov' parameter must be a multidimensional array
         function obj = updateDistributionsCovariance(obj, cov)
-            if Constants.VALIDATE && nargin < 2
+            if GaussianContainer.SETTINGS.VALIDATE && nargin < 2
                 error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
             end
+            
+            % if obj.type == "DS"
+            %     cov = cov + GaussianContainer.SETTINGS.EPSILON * eye(size(cov));
+            % end
             
             obj.cov = cov;
 
@@ -289,9 +302,13 @@ classdef GaussianContainer < handle
         end
 
         function obj = updateDistributionsParameters(obj, mu, cov)
-            if Constants.VALIDATE && nargin < 3
+            if GaussianContainer.SETTINGS.VALIDATE && nargin < 3
                 error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
             end
+
+            % if obj.type == "DS"
+            %     cov = cov + GaussianContainer.SETTINGS.EPSILON * eye(size(cov));
+            % end
             
             obj.mu = mu;
             obj.cov = cov;
@@ -305,7 +322,7 @@ classdef GaussianContainer < handle
                 return; % No change
             end
 
-            if Constants.VALIDATE && ~obj.validateDimIndices(indices)
+            if GaussianContainer.SETTINGS.VALIDATE && ~obj.validateDimIndices(indices)
                 error(['##### ERROR IN THE CLASS ' class(obj) ': Index out of range.']); 
             end
 
@@ -330,7 +347,9 @@ classdef GaussianContainer < handle
 
             % Clear cache
             obj.clearCache();
-            obj.cacheSize = 0;
+            % obj.cacheSize = 0;
+
+            obj.Size = size(obj.mu, 2);
         end
 
 
@@ -338,12 +357,12 @@ classdef GaussianContainer < handle
 
         
         %% Dependent properties
-        function value = get.Size(obj)
-            if obj.cacheSize == 0
-                obj.cacheSize = size(obj.mu, 2);
-            end
-            value = obj.cacheSize;
-        end        
+        % function value = get.Size(obj)
+        %     if obj.cacheSize == 0
+        %         obj.cacheSize = size(obj.mu, 2);
+        %     end
+        %     value = obj.cacheSize;
+        % end        
 
         function value = get.E(obj)
             if ~obj.cacheFlags(1)
@@ -458,6 +477,10 @@ classdef GaussianContainer < handle
                 obj.cacheFlags(9) = true;
             end
             value = obj.cache.Cov_Tr;    
+        end
+
+        function value = getCacheFlags(obj)
+            value = obj.cacheFlags;
         end
     end
 end

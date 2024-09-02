@@ -5,14 +5,81 @@
 % addpath('src');
 % addpath('models');
 % addpath('helpers');
-% addpath('tests');
-% addpath('tests/src');
-% addpath('experiments');
-% addpath('figures');
+% addpath(genpath('tests'))
+% addpath(genpath('experiments'))
+% addpath(genpath('figures'))
+% addpath('logs');
 % 
 % % Uncomment to run tests
 % testResults = runtests('tests');
 % %% 
+
+
+A = Utility.generateRandomIntMatrix(50, 6000);
+B = Utility.generateRandomIntMatrix(6000, 50);
+C = Utility.generateRandomIntMatrix(50, 50);
+
+tic;
+for i = 1:1000
+    trA = trace(A * B * C);
+end
+elapsedTime = toc;
+fprintf('Elapsed time ABC: %.4f seconds\n', elapsedTime);
+
+
+tic;
+for i = 1:1
+    trB = trace(B * C * A);
+end
+elapsedTime = toc;
+fprintf('Elapsed time BCA (skipped): %.4f seconds\n', elapsedTime);
+
+tic;
+for i = 1:1000
+    trC = trace(C * A * B);
+end
+elapsedTime = toc;
+fprintf('Elapsed time CAB: %.4f seconds\n', elapsedTime);
+
+
+tic;
+for i = 1:1000
+    D = A * B;
+    trA = (D(:))' * C(:);
+end
+elapsedTime = toc;
+fprintf('Elapsed time (AB)C: %.4f seconds\n', elapsedTime);
+
+tic;
+for i = 1:10000
+    D = A * B;
+    trA = C(:)' * D(:);
+end
+elapsedTime = toc;
+fprintf('Elapsed time (AB)C: %.4f seconds\n', elapsedTime);
+
+tic;
+for i = 1:1000
+    D = C*A;
+    trB = (D(:))' * B(:);
+end
+elapsedTime = toc;
+fprintf('Elapsed time (CA)B: %.4f seconds\n', elapsedTime);
+
+
+tic;
+for i = 1:1000
+    D = C*A;
+    trB = B(:)' * (D(:));
+end
+elapsedTime = toc;
+fprintf('Elapsed time (CA)B: %.4f seconds\n', elapsedTime);
+
+
+
+
+return;
+
 
 % Create a figure
 figure;

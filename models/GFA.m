@@ -29,6 +29,10 @@ classdef GFA < handle
     %     end
     % end
 
+    properties(Access = private, Constant)
+        SETTINGS = ModelSettings.getInstance();
+    end
+
     methods
         % [NOTE] We need to deal with the form of the datasets here (e.g.
         % are they in table format, or we need to import
@@ -42,6 +46,7 @@ classdef GFA < handle
         % [NOTE] For now we have 2 datasets passed in as matrices
         %% Constructors
         function obj = GFA(data, K, maxIter, tol, doRotation)
+            % Optional parameters: maxIter, tol
             if nargin < 2
                 error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
             end
@@ -54,13 +59,10 @@ classdef GFA < handle
 
             obj.K = DoubleWrapper(K);
 
-            % Set parameters to default values that will be updated if value is
-            % provided
-            obj.maxIter = Constants.DEFAULT_MAX_ITER;
-            obj.tol = Constants.DEFAULT_TOL;
+            obj.maxIter = GFA.SETTINGS.DEFAULT_MAX_ITER;
+            obj.tol = GFA.SETTINGS.DEFAULT_TOL;
             obj.doRotation = false;
 
-            % Optional parameters: maxIter, tol
             if nargin > 2
                 obj.maxIter = maxIter;
                 if nargin > 3
@@ -72,16 +74,10 @@ classdef GFA < handle
             end
 
             %% Model setup and initialization
-            % Z
-            % ------------------------------------------------------ %
-            % Initialize the model - set random values for the mean
-            % This means we will run the update equation for W first and
-            % that we should set some values for all the moments that are
-            % in those update equations.
             initZMu = randn(obj.K.Val, 1);
 
             %                         type, size_, cols, dim,     mu, cov, priorPrec
-            obj.Z = GaussianContainer("DS", obj.N, true, obj.K.Val, initZMu);
+            obj.Z = GaussianContainer("DS", obj.N, true, obj.K.Val, zeros(obj.K.Val, 1)); % STEP1
 
             % Initialize views
             obj.views = GFAGroup.empty(obj.M, 0);
@@ -102,7 +98,7 @@ classdef GFA < handle
 
             for m = 1:obj.M
                 WtT = obj.views(m).W.E_Xt * obj.views(m).T.E_Diag;
-                covNew = covNew + WtT * obj.views(m).W.E;
+                covNew = covNew + obj.views(m).W.E_Xt * obj.views(m).T.E_Diag * obj.views(m).W.E;
                 sum_WtTX = sum_WtTX + WtT * obj.views(m).X.X;
             end
 
@@ -132,6 +128,8 @@ classdef GFA < handle
 
 
 
+
+
         %% fit() and ELBO
         function [elboVals, it] = fit(obj, elboIterStep)
             if nargin < 2
@@ -139,21 +137,23 @@ classdef GFA < handle
             end
 
             elboVals = -Inf(1, obj.maxIter);
-            % When elboIterStep ~= 1, indexing into elbo array is not done
+            % [NOTE] When elboIterStep ~= 1, indexing into elbo array is not done
             % using 'iter'; iter / elboIterStep + 1, but having independent
             % counter is cleaner; '+ 1' because we compute elbo in the
             % first iteration.
             elboIdx = 1;
 
             for it = 1:obj.maxIter
-                obj.removeFactors(it);
-                obj.qWUpdate(it);
+
                 obj.qZUpdate();
+                obj.qWUpdate(it);
+                % obj.qZUpdate();
                 % if it > 0
                 %     obj.updateRotation();
                 % end  
                 obj.qAlphaUpdate();
                 obj.qTauUpdate();
+                obj.removeFactors(it);
 
                 if it ~= 1 && mod(it, elboIterStep) ~= 0
                     continue;
@@ -162,15 +162,15 @@ classdef GFA < handle
                 currElbo = obj.computeELBO();
                 elboVals(elboIdx) = currElbo;
 
-                if Constants.DEBUG
+                if GFA.SETTINGS.DEBUG
                     if elboIdx ~= 1
                         disp(['======= ELBO increased by: ', num2str(currElbo - elboVals(elboIdx - 1))]);
                     end
                 end
 
                 % ELBO has to increase from iteration to iteration
-                if elboIdx ~= 1 && currElbo - elboVals(elboIdx - 1) < 1e-12
-                    fprintf(2, 'ELBO decreased in iteration %d\n!!!', it);
+                if elboIdx ~= 1 && currElbo < elboVals(elboIdx - 1)
+                    fprintf(2, 'ELBO decreased in iteration %d by %f\n!!!', it, abs(currElbo - elboVals(elboIdx - 1)));
                 end 
 
                 % Check for convergence
@@ -180,48 +180,12 @@ classdef GFA < handle
                     break;
                 end
                 elboIdx = elboIdx + 1;
+
+                if it == obj.maxIter
+                    fprintf(2, 'Model did not converge in %d\n!!!', obj.maxIter);
+                end
             end
         end
-        % 
-        % function [elboVals, it] = fit(obj)
-        %     elboVals = -Inf(1, obj.maxIter);
-        % 
-        % 
-        %     for it = 1:obj.maxIter
-        %         obj.removeFactors(it);
-        %         obj.qWUpdate(it);
-        %         obj.qZUpdate();
-        %         % if it > 0
-        %         %     obj.updateRotation();
-        %         % end  
-        %         obj.qAlphaUpdate();
-        %         obj.qTauUpdate();
-        % 
-        %         currElbo = obj.computeELBO();
-        % 
-        %         % resArr{it} = res;
-        % 
-        %         % CHECK: ELBO has to increase from iteration to iteration
-        %         if it ~= 1 && currElbo < elboVals(it - 1)
-        %             fprintf(2, 'ELBO decreased in iteration %d\n', it);
-        %         end 
-        % 
-        %         elboVals(it) = currElbo;
-        % 
-        %         if it ~= 1
-        %             disp(['======= ELBO increased in iteration ', num2str(it), ' by: ', ...
-        %                 num2str(currElbo - elboVals(it - 1))]);
-        %         end
-        % 
-        %         % Check for convergence
-        %         if it ~= 1 && abs(currElbo - elboVals(it - 1)) / abs(currElbo) < obj.tol
-        %             disp(['Convergence at iteration: ', num2str(it)]);
-        %             elboVals = elboVals(1:it); % cut the -Inf values at the end
-        % 
-        %             break;
-        %         end
-        %     end
-        % end
 
         function elbo = computeELBO(obj)
             elbo = 0;
@@ -237,10 +201,12 @@ classdef GFA < handle
 
 
 
+
+
         %% Additional methods
         function obj = removeFactors(obj, it, threshold)
             if nargin < 3
-                threshold = Constants.LATENT_FACTORS_THRESHOLD;
+                threshold = GFA.SETTINGS.LATENT_FACTORS_THRESHOLD;
             end
             % Calculate the average of the square of elements for each row of Z
             avgSquare = mean(obj.Z.E.^2, 2);
@@ -266,6 +232,10 @@ classdef GFA < handle
             end
         end
     
+
+
+
+
         %% Getters
         function value = get.D(obj)
             value = zeros(obj.M, 1);

@@ -1,4 +1,4 @@
-classdef BPCA < handle
+classdef BPCA_v2 < handle
     properties 
         view            % ViewHandler
         K               % Number of latent dimensions/principal components
@@ -15,7 +15,7 @@ classdef BPCA < handle
                         % representing W as a size D container in a row
                         % format.
 
-        alpha           % [K x 1]   GammaContainer         [size: K]
+        alpha           % [scalar]  Gamma                  [scalar]
         tau             % [scalar]  Gamma                  [scalar]
 
         % Optimization parameters
@@ -27,14 +27,10 @@ classdef BPCA < handle
         N   % Number of observations/latent variables
         D   % Dimensionality
     end
-
-    properties(Access = private, Constant)
-        SETTINGS = ModelSettings.getInstance();
-    end
     
     methods
-        function obj = BPCA(X, W_init, maxIter, tol)
-            % Optional parameters: W_init, maxIter, tol
+        function obj = BPCA_v2(X, maxIter, tol)
+            % Optional parameters: maxIter, tol
             if nargin < 1
                 error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
             end
@@ -48,40 +44,47 @@ classdef BPCA < handle
             obj.K = obj.D - 1;
 
             % Set default values
-            obj.maxIter = BPCA.SETTINGS.DEFAULT_MAX_ITER;
-            obj.tol = BPCA.SETTINGS.DEFAULT_TOL;
-            muWInit = randn(obj.K, obj.D);
+            obj.maxIter = Constants.DEFAULT_MAX_ITER;
+            obj.tol = Constants.DEFAULT_TOL;
 
             if nargin > 1
-                muWInit = W_init'; % mean of W is stored in columns even thought cols = false for obj.W
+                obj.maxIter = maxIter;
                 if nargin > 2
-                    obj.maxIter = maxIter;
-                    if nargin > 3
-                        obj.tol = tol;
-                    end
+                    obj.tol = tol;
                 end
             end
 
             %% Model setup and initialization
+            initZMu = randn(obj.K, 1); %zeros(obj.K, 1);%  randn(obj.K, 1);
+
             %                         type, size_, cols, dim,     mu, cov, priorPrec
-            obj.Z = GaussianContainer("DS", obj.N, true, obj.K, zeros(obj.K, 1));
+            obj.Z = GaussianContainer("DS", obj.N, true, obj.K, initZMu);
 
             %                  dim, mu,    cov,  priorPrec
             obj.mu = Gaussian(obj.D, 0, eye(obj.D), 10^3);
 
-            %                           type, size_, a, b, prior
-            obj.alpha = GammaContainer("SD", obj.K);
+            alphaPrior = Gamma(Constants.DEFAULT_GAMMA_A, Constants.DEFAULT_GAMMA_B);
+            obj.alpha = Gamma(alphaPrior);
+            
+            % % Use PPCA result as an initial point
+            % [W_PPCA, sigmaSq] = PPCA(obj.view.X', obj.D - 1);
             
             %                         type, size_, cols,   dim,   mu, cov, priorPrec
-            obj.W = GaussianContainer("DS", obj.D, false, obj.K, muWInit);
+            obj.W = GaussianContainer("DS", obj.D, false, obj.K);
             
-            %
-            tauPrior = Gamma(BPCA.SETTINGS.DEFAULT_GAMMA_A, BPCA.SETTINGS.DEFAULT_GAMMA_B);
+            tauPrior = Gamma(Constants.DEFAULT_GAMMA_A, Constants.DEFAULT_GAMMA_B);
             obj.tau = Gamma(tauPrior);
 
-            % Init model
+            % Model initialization - second part
+            % The first update equation is for W, so we need to initialize
+            % everything that is used in those two equations and those
+            % initilizations are given below.
+            %   obj.tau.expInit
+            %   obj.alpha.ExpInit
+            %   obj.mu.expInit
+            % ----------------------------------------------------------------
             obj.tau.setExpInit(10);
-            obj.alpha.setExpInit(repmat(1e2, obj.K, 1));
+            obj.alpha.setExpInit(1e3);
             obj.mu.setExpInit(randn(obj.D, 1));
 
             % Performed only once
@@ -93,7 +96,7 @@ classdef BPCA < handle
         %% Update methods
         function obj = qConstantUpdates(obj)
             % alpha.a
-            obj.alpha.updateAllDistributionsA(obj.alpha.prior.a + obj.D/2);
+            obj.alpha.updateA(obj.alpha.prior.a + (obj.K * obj.D)/2);
             % tau.a
             obj.tau.updateA(obj.tau.prior.a + (obj.N * obj.D)/2);
         end
@@ -115,7 +118,7 @@ classdef BPCA < handle
             tauExp = Utility.ternary(it == 1, obj.tau.getExpInit(), obj.tau.E);
             muExp = Utility.ternary(it == 1, obj.mu.getExpInit(), obj.mu.E);
 
-            covNew = Utility.matrixInverse(diag(alphaExp) + tauExp * obj.Z.E_XXt);
+            covNew = Utility.matrixInverse(alphaExp * eye(obj.K) + tauExp * obj.Z.E_XXt);
             muNew = tauExp * covNew * obj.Z.E * (obj.view.X' - muExp');
             
             obj.W.updateDistributionsParameters(muNew, covNew);
@@ -123,8 +126,8 @@ classdef BPCA < handle
 
 
         function obj = qAlphaUpdate(obj)
-            obj.alpha.updateAllDistributionsB(obj.alpha.prior.b + ...
-                1/2 * obj.W.E_SNC);
+            obj.alpha.updateB(obj.alpha.prior.b + ...
+                1/2 * sum(obj.W.E_SNC));
         end
 
 
@@ -167,40 +170,39 @@ classdef BPCA < handle
             elboIdx = 1;
             
             for it = 1:obj.maxIter
-                obj.qZUpdate(it);
                 obj.qWUpdate(it);
                 obj.qMuUpdate();
+                obj.qZUpdate(it);
+            
+                
                 obj.qAlphaUpdate();
                 obj.qTauUpdate();
 
-                if it ~= 1 && mod(it, elboIterStep) ~= 0
-                    continue;
-                end
+                % if it ~= 1 && mod(it, elboIterStep) ~= 0
+                %     continue;
+                % end
 
-                currElbo = obj.computeELBO();
-                elboVals(elboIdx) = currElbo;
-                
-                if BPCA.SETTINGS.DEBUG
-                    if elboIdx ~= 1
-                        disp(['======= ELBO increased by: ', num2str(currElbo - elboVals(elboIdx - 1))]);
-                    end
-                end
-
-                % ELBO has to increase from iteration to iteration
-                if elboIdx ~= 1 && currElbo < elboVals(elboIdx - 1)
-                    fprintf(2, 'ELBO decreased in iteration %d by %f\n!!!', it, abs(currElbo - elboVals(elboIdx - 1)));
-                end 
-
-                % Check for convergence
-                if elboIdx ~= 1 && abs(currElbo - elboVals(elboIdx - 1)) / abs(currElbo) < obj.tol
-                    disp(['Convergence at iteration: ', num2str(it)]);
-                    elboVals = elboVals(1:elboIdx); % cut the -Inf values at the end
-                    break;
-                end
-                elboIdx = elboIdx + 1;
-                if it == obj.maxIter
-                    fprintf(2, 'Model did not converge in %d\n!!!', obj.maxIter);
-                end
+                % currElbo = obj.computeELBO();
+                % elboVals(elboIdx) = currElbo;
+                % 
+                % if Constants.DEBUG
+                %     if elboIdx ~= 1
+                %         disp(['======= ELBO increased by: ', num2str(currElbo - elboVals(elboIdx - 1))]);
+                %     end
+                % end
+                % 
+                % % ELBO has to increase from iteration to iteration
+                % if elboIdx ~= 1 && currElbo < elboVals(elboIdx - 1)
+                %     fprintf(2, 'ELBO decreased in iteration %d\n!!!', it);
+                % end 
+                % 
+                % % Check for convergence
+                % if elboIdx ~= 1 && abs(currElbo - elboVals(elboIdx - 1)) / abs(currElbo) < obj.tol
+                %     disp(['Convergence at iteration: ', num2str(it)]);
+                %     elboVals = elboVals(1:elboIdx); % cut the -Inf values at the end
+                %     break;
+                % end
+                % elboIdx = elboIdx + 1;
             end
         end
         

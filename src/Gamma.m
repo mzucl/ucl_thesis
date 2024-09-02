@@ -12,6 +12,10 @@ classdef Gamma < handle
         b
         prior
     end
+
+    properties(Access = private, Constant)
+        SETTINGS = ModelSettings.getInstance();
+    end
     
     properties (Access = private)
         expInit % Explicit expectation initialization
@@ -120,8 +124,8 @@ classdef Gamma < handle
         %%
         function obj = Gamma(a, b, prior)
             % Default param values
-            obj.a = Constants.DEFAULT_GAMMA_A;
-            obj.b = Constants.DEFAULT_GAMMA_B;
+            obj.a = Gamma.SETTINGS.DEFAULT_GAMMA_A;
+            obj.b = Gamma.SETTINGS.DEFAULT_GAMMA_B;
             obj.prior = NaN;
 
             switch nargin
@@ -145,7 +149,7 @@ classdef Gamma < handle
                     obj.updateParameters(a, b);
 
                     if nargin == 3 % prior
-                        if Constants.VALIDATE && ~Utility.isNaNOrInstanceOf(prior, 'Gamma')
+                        if Gamma.SETTINGS.VALIDATE && ~Utility.isNaNOrInstanceOf(prior, 'Gamma')
                             error(['##### ERROR IN THE CLASS ' class(obj) ': Invalid prior parameter.']);
                         end
                         obj.prior = prior.copy();
@@ -160,7 +164,7 @@ classdef Gamma < handle
 
         %% Update methods
         function obj = updateParameters(obj, a, b)
-            if Constants.VALIDATE
+            if Gamma.SETTINGS.VALIDATE
                 if nargin < 3
                     error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
                 end
@@ -180,7 +184,7 @@ classdef Gamma < handle
         end
         
         function obj = updateA(obj, a)
-            if Constants.VALIDATE
+            if Gamma.SETTINGS.VALIDATE
                 if nargin < 2
                     error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
                 end
@@ -199,7 +203,7 @@ classdef Gamma < handle
         end
 
         function obj = updateB(obj, b)
-            if Constants.VALIDATE
+            if Gamma.SETTINGS.VALIDATE
                 if nargin < 2
                     error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
                 end
@@ -221,7 +225,7 @@ classdef Gamma < handle
         
         %% Setters
         function obj = setExpInit(obj, value)
-            if Constants.VALIDATE && value <= 0
+            if Gamma.SETTINGS.VALIDATE && value <= 0
                 error(['##### ERROR IN THE CLASS ' class(obj) ': Expectation is a strictly positive number.']);
             end
             obj.expInit = value;

@@ -6,3 +6,6 @@ figures/
 
 # Ignore any .asv files
 *.asv
+
+# Ignore any .mat files
+*.mat

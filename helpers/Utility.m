@@ -12,49 +12,16 @@
 %   isnan([]) -> returns elements wise isnan check!
 %%
 classdef Utility
+    properties (Constant)
+        SETTINGS = ModelSettings.getInstance();
+    end
+
+
+
+
+
     methods (Static)
-        function res = isSingleNumber(x)
-            res = isscalar(x) && isnumeric(x) && ~isnan(x);
-        end
-
-        % ismatrix(3) -> true
-        function res = isArray(x)
-            res = ~isscalar(x) && ismatrix(x) && numel(size(x)) == 2 && (size(x, 1) == 1 || size(x, 2) == 1);
-        end
-
-        function res = isMatrix(x)
-            res = ~isscalar(x) && ismatrix(x) && ~Utility.isArray(x);
-        end
-
-        % This will return true if the obj is NaN, a single instance of the
-        % class, or an array of instances of a class
-        function res = isNaNOrInstanceOf(obj, className)
-            res = isnumeric(obj) && isnan(obj) || Utility.areAllInstancesOf(obj, className);
-        end
-
-        % Built-in 'isnan' results in error for instances of a class
-        function res = isNaN(obj)
-            res = isnumeric(obj) && isnan(obj);
-        end
-
-        % Compare obj1 and obj2 that can be NaN or instances of a
-        % class
-        function res = areEqual(obj1, obj2)
-            if Utility.isNaN(obj1) && Utility.isNaN(obj2)
-                res = true;
-            elseif ~Utility.isNaN(obj1) && Utility.isNaN(obj2) || ...
-                    Utility.isNaN(obj1) && ~Utility.isNaN(obj2)
-                res = false;
-            else 
-                res = obj1 == obj2;
-            end
-        end
-
-        % Returns true even if arr is just a single instance of the class
-        function res = areAllInstancesOf(arr, className)
-            res = all(arrayfun(@(x) isa(x, className), arr));
-        end
-        
+        %% General
         % Check if the array is monotonically increasing
         function isIncreasing = isMonotonicIncreasing(arr)
             isIncreasing = all(diff(arr) > 0);
@@ -71,8 +38,10 @@ classdef Utility
         % Optimized version that doesn't evaluate the unnecessary value,
         % either 'valTrue' or 'valFalse' depending on the 'cond'
         % Also, slower compared to 'ternary' for simple stuff, so it should
-        % be used just in case both true and false statements can't be
-        % evaluated.
+        % be used just in case both true and false statements can't/shouldn't be
+        % evaluated or outside loops.
+        %
+        % EXAMPLE: Utility.ternaryOpt(isscalar(priors), @() GaussianDistribution(priors), @() GaussianDistribution(priors(i)));
         function result = ternaryOpt(cond, valTrueFunc, valFalseFunc)
             if cond
                 result = valTrueFunc();
@@ -83,17 +52,102 @@ classdef Utility
 
 
 
-        %% Algebra
+
+
+        %% Check type
+        function res = isSingleNumber(x)
+            res = isscalar(x) && isnumeric(x) && ~isnan(x);
+        end
+
+        % ismatrix(3) -> true
+        function res = isArray(x)
+            res = ~isscalar(x) && ismatrix(x) && numel(size(x)) == 2 && (size(x, 1) == 1 || size(x, 2) == 1);
+        end
+
+        function res = isMatrix(x)
+            res = ~isscalar(x) && ismatrix(x) && ~Utility.isArray(x);
+        end
+
+        % Built-in 'isnan' results in error for instances of a class
+        function res = isNaN(obj)
+            res = isnumeric(obj) && isnan(obj);
+        end
+
+        % This will return true if the obj is NaN, a single instance of the
+        % class, or an array of instances of a class
+        function res = isNaNOrInstanceOf(obj, className)
+            res = isnumeric(obj) && isnan(obj) || Utility.areAllInstancesOf(obj, className);
+        end
+
+        % Returns true even if arr is just a single instance of the class
+        function res = areAllInstancesOf(arr, className)
+            res = all(arrayfun(@(x) isa(x, className), arr));
+        end
+
+        % Compare obj1 and obj2 that can be NaN or instances of a class
+        % (that overloads '==')
+        function res = areEqual(obj1, obj2)
+            if Utility.isNaN(obj1) && Utility.isNaN(obj2) % both are 'NaN'
+                res = true;
+            elseif xor(Utility.isNaN(obj1), Utility.isNaN(obj2)) % one is 'NaN', the other is not
+                res = false;
+            else 
+                res = obj1 == obj2;
+            end
+        end
+
+        
+
+        
+
+        %% Tests with matrices
         function res = isSquareMatrix(matrix)
             [rows, cols] = size(matrix);
             res = (rows == cols);
         end
 
         function res = isSymmetricMatrix(matrix)
-            res = Utility.isSquareMatrix(matrix) && isequal(matrix, matrix.');
+            res = Utility.isSquareMatrix(matrix) && isequal(matrix, matrix.'); % TODO (high): consider using norm(..., 'fro') for this check
         end
 
+        function res = isSingular(matrix)
+            res = ~Utility.isSquareMatrix(matrix) || Utility.ternary(det(matrix) == 0, true, false);
+        end
+ 
+        function res = isRotationMatrix(matrix)
+            if ~Utility.isSquareMatrix(matrix)
+                res = false;
+                return;
+            end
+            
+            % Orthogonality check: R' * R should be close to the identity matrix
+            shouldBeIdentity = matrix' * matrix;
+            identityMatrix = eye(rows);
+
+            orthoCheck = norm(shouldBeIdentity - identityMatrix, 'fro') < Constants.TOL;
+            
+            % Determinant check: det(R) should be close to 1
+            detCheck = abs(det(matrix) - 1) < Constants.TOL;
+
+            res = orthoCheck && detCheck;
+        end
+        
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        % [NOTE] In general matrix doesn't need to be symmetric to be PD or
+        % PSD, but we use these tests for the covariance matrices are need
+        % to be symmetric!
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        % Cholesky Decomposition: A = LL^T
+        % 1. Square
+        % 2. Symmetric
+        % 3. Positive Definite
+        %
+        % Matrix cannot be positive definite if it is not symmetric!
         function res = isPositiveDefinite(matrix)
+            if ~Utility.isSymmetricMatrix(matrix)
+                res = false;
+                return;
+            end
             % Try to perform Cholesky decomposition
             try
                 chol(matrix);
@@ -107,80 +161,74 @@ classdef Utility
             end
         end
 
-        function res = isRotationMatrix(R)
-            % Check if the matrix is square
-            [rows, cols] = size(R);
-            if rows ~= cols
+        function res = isPositiveSemiDefinite(matrix)
+            if ~Utility.isSymmetricMatrix(matrix)
                 res = false;
                 return;
             end
             
-            % Orthogonality check: R' * R should be close to the identity matrix
-            shouldBeIdentity = R' * R;
-            identityMatrix = eye(rows);
-            orthoCheck = norm(shouldBeIdentity - identityMatrix, 'fro') < 1e-6;
-            
-            % Determinant check: det(R) should be close to 1
-            detCheck = abs(det(R) - 1) < 1e-6;
-
-            res = orthoCheck && detCheck;
-        end
-
-        function res = isSemiPositiveDefinite(matrix)
-            if Constants.VALIDATE && ~Utility.isSquareMatrix(matrix)
-                error(['##### ERROR IN THE CLASS ' mfilename('class') ': Input must be a square matrix.']);
-            end
-  
             eigenvalues = eig(matrix);
             
             % Check if all eigenvalues are non-negative
-            res = all(eigenvalues >= -1e-10);
+            res = all(eigenvalues > 0);
         end
 
         function res = isValidCovarianceMatrix(matrix)
-            % res = Utility.isSymmetricMatrix(matrix) && Utility.isSemiPositiveDefinite(matrix);
-            res = Utility.isSemiPositiveDefinite(matrix);
+            res = Utility.isPositiveSemiDefinite(matrix);
         end
 
-        function [isDiagonal, diagElementsOrValue] = checkAndExtractDiagonal(A)
-            isDiagonal = isequal(A, diag(diag(A)));
+
+
+
+
+        %% Matrix inverse
+        % For these two methods, the VALIDATE flag is checked within the methods
+        % themselves rather than at the point of invocation. This is done for 
+        % convenience, especially since these methods are often called within loops.
+        function invMatrix = choleskyInverse(matrix)
+            if Utility.SETTINGS.VALIDATE 
+                if Utility.isSingular(matrix)
+                    error(['##### ERROR IN THE CLASS ' mfilename('class') ': Matrix must be non-singular for choleskyInverse.']);
+                elseif ~Utility.isSymmetricMatrix(matrix)
+                    error(['##### ERROR IN THE CLASS ' mfilename('class') ': Matrix must be symmetric for choleskyInverse.']);
             
-            if isDiagonal
-                diagElements = diag(A);
-
-                diagElementsOrValue = Utility.ternary(all(diagElements == diagElements(1)), ...
-                    diagElements(1), diagElements);
-            else
-                diagElementsOrValue = [];
-            end
-        end
-
-        function invA = choleskyInverse(A)
-            if Constants.VALIDATE && ~Utility.isSquareMatrix(A)
-                error(['##### ERROR IN THE CLASS ' mfilename('class') ': Matrix must be square for inversion.']);
+                end
             end
             
             % Perform Cholesky decomposition
             try
-                L = chol(A, 'lower');
+                L = chol(matrix, 'lower');
             catch
-                error(['##### ERROR IN THE CLASS ' mfilename('class') ': Matrix is not positive definite.']);
+                if strcmp(e.identifier, 'MATLAB:posdef')
+                    error(['##### ERROR IN THE CLASS ' mfilename('class') ': Matrix is not positive definite.']);
+                else
+                    rethrow(e);
+                end
             end
             
             invL = inv(L);
-            invA = invL' * invL;
+            invMatrix = invL' * invL;
         end
 
-        % Compute the inverse of matrix A using LU decomposition
-        function invA = matrixInverse(A)
-            if Constants.VALIDATE && ~Utility.isSquareMatrix(A)
-                error(['##### ERROR IN THE CLASS ' mfilename('class') ': Matrix must be square for inversion.']);
+        % LU Decomposition: A = LU
+        % 1. Square
+        % 2. Non-Singular
+        % 3. Not Necessarily Symmetric or Positive Definite (unlike
+        % Cholesky decomposition)
+        function invMatrix = matrixInverse(matrix)
+            if Utility.SETTINGS.VALIDATE && Utility.isSingular(matrix)
+                    error(['##### ERROR IN THE CLASS ' mfilename('class') ': Matrix must be non-singular for matrixInverse.']);
             end
-            
-            [L, U, P] = lu(A);
-            invA = U \ (L \ P);
+
+            [L, U, P] = lu(matrix);
+            invMatrix = U \ (L \ P);
         end
 
+
+
+
+
+        %% Generate different matrices
         function A = generateRandomSPDMatrix(n)
             R = randn(n);
 
@@ -209,10 +257,39 @@ classdef Utility
             R = Q;
         end
 
+        function matrix = generateRandomBinaryMatrix(m, n)
+            matrix = randi([0, 1], m, n);
+        end
+    
+    
+
+
+
+        %% Misc
         function logDetA = logDetUsingCholesky(A)
-            L = chol(A, 'lower');
+            % Perform Cholesky decomposition
+            try
+                L = chol(A, 'lower');
+            catch
+                error(['##### ERROR IN THE CLASS ' mfilename('class') ': Matrix is not positive definite.']);
+            end
 
             logDetA = 2 * sum(log(diag(L)));
+        end
+
+        % Check if matrix is diagonal 'isDiagonal' and if is returns the diagonal elements
+        % (element in case matrix is a scalar multiple of the identity matrix)
+        function [isDiagonal, diagElementsOrValue] = checkAndExtractDiagonal(A)
+            isDiagonal = isequal(A, diag(diag(A)));
+            
+            if isDiagonal
+                diagElements = diag(A);
+
+                diagElementsOrValue = Utility.ternary(all(diagElements == diagElements(1)), ...
+                    diagElements(1), diagElements);
+            else
+                diagElementsOrValue = [];
+            end
         end
     end
 end

@@ -6,13 +6,14 @@ function data = generateTwoViews()
 
     % Latent factors
     K = 4;
-    Z = zeros(N, K);
-    for i = 1:N
-        Z(i,1) = sin((i)/(N/20));
-        Z(i,2) = cos((i)/(N/20));
-        Z(i,3) = 2 * ((i)/N-0.5); 
-    end
-    Z(:,4) = normrnd(0, 1, [N, 1]);          
+    Z = zeros(K, N);
+
+    x = 1:N;
+
+    Z(1, :) = sin(x / (N/20));
+    Z(2, :) = cos(x / (N/20));
+    Z(3, :) = 2 * (x/N - 0.5); 
+    Z(4, :) = normrnd(0, 1, [N, 1]);          
     
     % Specify noise precisions manually
     tau = cell(1, length(D));
@@ -21,15 +22,12 @@ function data = generateTwoViews()
     
     % Specify alphas manually
     alpha = zeros(M, K);
-    alpha(1,:) = [1e6, 1, 1e6, 1];
-    alpha(2,:) = [1, 1, 1, 1e6];
-    % alpha(1,:) = [1, 1, 1e6];
-    % alpha(2,:) = [1, 1, 1]; 
+    alpha(1, :) = [1e6, 1, 1e6, 1];
+    alpha(2, :) = [1,   1, 1,   1e6];
     
-    % W and X
-    W = cell(1, length(D));
-    X_train = cell(1, length(D));
-    X_test = cell(1, length(D));
+    W = cell(1, M);
+    X_train = cell(1, M);
+    X_test = cell(1, M);
     
     for i = 1:length(D)
         W{i} = zeros(D(i), K);

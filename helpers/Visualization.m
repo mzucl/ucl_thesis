@@ -45,50 +45,60 @@ classdef Visualization
             end
         end
 
-        function hintonDiagramPlot(arrW, folderName, figName)
+        function hintonDiagramPlot(arrW, folderName, figName, saveFig)
+            % TODO (high): Change this, only 'arrW' should be non-optional
+            % parameter, remove saveFig and switch order of figName and
+            % folderName (default to current folder);
             if nargin < 3
                 error(['##### ERROR IN THE CLASS ' mfilename('class') ': Not enough input arguments provided.']);
             end
+            if nargin < 4
+                saveFig = false;
+            end
+
             hfig = figure;
 
-            ax1 = subplot(1, 2, 1);
-            Visualization.hintonDiagram(arrW{1}, ax1);
+            numPlots = length(arrW);
 
-            ax2 = subplot(1, 2, 2);
-            Visualization.hintonDiagram(arrW{2}, ax2);
+            for i = 1:numPlots
+                ax = subplot(1, numPlots, i);
+                Visualization.hintonDiagram(arrW{i}, ax);
+            end
 
             width = 20;
-            ration = 0.65; % height/weight ratio
+            ratio = 0.65; % height/weight ratio
             set(findall(hfig, '-property','FontSize'),'FontSize', 17);
             % set(findall(hfig, '-property', 'Box'), 'Box', 'off');
             set(findall(hfig, '-property', 'Interpreter'), 'Interpreter', 'latex');
             set(findall(hfig, '-property', 'TickLabelInterpreter'), 'TickLabelInterpreter', 'latex');
             
-            set(hfig, 'Units', 'centimeters', ...
-                      'Position', [3 3 width ration * width]);
-            
-            pos = get(hfig, 'Position');
-            
-            set(hfig, 'PaperPositionMode', 'Auto', ...
-                      'PaperUnits', 'centimeters', ...
-                      'PaperSize', [pos(3), pos(4)]);
-
-            % Save figure
-            if ~exist(folderName, 'dir')
-                mkdir(folderName);
+            if saveFig
+                set(hfig, 'Units', 'centimeters', ...
+                          'Position', [3 3 width ratio * width]);
+                
+                pos = get(hfig, 'Position');
+                
+                set(hfig, 'PaperPositionMode', 'Auto', ...
+                          'PaperUnits', 'centimeters', ...
+                          'PaperSize', [pos(3), pos(4)]);
+    
+                % Save figure
+                if ~exist(folderName, 'dir')
+                    mkdir(folderName);
+                end
+    
+                % Export to .pdf
+                figNamePDF = [figName, '.pdf'];
+                filePath = fullfile(folderName, figNamePDF);
+                set(gcf, 'PaperPositionMode', 'auto');
+                exportgraphics(hfig, filePath, 'ContentType', 'vector');
+    
+                % Export to .png
+                figNamePNG = [figName, '.png'];
+                filePath = fullfile(folderName, figNamePNG);
+                set(gcf, 'PaperPositionMode', 'auto');
+                exportgraphics(hfig, filePath, 'Resolution', 300);
             end
-
-            % Export to .pdf
-            figNamePDF = [figName, '.pdf'];
-            filePath = fullfile(folderName, figNamePDF);
-            set(gcf, 'PaperPositionMode', 'auto');
-            exportgraphics(hfig, filePath, 'ContentType', 'vector');
-
-            % Export to .png
-            figNamePNG = [figName, '.png'];
-            filePath = fullfile(folderName, figNamePNG);
-            set(gcf, 'PaperPositionMode', 'auto');
-            exportgraphics(hfig, filePath, 'Resolution', 300);
         end
 
         function plotStructVariables(resArr, offset)

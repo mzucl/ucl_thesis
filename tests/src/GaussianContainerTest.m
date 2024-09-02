@@ -1,4 +1,8 @@
 classdef GaussianContainerTest < matlab.unittest.TestCase
+    properties(Access = private, Constant)
+        SETTINGS = ModelSettings.getInstance();
+    end
+
     methods (Test)
         %% Constructors
         % 'mu' and 'cov' don't depend on 'cols'
@@ -282,7 +286,7 @@ classdef GaussianContainerTest < matlab.unittest.TestCase
             obj = GaussianContainer(type, size_, cols, dim, mu, cov);
 
             testCase.verifyEqual(obj.mu, mu);
-            testCase.verifyEqual(obj.priorPrec, Constants.DEFAULT_GAUSS_PRECISION);
+            testCase.verifyEqual(obj.priorPrec, GaussianContainerTest.SETTINGS.DEFAULT_GAUSS_PRECISION);
             
             for i = 1:size_
                 testCase.verifyEqual(obj.cov(:, :, i), cov);
