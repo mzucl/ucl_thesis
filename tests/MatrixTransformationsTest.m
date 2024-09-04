@@ -1,6 +1,6 @@
 classdef MatrixTransformationsTest < matlab.unittest.TestCase
     methods (Test)
-        %% Code transformations for BPCA model
+        %% Code transformations for the BPCA model
         % Sum in E[ln p(X | Z, W, mu, tau)]
         function testIdentityBPCA1(testCase)
             % Setup
@@ -28,7 +28,7 @@ classdef MatrixTransformationsTest < matlab.unittest.TestCase
 
 
 
-        %% Code transformations for GFA model 
+        %% Code transformations for the GFA model 
         % ln q(W) terms when we expand the quadratic form
         function testIdentityGFA1_1(testCase)
             % Setup
@@ -60,7 +60,6 @@ classdef MatrixTransformationsTest < matlab.unittest.TestCase
             K = 10;
             N = 50;
 
-            X = Utility.generateRandomIntMatrix(D, N);
             W = Utility.generateRandomIntMatrix(D, K);
             T = diag(diag(Utility.generateRandomIntMatrix(D, D)));
             Z = Utility.generateRandomIntMatrix(K, N);
@@ -82,7 +81,6 @@ classdef MatrixTransformationsTest < matlab.unittest.TestCase
             % Setup
             D = 20;
             K = 10;
-            N = 50;
             W = Utility.generateRandomIntMatrix(D, K);
             alpha = Utility.generateRandomIntMatrix(K, 1);
 
@@ -146,5 +144,58 @@ classdef MatrixTransformationsTest < matlab.unittest.TestCase
 
             testCase.verifyEqual(sum1, sum2);
         end  
+    
+    
+
+
+
+        %% Code transformations for the new GFA model (spherical noise)
+        % ln q(W) terms when we expand the quadratic form (term 3 is the
+        % same as in the diagonal noise GFA model)
+        function testIdentityGFANew1_1(testCase)
+            % Setup
+            D = 20;
+            K = 10;
+            N = 50;
+
+            X = Utility.generateRandomIntMatrix(D, N);
+            W = Utility.generateRandomIntMatrix(D, K);
+            Z = Utility.generateRandomIntMatrix(K, N);
+            mu = Utility.generateRandomIntMatrix(D, 1);
+
+            sum1 = 0;
+            for n = 1:N
+                sum1 = sum1 + (X(:, n) - mu)' * W * Z(:, n);
+            end
+
+            sum2 = 0;
+            for d = 1:D
+                sum2 = sum2 + W(d, :) * Z * (X(d, :)' - mu(d) * ones(N, 1));
+            end
+
+            testCase.verifyEqual(sum1, sum2);
+        end
+
+        function testIdentityGFANew1_2(testCase)
+            % Setup
+            D = 20;
+            K = 10;
+            N = 50;
+
+            W = Utility.generateRandomIntMatrix(D, K);
+            Z = Utility.generateRandomIntMatrix(K, N);
+
+            sum1 = 0;
+            for n = 1:N
+                sum1 = sum1 + Z(:, n)' * (W' * W) * Z(:, n);
+            end
+
+            sum2 = 0;
+            for d = 1:D
+                sum2 = sum2 + W(d, :) * (Z * Z') * W(d, :)';
+            end
+
+            testCase.verifyEqual(sum1, sum2);
+        end
     end
 end
