@@ -5,7 +5,20 @@ classdef CodeVectorizationsTest < matlab.unittest.TestCase
             W = Utility.generateRandomIntMatrix(D, K);
             T = diag(diag(Utility.generateRandomIntMatrix(D, D)));
         end
+
+        % Generate view for the new GFA model: mu included, noise
+        % spherical;
+        function [X, W, mu, tau] = generateViewMatricesGFANew(D, N, K)
+            X = Utility.generateRandomIntMatrix(D, N);
+            W = Utility.generateRandomIntMatrix(D, K);
+            mu = Utility.generateRandomIntMatrix(D, 1);
+            tau = randi(15); % Drawn from Unif[1:15]
+        end
     end
+
+
+
+
     
     methods (Test)
         %% Code vectorization BPCA model
@@ -134,7 +147,7 @@ classdef CodeVectorizationsTest < matlab.unittest.TestCase
 
 
 
-        %% Code vectorization GFA model
+        %% Code vectorization for the GFA model
         % Vectorization for qZUpdate: mu
         function testIdentityGFAVectorization1(testCase)
             % Setup
@@ -160,6 +173,7 @@ classdef CodeVectorizationsTest < matlab.unittest.TestCase
                 testCase.verifyEqual(MU(:, n), mu);
             end
         end
+
 
         % Vectorization for qZUpdate: mu - full vectorization over the
         % views as well!
@@ -196,6 +210,7 @@ classdef CodeVectorizationsTest < matlab.unittest.TestCase
             end
         end
 
+
         % Vectorization for qWUpdate: mu
         function testIdentityGFAVectorization2_1(testCase)
             % Setup
@@ -222,6 +237,7 @@ classdef CodeVectorizationsTest < matlab.unittest.TestCase
                 testCase.verifyTrue(diffSqNorm < 1e-9);
             end
         end
+
 
         % Vectorization for qWUpdate: sigma
         % Step 1: Vectorize the equation with the inverse
@@ -266,7 +282,8 @@ classdef CodeVectorizationsTest < matlab.unittest.TestCase
             end
         end
     
-        % Vectorization for binary - Jaakkola bound
+
+        % Vectorization for binary - Jaakkola bound (SSHIBA approach)
         function testIdentityGFAVectorization3(testCase)
             % Setup
             D = 10; % View dimensions
@@ -292,40 +309,62 @@ classdef CodeVectorizationsTest < matlab.unittest.TestCase
             end
         end
 
-        % % Vectorization for qZUpdate: sigma
-        % function testIdentityGFAVectorization2(testCase)
-        %     % Setup
-        %     Ds = [5, 10, 12]; % View dimensions
-        %     K = 80;
-        %     N = 10000;
-        %     M = length(Ds);
-        % 
-        %     [X1, W1, T1] = CodeVectorizationsTest.generateViewMatrices(Ds(1), N, K);
-        %     [X2, W2, T2] = CodeVectorizationsTest.generateViewMatrices(Ds(2), N, K);
-        %     [X3, W3, T3] = CodeVectorizationsTest.generateViewMatrices(Ds(3), N, K);
-        % 
-        %     W = blkdiag(W1, W2, W3, W1, W2, W3, W1, W2, W3, W1, W2, W3, W1, W2, W3, W1, W2, W3);
-        %     T = blkdiag(T1, T2, T3, T1, T2, T3, T1, T2, T3, T1, T2, T3, T1, T2, T3, T1, T2, T3);
-        % 
-        %     % Vectorized code
-        %     tic;
-        %     temp = W' * T * W;
-        %     % sigmaZ_Vect = Utility.matrixInverse(eye(K) + temp(1:K, 1:K) + temp(K + 1:2 * K, K + 1:  2 * K) + ...
-        %     %     temp(2 * K + 1:end, 2 * K + 1:end));
-        % 
-        %     elapsedTime = toc;
-        %     fprintf('Elapsed time : %.4f seconds\n', elapsedTime);
-        % 
-        %     % Non-vectorized code
-        %     tic;
-        %     sigmaZ = Utility.matrixInverse(eye(K) + W1' * T1 * W1 + W2' * T2 * W2 + W3' * T3 * W3 + ...
-        %         W1' * T1 * W1 + W2' * T2 * W2 + W3' * T3 * W3 + W1' * T1 * W1 + W2' * T2 * W2 + W3' * T3 * W3 + ...
-        %         W1' * T1 * W1 + W2' * T2 * W2 + W3' * T3 * W3 + W1' * T1 * W1 + W2' * T2 * W2 + W3' * T3 * W3 + ...
-        %         W1' * T1 * W1 + W2' * T2 * W2 + W3' * T3 * W3);
-        %     elapsedTime = toc;
-        %     fprintf('Elapsed time : %.4f seconds\n', elapsedTime);
-        % 
-        %     % testCase.verifyEqual(sigmaZ, sigmaZ_Vect);
-        % end
+
+
+
+
+        %% Code vectorization for the new GFA model
+        % Vectorization for qZUpdate: mu
+        function testIdentityGFANewVectorization1(testCase)
+            % Setup
+            Ds = [5, 10, 12]; % View dimensions
+            K = 10;
+            N = 100;
+
+            
+            [X1, W1, mu1, tau1] = CodeVectorizationsTest.generateViewMatricesGFANew(Ds(1), N, K);
+            [X2, W2, mu2, tau2] = CodeVectorizationsTest.generateViewMatricesGFANew(Ds(2), N, K);
+            [X3, W3, mu3, tau3] = CodeVectorizationsTest.generateViewMatricesGFANew(Ds(3), N, K);
+
+            sigmaZ = Utility.generateRandomIntMatrix(K, K);
+            
+            % Vectorized code
+            MU = sigmaZ * (tau1 * W1' * (X1 - mu1) + tau2 * W2' * (X2 - mu2) + ...
+                tau3 * W3' * (X3 - mu3));
+
+            % Non-vectorized code
+            for n = 1:N
+                mu = tau1 * W1' * (X1(:, n) - mu1) + tau2 * W2' * (X2(:, n) - mu2) + ...
+                    tau3 * W3' * (X3(:, n) - mu3);
+                mu = sigmaZ * mu;
+
+                % Compare
+                testCase.verifyEqual(MU(:, n), mu);
+            end
+        end
+    
+        % Vectorization for qWUpdate: mu
+        function testIdentityGFANewVectorization2(testCase)
+            % Setup
+            D = 5; % View dimension
+            K = 10;
+            N = 100;
+
+            [X, ~, mu, tau] = CodeVectorizationsTest.generateViewMatricesGFANew(D, N, K);
+            Z = Utility.generateRandomIntMatrix(K, N);
+            
+            sigmaW = Utility.generateRandomIntMatrix(K, K);
+
+            % Vectorized code
+            MU = sigmaW * tau * Z * (X - mu)';
+
+            % Non-vectorized code
+            for d = 1:D
+                mu_Wd = sigmaW * tau * Z * (X(d, :)' - mu(d));
+
+                % Compare
+                testCase.verifyEqual(MU(:, d), mu_Wd);
+            end
+        end
     end
 end
