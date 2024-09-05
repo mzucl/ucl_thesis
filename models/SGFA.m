@@ -120,6 +120,12 @@ classdef SGFA < handle
             end
         end
 
+        function obj = qMuUpdate(obj)
+            for i = 1:obj.M
+                obj.views(i).qMuUpdate();
+            end
+        end
+
         function obj = qTauUpdate(obj)
             for i = 1:obj.M
                 obj.views(i).qTauUpdate();
@@ -145,8 +151,8 @@ classdef SGFA < handle
 
             for it = 1:obj.maxIter
                 obj.qZUpdate();
-                break;
                 obj.qWUpdate(it);
+                obj.qMuUpdate();
                 % obj.qZUpdate();
                 % if it > 0
                 %     obj.updateRotation();
@@ -189,11 +195,12 @@ classdef SGFA < handle
 
         function elbo = computeELBO(obj)
             elbo = 0;
-            for i = 1:obj.M
+            for m = 1:obj.M
                 % p
-                elbo = elbo + obj.views(i).getExpectationLnPX() + obj.views(i).getExpectationLnW() ...
-                    + obj.views(i).alpha.E_LnP + obj.views(i).T.E_LnP + obj.views(i).W.H ...
-                    + obj.views(i).alpha.H + obj.views(i).T.H;
+                view = obj.views(m);
+                elbo = elbo + view.getExpectationLnPX() + view.getExpectationLnW() ... % p(.)
+                    + view.alpha.E_LnP + view.mu.E_LnP + view.tau.E_LnP ... % p(.)
+                    + view.W.H + view.alpha.H + view.mu.H + view.tau.H; % q(.)
             end
 
             elbo = elbo + obj.Z.H + obj.Z.E_LnP;

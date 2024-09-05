@@ -15,23 +15,52 @@ settings = ModelSettings.getInstance();
 % settings.DEBUG = false;
 
 
+
 %% Generate data and train the model
 data = generateTwoViews();
 
 X1 = data.X_tr{1}; % [N x D1];
 X2 = data.X_tr{2}; % [N x D2]
 
-profile on;
+% Scale datasets
+% X1 = Datasets.standardScaler(X1);
+% X2 = Datasets.standardScaler(X2);
 
 K = 10;
-sgfaModel = SGFA({X1', X2'}, K);
-[elboVals, convIt] = sgfaModel.fit(10);
 
+stabilityRun = 20;
+modelSelectionIter = 10;
+convItAvg = 0;
 
-profile off;
-profile viewer;
+tic;
 
+for s = 1:stabilityRun 
+    maxElbo = -Inf;
+    bestW = NaN;
+    convIt = NaN;
 
+    for i = 1:modelSelectionIter
+        sgfaModel = SGFA({X1', X2'}, K);
+        [elboVals, it] = sgfaModel.fit(10);
+    
+        if elboVals(end) > maxElbo
+            maxElbo = elboVals(end);
+            bestModel = sgfaModel;
+            convIt = it;
+        end
+    end
+
+    convItAvg = convItAvg + convIt;
+    disp(['The best model converged in ', num2str(convIt), 'iterations.\n']);
+end
+
+elapsedTime = toc;
+fprintf('\n\n\nElapsed time: %.4f [s]\n', elapsedTime);
+fprintf('Average number of iterations: %.4f\n', convItAvg / stabilityRun);
+
+diary off; 
+
+% return;
 %% Visualize true and recovered latent factors
 % True factors
 trueNumOfFactors = size(data.Z, 2);
@@ -46,7 +75,7 @@ end
 sgtitle('True latent factors');
 
 % Recovered latent factors
-expZ = sgfaModel.Z.E;
+expZ = bestModel.Z.E;
 
 % Effective number of factors
 numEffFactors = size(expZ, 1);
@@ -63,24 +92,24 @@ sgtitle('Latent factors');
 
 
 %% Visualize loadings and alpha
-totalD = sum(sgfaModel.D); % Total number of dimensions
+totalD = sum(bestModel.D); % Total number of dimensions
 
 trueW = zeros(totalD, data.trueK); % True K
-estW = zeros(totalD, sgfaModel.K.Val);
-estAlpha = zeros(sgfaModel.K.Val, sgfaModel.M);
+estW = zeros(totalD, bestModel.K.Val);
+estAlpha = zeros(bestModel.K.Val, bestModel.M);
 
 d = 0;
-for m = 1:sgfaModel.M
-    Dm = sgfaModel.views(m).D;
+for m = 1:bestModel.M
+    Dm = bestModel.views(m).D;
     trueW(d + 1 : d + Dm, :) = data.W{m};
-    estW(d + 1 : d + Dm, :) = sgfaModel.views(m).W.E;
+    estW(d + 1 : d + Dm, :) = bestModel.views(m).W.E;
     d = d + Dm;
 
-    estAlpha(:, m) = sgfaModel.views(m).alpha.E;
+    estAlpha(:, m) = bestModel.views(m).alpha.E;
 end
 
-Visualization.plotLoadings(trueW, sgfaModel.D, 'True W');
-Visualization.plotLoadings(estW, sgfaModel.D, 'Estimated W');
+Visualization.plotLoadings(trueW, bestModel.D, 'True W');
+Visualization.plotLoadings(estW, bestModel.D, 'Estimated W');
 
 figure;
 ax1 = subplot(1, 2, 1);

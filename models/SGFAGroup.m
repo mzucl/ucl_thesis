@@ -60,8 +60,8 @@ classdef SGFAGroup < handle
             tauPrior = Gamma(SGFAGroup.SETTINGS.DEFAULT_GAMMA_A, SGFAGroup.SETTINGS.DEFAULT_GAMMA_B);
             obj.tau = Gamma(tauPrior);
 
-            %                         type, size_, cols,   dim,   mu, cov, priorPrec
-            obj.W = GaussianContainer("DD", obj.D, false, obj.K.Val, randn(obj.K.Val, obj.D));
+            %                         type, size_, cols,   dim,        mu, cov, priorPrec
+            obj.W = GaussianContainer("DS", obj.D, false, obj.K.Val, randn(obj.K.Val, obj.D));
 
             % Model initialization - second part
             % The first update equation is for W, so we need to initialize
@@ -104,11 +104,19 @@ classdef SGFAGroup < handle
             obj.alpha.updateAllDistributionsB(bNew);
         end
 
-        function obj = qTauUpdate(obj)
-            bNew = obj.tau.prior.b + 1/2 * diag( ...
-                obj.X.XXt - 2 * obj.W.E * obj.Z.E * obj.X.X' ...
-                + obj.W.E * obj.Z.E_XXt * obj.W.E');
+        function obj = qMuUpdate(obj)
+            covNew = (1/(obj.mu.priorPrec + obj.N * obj.tau.E)) * eye(obj.D);
+            muNew = obj.tau.E * covNew * (obj.X.X - obj.W.E * obj.Z.E) * ones(obj.N, 1);
+            
+            obj.mu.updateParameters(muNew, covNew);
+        end
 
+        function obj = qTauUpdate(obj)
+            bNew = obj.tau.prior.b + 1/2 * ( ...
+                trace(obj.X.X' * obj.X.X) - 2 * obj.mu.E_Xt * obj.X.X * ones(obj.N, 1) + ...
+                obj.N * obj.mu.E_XtX - 2 * trace(obj.W.E * obj.Z.E * (obj.X.X - obj.mu.E)') + ...
+                trace(obj.W.E_XtX * obj.Z.E_XXt));
+            
             obj.tau.updateB(bNew);
         end
     
@@ -121,11 +129,10 @@ classdef SGFAGroup < handle
         end
 
         function value = getExpectationLnPX(obj)
-            value = obj.N/2 * obj.tau.E_LnX - obj.N * obj.D/2 * log(2 * pi) - 1/2 * ...
-                obj.tau.E' * diag( ...
-                obj.X.XXt ...
-                - 2 * obj.W.E * obj.Z.E * obj.X.X' ...
-                + obj.W.E * obj.Z.E_XXt * obj.W.E');
+            value = (obj.N * obj.D)/2 * obj.tau.E_LnX - obj.N * obj.D/2 * log(2 * pi) - obj.tau.E/2 * ...
+                (trace(obj.X.X' * obj.X.X) - 2 * obj.mu.E_Xt * obj.X.X * ones(obj.N, 1) + ...
+                obj.N * obj.mu.E_XtX - 2 * trace(obj.W.E * obj.Z.E * (obj.X.X - obj.mu.E)') + ...
+                trace(obj.W.E_XtX * obj.Z.E_XXt));
         end
     end
 end
