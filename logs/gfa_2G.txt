@@ -1733,3 +1733,13 @@ ans =
     0.0598   -0.2216
    -0.0374   -0.0834
 
+imshow(gfaModel.views(1).W.E)
+figure
+imshow(gfaModel.views(1).W.E)
+close all
+figure
+imshow(gfaModel.views(1).W.E)
+close all
+figure
+imshow(gfaModel.views(2).W.E)
+save EEG_run

@@ -197,5 +197,75 @@ classdef MatrixTransformationsTest < matlab.unittest.TestCase
 
             testCase.verifyEqual(sum1, sum2);
         end
+    
+        % ln q(tau) first term when we expand the quadratic form
+        function testIdentityGFANew2_1(testCase)
+            % Setup
+            N = 50;
+            D = 20;
+
+            X = Utility.generateRandomIntMatrix(D, N);
+            mu = Utility.generateRandomIntMatrix(D, 1);
+
+            sum1 = 0;
+            for n = 1:N
+                sum1 = sum1 + (X(:, n) - mu)' * (X(:, n) - mu);
+            end
+
+            vect = trace(X' * X) - 2 * mu' * X * ones(N, 1) + N * (mu' * mu);
+
+            testCase.verifyEqual(sum1, vect);
+        end
+    
+        % ln q(tau) the whole expression
+        function testIdentityGFANew2_2(testCase)
+            % Setup
+            K = 10;
+            N = 50;
+            D = 20;
+
+            X = Utility.generateRandomIntMatrix(D, N);
+            W = Utility.generateRandomIntMatrix(D, K);
+            Z = Utility.generateRandomIntMatrix(K, N);
+            mu = Utility.generateRandomIntMatrix(D, 1);
+
+            sum1 = 0;
+            for n = 1:N
+                sum1 = sum1 + (X(:, n) - mu - W * Z(:, n))' * (X(:, n) - mu - W * Z(:, n));
+            end
+
+            vect = trace(X' * X) - 2 * mu' * X * ones(N, 1) + N * (mu' * mu) ...
+                - 2 * trace(W * Z * (X - mu)') + trace( ...
+                (W' * W) * (Z * Z'));
+
+            testCase.verifyEqual(sum1, vect);
+        end
+
+        % ln q(mu) the whole expression
+        function testIdentityGFANew3(testCase)
+            % Setup
+            K = 10;
+            N = 50;
+            D = 20;
+
+            X = Utility.generateRandomIntMatrix(D, N);
+            W = Utility.generateRandomIntMatrix(D, K);
+            Z = Utility.generateRandomIntMatrix(K, N);
+            mu = Utility.generateRandomIntMatrix(D, 1);
+            beta = randi(15);
+            tau = randi(100);
+
+            sum = 0;
+            for n = 1:N
+                sum = sum - 2 * mu' * X(:, n) + 2 * mu' * W * Z(:, n) + mu' * mu;
+            end
+
+            startEq = -tau/2 * sum - beta/2 * (mu' * mu);
+
+            endEq = -1/2 * mu' * (beta + N * tau) * eye(D) * mu + ...
+                mu' * (tau * X * ones(N,1) - tau * W * Z * ones(N, 1));
+
+            testCase.verifyEqual(startEq, endEq);
+        end
     end
 end

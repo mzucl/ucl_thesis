@@ -123,8 +123,7 @@ classdef BPCA < handle
 
 
         function obj = qAlphaUpdate(obj)
-            obj.alpha.updateAllDistributionsB(obj.alpha.prior.b + ...
-                1/2 * obj.W.E_SNC);
+            obj.alpha.updateAllDistributionsB(obj.alpha.prior.b + 1/2 * obj.W.E_SNC);
         end
 
 

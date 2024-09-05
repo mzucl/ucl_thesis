@@ -2,13 +2,13 @@
 % close all; clear; clc;
 % 
 % % Add folders to MATLAB path
-% addpath('src');
-% addpath('models');
-% addpath('helpers');
-% addpath(genpath('tests'))
-% addpath(genpath('experiments'))
-% addpath(genpath('figures'))
-% addpath('logs');
+addpath('src');
+addpath('models');
+addpath('helpers');
+addpath(genpath('tests'))
+addpath(genpath('experiments'))
+addpath(genpath('figures'))
+addpath('logs');
 % 
 % % Uncomment to run tests
 % testResults = runtests('tests');
