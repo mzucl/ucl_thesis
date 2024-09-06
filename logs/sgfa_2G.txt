@@ -35685,3 +35685,1114 @@ The best model converged in 2140iterations.\n
 
 Elapsed time: 521.1070 [s]
 Average number of iterations: 1732.5000
+======= ELBO increased by: 95437.6388
+======= ELBO increased by: 575.2686
+======= ELBO increased by: 175.5096
+======= ELBO increased by: 166.9265
+======= ELBO increased by: 164.0951
+======= ELBO increased by: 162.5963
+======= ELBO increased by: 160.5778
+======= ELBO increased by: 158.4843
+======= ELBO increased by: 156.6616
+======= ELBO increased by: 154.981
+======= ELBO increased by: 153.2877
+======= ELBO increased by: 151.5113
+======= ELBO increased by: 149.6473
+======= ELBO increased by: 147.7472
+======= ELBO increased by: 145.9378
+======= ELBO increased by: 144.4847
+======= ELBO increased by: 143.9738
+======= ELBO increased by: 145.7693
+======= ELBO increased by: 150.4403
+======= ELBO increased by: 137.4201
+======= ELBO increased by: 121.834
+======= ELBO increased by: 115.7132
+======= ELBO increased by: 112.2136
+======= ELBO increased by: 111.7415
+======= ELBO increased by: 106.7251
+======= ELBO increased by: 89.4153
+======= ELBO increased by: 78.9943
+======= ELBO increased by: 72.64
+======= ELBO increased by: 67.7715
+======= ELBO increased by: 63.5737
+======= ELBO increased by: 59.8438
+======= ELBO increased by: 56.5307
+======= ELBO increased by: 53.6482
+======= ELBO increased by: 51.2639
+======= ELBO increased by: 49.5176
+======= ELBO increased by: 48.6743
+======= ELBO increased by: 49.2589
+======= ELBO increased by: 52.3788
+======= ELBO increased by: 60.0156
+======= ELBO increased by: 66.6654
+======= ELBO increased by: 43.9243
+======= ELBO increased by: 48.3382
+Removed 1 factors in iteration 425
+======= ELBO increased by: 104.503
+======= ELBO increased by: 29.5958
+======= ELBO increased by: 33.9283
+======= ELBO increased by: 41.2837
+======= ELBO increased by: 44.0055
+======= ELBO increased by: 31.747
+======= ELBO increased by: 28.6923
+Removed 1 factors in iteration 498
+======= ELBO increased by: 107.6409
+======= ELBO increased by: 17.2218
+======= ELBO increased by: 20.2384
+======= ELBO increased by: 23.9064
+======= ELBO increased by: 30.8975
+Removed 1 factors in iteration 542
+======= ELBO increased by: 77.4254
+======= ELBO increased by: 8.6665
+======= ELBO increased by: 8.6827
+======= ELBO increased by: 8.8222
+======= ELBO increased by: 9.1002
+======= ELBO increased by: 9.5478
+======= ELBO increased by: 10.2129
+======= ELBO increased by: 11.1687
+======= ELBO increased by: 12.5318
+======= ELBO increased by: 14.4949
+======= ELBO increased by: 17.3917
+======= ELBO increased by: 21.7975
+======= ELBO increased by: 28.3941
+======= ELBO increased by: 35.2148
+======= ELBO increased by: 38.427
+======= ELBO increased by: 44.7571
+======= ELBO increased by: 36.7671
+======= ELBO increased by: 16.1991
+======= ELBO increased by: 23.5533
+Removed 1 factors in iteration 736
+======= ELBO increased by: 86.0857
+======= ELBO increased by: 11.3585
+======= ELBO increased by: 9.8358
+======= ELBO increased by: 5.3493
+Removed 1 factors in iteration 780
+======= ELBO increased by: 84.65
+======= ELBO increased by: 0.78974
+======= ELBO increased by: 0.70154
+======= ELBO increased by: 0.62923
+======= ELBO increased by: 0.56919
+======= ELBO increased by: 0.51904
+======= ELBO increased by: 0.47696
+======= ELBO increased by: 0.44163
+======= ELBO increased by: 0.412
+======= ELBO increased by: 0.38729
+======= ELBO increased by: 0.36689
+======= ELBO increased by: 0.35032
+======= ELBO increased by: 0.33718
+======= ELBO increased by: 0.32718
+======= ELBO increased by: 0.32008
+======= ELBO increased by: 0.31569
+======= ELBO increased by: 0.31386
+======= ELBO increased by: 0.3145
+======= ELBO increased by: 0.31754
+======= ELBO increased by: 0.32296
+======= ELBO increased by: 0.33076
+======= ELBO increased by: 0.34099
+======= ELBO increased by: 0.35373
+======= ELBO increased by: 0.36911
+======= ELBO increased by: 0.3873
+======= ELBO increased by: 0.40852
+======= ELBO increased by: 0.43307
+======= ELBO increased by: 0.46131
+======= ELBO increased by: 0.4937
+======= ELBO increased by: 0.5308
+======= ELBO increased by: 0.57334
+======= ELBO increased by: 0.62221
+======= ELBO increased by: 0.67856
+======= ELBO increased by: 0.74383
+======= ELBO increased by: 0.81991
+======= ELBO increased by: 0.90929
+======= ELBO increased by: 1.0153
+======= ELBO increased by: 1.1424
+======= ELBO increased by: 1.2969
+======= ELBO increased by: 1.4878
+======= ELBO increased by: 1.7284
+======= ELBO increased by: 2.0393
+======= ELBO increased by: 2.4533
+======= ELBO increased by: 3.0259
+======= ELBO increased by: 3.856
+======= ELBO increased by: 5.1263
+======= ELBO increased by: 7.1459
+======= ELBO increased by: 9.8684
+======= ELBO increased by: 8.9327
+======= ELBO increased by: 4.6462
+Removed 1 factors in iteration 1280
+======= ELBO increased by: 82.8367
+======= ELBO increased by: 0.034585
+======= ELBO increased by: 0.02221
+======= ELBO increased by: 0.014615
+Convergence at iteration: 1310
+A = [1, 2, 3; 4, 5, 6]
+
+A =
+
+     1     2     3
+     4     5     6
+
+sum(A, 1)
+
+ans =
+
+     5     7     9
+
+sum(A, 2)
+
+ans =
+
+     6
+    15
+
+sgfa_profiler
+<a href="matlab: opentoline('/Users/mzukic/Desktop/Thesis/code/models/SGFAGroup.m',126,1)">126 </a>            obj.tau.updateB(bNew);
+bNew == bNew1
+
+ans =
+
+  <a href="matlab:helpPopup('logical')" style="font-weight:bold">logical</a>
+
+   1
+
+if system_dependent('IsDebugMode')==1, dbquit; end
+sgfa_profiler
+{Error using <a href="matlab:matlab.lang.internal.introspective.errorDocCallback('Gamma/updateB', '/Users/mzukic/Desktop/Thesis/code/src/Gamma.m', 214)" style="font-weight:bold">Gamma/updateB</a> (<a href="matlab: opentoline('/Users/mzukic/Desktop/Thesis/code/src/Gamma.m',214,0)">line 214</a>)
+##### ERROR IN THE CLASS Gamma: Parameter b is a strictly positive number.
+
+Error in <a href="matlab:matlab.lang.internal.introspective.errorDocCallback('SGFAGroup/qTauUpdate', '/Users/mzukic/Desktop/Thesis/code/models/SGFAGroup.m', 126)" style="font-weight:bold">SGFAGroup/qTauUpdate</a> (<a href="matlab: opentoline('/Users/mzukic/Desktop/Thesis/code/models/SGFAGroup.m',126,0)">line 126</a>)
+            obj.tau.updateB(bNew);
+
+Error in <a href="matlab:matlab.lang.internal.introspective.errorDocCallback('SGFA/qTauUpdate', '/Users/mzukic/Desktop/Thesis/code/models/SGFA.m', 131)" style="font-weight:bold">SGFA/qTauUpdate</a> (<a href="matlab: opentoline('/Users/mzukic/Desktop/Thesis/code/models/SGFA.m',131,0)">line 131</a>)
+                obj.views(i).qTauUpdate();
+
+Error in <a href="matlab:matlab.lang.internal.introspective.errorDocCallback('SGFA/fit', '/Users/mzukic/Desktop/Thesis/code/models/SGFA.m', 161)" style="font-weight:bold">SGFA/fit</a> (<a href="matlab: opentoline('/Users/mzukic/Desktop/Thesis/code/models/SGFA.m',161,0)">line 161</a>)
+                obj.qTauUpdate();
+
+Error in <a href="matlab:matlab.lang.internal.introspective.errorDocCallback('sgfa_profiler', '/Users/mzukic/Desktop/Thesis/code/experiments/gfa/sgfa_profiler.m', 28)" style="font-weight:bold">sgfa_profiler</a> (<a href="matlab: opentoline('/Users/mzukic/Desktop/Thesis/code/experiments/gfa/sgfa_profiler.m',28,0)">line 28</a>)
+[elboVals, convIt] = sgfaModel.fit(10);
+} 
+sgfa_profiler
+======= ELBO increased by: 94187.1646
+======= ELBO increased by: 659.3246
+======= ELBO increased by: 188.3397
+======= ELBO increased by: 184.4494
+======= ELBO increased by: 188.6047
+======= ELBO increased by: 202.5519
+======= ELBO increased by: 176.4855
+======= ELBO increased by: 168.1921
+======= ELBO increased by: 164.3096
+======= ELBO increased by: 160.6434
+======= ELBO increased by: 157.0079
+======= ELBO increased by: 153.3183
+======= ELBO increased by: 149.5044
+======= ELBO increased by: 145.5509
+======= ELBO increased by: 141.6334
+======= ELBO increased by: 137.8687
+======= ELBO increased by: 131.1498
+======= ELBO increased by: 120.0276
+======= ELBO increased by: 110.6909
+======= ELBO increased by: 103.1223
+======= ELBO increased by: 96.9972
+======= ELBO increased by: 92.3291
+======= ELBO increased by: 89.42
+======= ELBO increased by: 88.99
+======= ELBO increased by: 92.3554
+======= ELBO increased by: 99.8807
+======= ELBO increased by: 98.5163
+======= ELBO increased by: 83.8376
+======= ELBO increased by: 83.0851
+Removed 1 factors in iteration 293
+======= ELBO increased by: 122.2478
+======= ELBO increased by: 48.8334
+======= ELBO increased by: 48.056
+======= ELBO increased by: 48.4426
+======= ELBO increased by: 49.5515
+======= ELBO increased by: 46.884
+======= ELBO increased by: 40.0669
+======= ELBO increased by: 38.1932
+======= ELBO increased by: 39.2222
+======= ELBO increased by: 41.6261
+======= ELBO increased by: 37.5293
+======= ELBO increased by: 30.9142
+======= ELBO increased by: 30.1264
+======= ELBO increased by: 32.7896
+======= ELBO increased by: 35.779
+======= ELBO increased by: 24.2423
+======= ELBO increased by: 26.3829
+Removed 1 factors in iteration 467
+======= ELBO increased by: 97.8758
+======= ELBO increased by: 14.046
+======= ELBO increased by: 12.2705
+======= ELBO increased by: 11.3024
+======= ELBO increased by: 10.8278
+======= ELBO increased by: 10.7072
+======= ELBO increased by: 10.9677
+======= ELBO increased by: 11.7547
+======= ELBO increased by: 13.3609
+======= ELBO increased by: 15.9871
+======= ELBO increased by: 16.6319
+======= ELBO increased by: 12.776
+Removed 1 factors in iteration 590
+======= ELBO increased by: 90.8322
+======= ELBO increased by: 8.3047
+======= ELBO increased by: 9.4451
+======= ELBO increased by: 11.2883
+======= ELBO increased by: 14.3847
+======= ELBO increased by: 19.834
+======= ELBO increased by: 26.8878
+======= ELBO increased by: 19.6728
+======= ELBO increased by: 32.0779
+Removed 1 factors in iteration 672
+======= ELBO increased by: 80.1599
+======= ELBO increased by: 13.0919
+======= ELBO increased by: 19.5773
+======= ELBO increased by: 29.7297
+======= ELBO increased by: 14.75
+======= ELBO increased by: 7.2698
+======= ELBO increased by: 6.7529
+======= ELBO increased by: 6.6813
+======= ELBO increased by: 6.868
+======= ELBO increased by: 7.3079
+======= ELBO increased by: 8.0525
+======= ELBO increased by: 9.216
+======= ELBO increased by: 10.9999
+======= ELBO increased by: 13.6555
+======= ELBO increased by: 16.9286
+======= ELBO increased by: 18.976
+======= ELBO increased by: 18.5067
+======= ELBO increased by: 18.0069
+======= ELBO increased by: 22.0203
+======= ELBO increased by: 21.3853
+======= ELBO increased by: 9.7614
+======= ELBO increased by: 25.2753
+Removed 1 factors in iteration 891
+======= ELBO increased by: 73.3597
+======= ELBO increased by: 4.9544
+======= ELBO increased by: 5.9173
+======= ELBO increased by: 7.388
+======= ELBO increased by: 9.7719
+======= ELBO increased by: 13.8899
+======= ELBO increased by: 20.1271
+======= ELBO increased by: 16.513
+======= ELBO increased by: 7.946
+Removed 1 factors in iteration 989
+======= ELBO increased by: 88.3072
+======= ELBO increased by: 0.38516
+======= ELBO increased by: 0.33719
+======= ELBO increased by: 0.29607
+======= ELBO increased by: 0.26061
+======= ELBO increased by: 0.22987
+======= ELBO increased by: 0.20309
+======= ELBO increased by: 0.17968
+======= ELBO increased by: 0.15917
+======= ELBO increased by: 0.14114
+======= ELBO increased by: 0.12529
+======= ELBO increased by: 0.11132
+======= ELBO increased by: 0.098992
+======= ELBO increased by: 0.088107
+======= ELBO increased by: 0.078483
+======= ELBO increased by: 0.069967
+======= ELBO increased by: 0.062424
+======= ELBO increased by: 0.055737
+======= ELBO increased by: 0.049805
+======= ELBO increased by: 0.044539
+======= ELBO increased by: 0.03986
+======= ELBO increased by: 0.0357
+======= ELBO increased by: 0.031999
+======= ELBO increased by: 0.028705
+======= ELBO increased by: 0.025771
+======= ELBO increased by: 0.023156
+======= ELBO increased by: 0.020825
+======= ELBO increased by: 0.018745
+Convergence at iteration: 1260
+sgfa_profiler
+<a href="matlab: opentoline('/Users/mzukic/Desktop/Thesis/code/models/SGFAGroup.m',126,1)">126 </a>            obj.tau.updateB(bNew);
+sgfa_profiler
+<a href="matlab: opentoline('/Users/mzukic/Desktop/Thesis/code/models/SGFAGroup.m',126,1)">126 </a>            obj.tau.updateB(bNew);
+bNew == bNew1
+
+ans =
+
+  <a href="matlab:helpPopup('logical')" style="font-weight:bold">logical</a>
+
+   1
+
+if system_dependent('IsDebugMode')==1, dbquit; end
+if system_dependent('IsDebugMode')==1, dbquit; end
+sgfa_profiler
+{Error using <a href="matlab:matlab.lang.internal.introspective.errorDocCallback('times')" style="font-weight:bold"> .* </a>
+Arrays have incompatible sizes for this operation.
+
+Error in <a href="matlab:matlab.lang.internal.introspective.errorDocCallback('SGFAGroup/qTauUpdate', '/Users/mzukic/Desktop/Thesis/code/models/SGFAGroup.m', 123)" style="font-weight:bold">SGFAGroup/qTauUpdate</a> (<a href="matlab: opentoline('/Users/mzukic/Desktop/Thesis/code/models/SGFAGroup.m',123,0)">line 123</a>)
+                obj.N * obj.mu.E_XtX - 2 * sum(sum((obj.W.E * obj.Z.E) .* (obj.X.X - obj.mu.E)')) + ...
+
+Error in <a href="matlab:matlab.lang.internal.introspective.errorDocCallback('SGFA/qTauUpdate', '/Users/mzukic/Desktop/Thesis/code/models/SGFA.m', 131)" style="font-weight:bold">SGFA/qTauUpdate</a> (<a href="matlab: opentoline('/Users/mzukic/Desktop/Thesis/code/models/SGFA.m',131,0)">line 131</a>)
+                obj.views(i).qTauUpdate();
+
+Error in <a href="matlab:matlab.lang.internal.introspective.errorDocCallback('SGFA/fit', '/Users/mzukic/Desktop/Thesis/code/models/SGFA.m', 161)" style="font-weight:bold">SGFA/fit</a> (<a href="matlab: opentoline('/Users/mzukic/Desktop/Thesis/code/models/SGFA.m',161,0)">line 161</a>)
+                obj.qTauUpdate();
+
+Error in <a href="matlab:matlab.lang.internal.introspective.errorDocCallback('sgfa_profiler', '/Users/mzukic/Desktop/Thesis/code/experiments/gfa/sgfa_profiler.m', 28)" style="font-weight:bold">sgfa_profiler</a> (<a href="matlab: opentoline('/Users/mzukic/Desktop/Thesis/code/experiments/gfa/sgfa_profiler.m',28,0)">line 28</a>)
+[elboVals, convIt] = sgfaModel.fit(10);
+
+<a href="matlab:helpview('matlab','error_sizeDimensionsMustMatch')" style="font-weight:bold">Related documentation</a>
+} 
+sgfa_profiler
+<a href="matlab: opentoline('/Users/mzukic/Desktop/Thesis/code/models/SGFAGroup.m',126,1)">126 </a>            obj.tau.updateB(bNew);
+bNew == bNew1
+
+ans =
+
+  <a href="matlab:helpPopup('logical')" style="font-weight:bold">logical</a>
+
+   0
+
+bNew - bNew1
+
+ans =
+
+   9.0949e-12
+
+if system_dependent('IsDebugMode')==1, dbquit; end
+SGFAGroup
+{Error using <a href="matlab:matlab.lang.internal.introspective.errorDocCallback('SGFAGroup', '/Users/mzukic/Desktop/Thesis/code/models/SGFAGroup.m', 39)" style="font-weight:bold">SGFAGroup</a> (<a href="matlab: opentoline('/Users/mzukic/Desktop/Thesis/code/models/SGFAGroup.m',39,0)">line 39</a>)
+##### ERROR IN THE CLASS SGFAGroup: Too few arguments passed.
+} 
+bNew - bNew1
+{Unrecognized function or variable 'bNew'.
+} 
+SGFAGroup
+{Error using <a href="matlab:matlab.lang.internal.introspective.errorDocCallback('SGFAGroup', '/Users/mzukic/Desktop/Thesis/code/models/SGFAGroup.m', 39)" style="font-weight:bold">SGFAGroup</a> (<a href="matlab: opentoline('/Users/mzukic/Desktop/Thesis/code/models/SGFAGroup.m',39,0)">line 39</a>)
+##### ERROR IN THE CLASS SGFAGroup: Too few arguments passed.
+} 
+sgfa_profiler
+<a href="matlab: opentoline('/Users/mzukic/Desktop/Thesis/code/models/SGFAGroup.m',126,1)">126 </a>            obj.tau.updateB(bNew);
+bNew == bNew1
+
+ans =
+
+  <a href="matlab:helpPopup('logical')" style="font-weight:bold">logical</a>
+
+   0
+
+bNew - bNew1
+
+ans =
+
+   1.4552e-11
+
+if system_dependent('IsDebugMode')==1, dbquit; end
+sgfa_profiler
+<a href="matlab: opentoline('/Users/mzukic/Desktop/Thesis/code/models/SGFAGroup.m',126,1)">126 </a>            obj.tau.updateB(bNew);
+trace(obj.W.E * obj.Z.E * (obj.X.X - obj.mu.E)') == sum(sum((obj.W.E * obj.Z.E) .* (obj.X.X - obj.mu.E)))
+
+ans =
+
+  <a href="matlab:helpPopup('logical')" style="font-weight:bold">logical</a>
+
+   1
+
+trace(obj.W.E * obj.Z.E * (obj.X.X - obj.mu.E)') == sum(sum((obj.W.E * obj.Z.E) .* (obj.X.X - obj.mu.E)))
+
+ans =
+
+  <a href="matlab:helpPopup('logical')" style="font-weight:bold">logical</a>
+
+   1
+
+if system_dependent('IsDebugMode')==1, dbquit; end
+sgfa_profiler
+<a href="matlab: opentoline('/Users/mzukic/Desktop/Thesis/code/models/SGFAGroup.m',126,1)">126 </a>            obj.tau.updateB(bNew);
+trace(obj.W.E * obj.Z.E * (obj.X.X - obj.mu.E)') == sum(sum((obj.W.E * obj.Z.E) .* (obj.X.X - obj.mu.E)))
+
+ans =
+
+  <a href="matlab:helpPopup('logical')" style="font-weight:bold">logical</a>
+
+   0
+
+trace(obj.W.E * obj.Z.E * (obj.X.X - obj.mu.E)') - sum(sum((obj.W.E * obj.Z.E) .* (obj.X.X - obj.mu.E)))
+
+ans =
+
+   3.6380e-12
+
+if system_dependent('IsDebugMode')==1, dbquit; end
+sgfa_profiler
+======= ELBO increased by: 96203.2005
+======= ELBO increased by: 650.1924
+======= ELBO increased by: 210.0022
+======= ELBO increased by: 200.2457
+======= ELBO increased by: 193.9486
+======= ELBO increased by: 188.6954
+======= ELBO increased by: 183.8222
+======= ELBO increased by: 178.9311
+======= ELBO increased by: 173.7016
+======= ELBO increased by: 167.8826
+======= ELBO increased by: 161.3322
+======= ELBO increased by: 154.0806
+======= ELBO increased by: 146.3845
+======= ELBO increased by: 138.7224
+======= ELBO increased by: 131.6887
+======= ELBO increased by: 125.8164
+======= ELBO increased by: 121.4317
+======= ELBO increased by: 118.6441
+======= ELBO increased by: 117.4897
+======= ELBO increased by: 118.1867
+======= ELBO increased by: 121.5401
+======= ELBO increased by: 129.7099
+======= ELBO increased by: 145.576
+======= ELBO increased by: 159.5477
+======= ELBO increased by: 117.077
+======= ELBO increased by: 97.0595
+======= ELBO increased by: 105.2476
+Removed 1 factors in iteration 275
+======= ELBO increased by: 171.1515
+======= ELBO increased by: 95.6322
+======= ELBO increased by: 85.0991
+======= ELBO increased by: 79.226
+======= ELBO increased by: 83.5076
+======= ELBO increased by: 76.5876
+======= ELBO increased by: 65.8742
+======= ELBO increased by: 55.9602
+======= ELBO increased by: 39.9622
+======= ELBO increased by: 29.9941
+======= ELBO increased by: 27.799
+======= ELBO increased by: 26.3328
+======= ELBO increased by: 24.6704
+======= ELBO increased by: 23.3853
+======= ELBO increased by: 22.8542
+======= ELBO increased by: 23.2588
+======= ELBO increased by: 24.8381
+======= ELBO increased by: 27.9724
+======= ELBO increased by: 31.722
+======= ELBO increased by: 30.2989
+======= ELBO increased by: 30.7697
+======= ELBO increased by: 33.8835
+======= ELBO increased by: 23.3109
+======= ELBO increased by: 27.6475
+Removed 1 factors in iteration 517
+======= ELBO increased by: 98.6567
+======= ELBO increased by: 12.8854
+Removed 1 factors in iteration 538
+======= ELBO increased by: 85.3693
+======= ELBO increased by: 4.8704
+======= ELBO increased by: 4.7141
+======= ELBO increased by: 4.6587
+======= ELBO increased by: 4.706
+======= ELBO increased by: 4.8801
+======= ELBO increased by: 5.2272
+======= ELBO increased by: 5.8298
+======= ELBO increased by: 6.834
+======= ELBO increased by: 8.4636
+======= ELBO increased by: 10.6376
+======= ELBO increased by: 10.2613
+======= ELBO increased by: 4.7908
+======= ELBO increased by: 4.3922
+Removed 1 factors in iteration 680
+======= ELBO increased by: 84.9032
+======= ELBO increased by: 2.1746
+======= ELBO increased by: 2.0903
+======= ELBO increased by: 2.0781
+======= ELBO increased by: 2.1211
+======= ELBO increased by: 2.2096
+======= ELBO increased by: 2.3416
+======= ELBO increased by: 2.5224
+======= ELBO increased by: 2.7644
+======= ELBO increased by: 3.0898
+======= ELBO increased by: 3.5367
+======= ELBO increased by: 4.1738
+======= ELBO increased by: 5.1342
+======= ELBO increased by: 6.6962
+======= ELBO increased by: 9.4186
+======= ELBO increased by: 12.9322
+======= ELBO increased by: 8.8106
+======= ELBO increased by: 3.6604
+======= ELBO increased by: 2.9127
+======= ELBO increased by: 2.7831
+======= ELBO increased by: 2.7817
+======= ELBO increased by: 2.8395
+======= ELBO increased by: 2.9432
+======= ELBO increased by: 3.0924
+======= ELBO increased by: 3.2924
+======= ELBO increased by: 3.5529
+======= ELBO increased by: 3.8888
+======= ELBO increased by: 4.3219
+======= ELBO increased by: 4.8857
+======= ELBO increased by: 5.6313
+======= ELBO increased by: 6.6421
+======= ELBO increased by: 8.0596
+======= ELBO increased by: 10.1415
+======= ELBO increased by: 13.3893
+======= ELBO increased by: 18.8039
+======= ELBO increased by: 27.5637
+======= ELBO increased by: 30.7877
+======= ELBO increased by: 14.687
+======= ELBO increased by: 7.9585
+======= ELBO increased by: 3.887
+======= ELBO increased by: 13.4913
+Removed 1 factors in iteration 1085
+======= ELBO increased by: 72.948
+======= ELBO increased by: 0.14432
+======= ELBO increased by: 0.12485
+======= ELBO increased by: 0.109
+======= ELBO increased by: 0.096052
+======= ELBO increased by: 0.085471
+======= ELBO increased by: 0.076838
+======= ELBO increased by: 0.069818
+======= ELBO increased by: 0.064146
+======= ELBO increased by: 0.059602
+======= ELBO increased by: 0.056013
+======= ELBO increased by: 0.053232
+======= ELBO increased by: 0.051143
+======= ELBO increased by: 0.049648
+======= ELBO increased by: 0.048669
+======= ELBO increased by: 0.048141
+======= ELBO increased by: 0.048011
+======= ELBO increased by: 0.048235
+======= ELBO increased by: 0.04878
+======= ELBO increased by: 0.049615
+======= ELBO increased by: 0.050721
+======= ELBO increased by: 0.052078
+======= ELBO increased by: 0.053674
+======= ELBO increased by: 0.0555
+======= ELBO increased by: 0.05755
+======= ELBO increased by: 0.059819
+======= ELBO increased by: 0.062307
+======= ELBO increased by: 0.065016
+======= ELBO increased by: 0.067948
+======= ELBO increased by: 0.071108
+======= ELBO increased by: 0.074504
+======= ELBO increased by: 0.078144
+======= ELBO increased by: 0.082038
+======= ELBO increased by: 0.086199
+======= ELBO increased by: 0.090639
+======= ELBO increased by: 0.095373
+======= ELBO increased by: 0.10042
+======= ELBO increased by: 0.1058
+======= ELBO increased by: 0.11153
+======= ELBO increased by: 0.11763
+======= ELBO increased by: 0.12413
+======= ELBO increased by: 0.13106
+======= ELBO increased by: 0.13844
+======= ELBO increased by: 0.14631
+======= ELBO increased by: 0.15471
+======= ELBO increased by: 0.16367
+======= ELBO increased by: 0.17324
+======= ELBO increased by: 0.18346
+======= ELBO increased by: 0.1944
+======= ELBO increased by: 0.20609
+======= ELBO increased by: 0.21862
+======= ELBO increased by: 0.23204
+======= ELBO increased by: 0.24644
+======= ELBO increased by: 0.26191
+======= ELBO increased by: 0.27854
+======= ELBO increased by: 0.29645
+======= ELBO increased by: 0.31575
+======= ELBO increased by: 0.33658
+======= ELBO increased by: 0.3591
+======= ELBO increased by: 0.38349
+======= ELBO increased by: 0.40995
+======= ELBO increased by: 0.43871
+======= ELBO increased by: 0.47004
+======= ELBO increased by: 0.50425
+======= ELBO increased by: 0.54168
+======= ELBO increased by: 0.58277
+======= ELBO increased by: 0.628
+======= ELBO increased by: 0.67796
+======= ELBO increased by: 0.73333
+======= ELBO increased by: 0.79496
+======= ELBO increased by: 0.86386
+======= ELBO increased by: 0.94126
+======= ELBO increased by: 1.0287
+======= ELBO increased by: 1.1281
+======= ELBO increased by: 1.2419
+======= ELBO increased by: 1.3733
+======= ELBO increased by: 1.5263
+======= ELBO increased by: 1.7064
+======= ELBO increased by: 1.921
+======= ELBO increased by: 2.1806
+======= ELBO increased by: 2.4999
+======= ELBO increased by: 2.9012
+======= ELBO increased by: 3.4185
+======= ELBO increased by: 4.1069
+======= ELBO increased by: 5.0608
+======= ELBO increased by: 6.4524
+======= ELBO increased by: 8.6173
+======= ELBO increased by: 12.2088
+======= ELBO increased by: 17.7395
+======= ELBO increased by: 17.1812
+======= ELBO increased by: 3.9929
+======= ELBO increased by: 8.3916
+Removed 1 factors in iteration 2008
+======= ELBO increased by: 83.6308
+======= ELBO increased by: 0.098005
+======= ELBO increased by: 0.082551
+======= ELBO increased by: 0.069757
+======= ELBO increased by: 0.059149
+======= ELBO increased by: 0.050342
+======= ELBO increased by: 0.04302
+======= ELBO increased by: 0.036926
+======= ELBO increased by: 0.031849
+======= ELBO increased by: 0.027614
+======= ELBO increased by: 0.024079
+======= ELBO increased by: 0.021126
+======= ELBO increased by: 0.018656
+Convergence at iteration: 2130
+close all
+clc 
+Running UtilityTest
+...
+Done UtilityTest
+__________
+
+Running CodeVectorizationsTest
+.......... ..
+Done CodeVectorizationsTest
+__________
+
+Running MatrixTransformationsTest
+.......... ..
+Done MatrixTransformationsTest
+__________
+
+Running MatrixIdentityTest
+........
+Done MatrixIdentityTest
+__________
+
+Running UtilityTest
+...
+Done UtilityTest
+__________
+
+Running CodeVectorizationsTest
+.......... ..
+Done CodeVectorizationsTest
+__________
+
+Running MatrixTransformationsTest
+.......... ..
+Done MatrixTransformationsTest
+__________
+
+Running MatrixIdentityTest
+........
+Done MatrixIdentityTest
+__________
+
+Running MatrixTransformationsTest
+.
+Done MatrixTransformationsTest
+__________
+
+Running MatrixTransformationsTest
+.
+Done MatrixTransformationsTest
+__________
+
+Running MatrixTransformationsTest
+.
+Done MatrixTransformationsTest
+__________
+
+Running MatrixTransformationsTest
+.
+Done MatrixTransformationsTest
+__________
+
+Running MatrixTransformationsTest
+.
+Done MatrixTransformationsTest
+__________
+
+Running MatrixTransformationsTest
+.
+Done MatrixTransformationsTest
+__________
+
+close all
+clc
+sgfa_profiler
+======= ELBO increased by: 93732.895
+======= ELBO increased by: 708.7438
+======= ELBO increased by: 180.9683
+======= ELBO increased by: 142.3692
+======= ELBO increased by: 134.5851
+======= ELBO increased by: 132.4629
+======= ELBO increased by: 130.8008
+======= ELBO increased by: 129.2688
+======= ELBO increased by: 127.777
+======= ELBO increased by: 126.2821
+======= ELBO increased by: 124.7551
+======= ELBO increased by: 123.1716
+======= ELBO increased by: 121.5092
+======= ELBO increased by: 119.7463
+======= ELBO increased by: 117.8619
+======= ELBO increased by: 115.8357
+======= ELBO increased by: 113.649
+======= ELBO increased by: 111.2859
+======= ELBO increased by: 108.7345
+======= ELBO increased by: 105.9898
+======= ELBO increased by: 103.0555
+======= ELBO increased by: 99.9465
+======= ELBO increased by: 96.6893
+======= ELBO increased by: 93.3215
+======= ELBO increased by: 89.8886
+======= ELBO increased by: 86.4402
+======= ELBO increased by: 83.0251
+======= ELBO increased by: 79.6879
+======= ELBO increased by: 76.4667
+======= ELBO increased by: 73.393
+======= ELBO increased by: 70.4941
+======= ELBO increased by: 67.7971
+======= ELBO increased by: 65.3349
+======= ELBO increased by: 63.1555
+======= ELBO increased by: 61.337
+======= ELBO increased by: 60.0169
+======= ELBO increased by: 59.4557
+======= ELBO increased by: 60.1861
+======= ELBO increased by: 63.4074
+======= ELBO increased by: 71.9006
+======= ELBO increased by: 82.1098
+======= ELBO increased by: 58.7952
+======= ELBO increased by: 47.6109
+======= ELBO increased by: 46.0901
+======= ELBO increased by: 48.9875
+======= ELBO increased by: 47.7474
+======= ELBO increased by: 47.1903
+Removed 1 factors in iteration 480
+======= ELBO increased by: 126.9922
+======= ELBO increased by: 27.19
+======= ELBO increased by: 24.2194
+======= ELBO increased by: 23.9015
+======= ELBO increased by: 22.2836
+======= ELBO increased by: 21.5602
+======= ELBO increased by: 20.6399
+======= ELBO increased by: 18.4686
+======= ELBO increased by: 15.1803
+======= ELBO increased by: 11.808
+======= ELBO increased by: 9.8411
+======= ELBO increased by: 9.0239
+======= ELBO increased by: 8.6959
+======= ELBO increased by: 8.6778
+======= ELBO increased by: 9.0221
+======= ELBO increased by: 9.7201
+======= ELBO increased by: 10.3484
+======= ELBO increased by: 10.6196
+======= ELBO increased by: 11.0163
+======= ELBO increased by: 11.9606
+======= ELBO increased by: 13.6465
+======= ELBO increased by: 15.8516
+======= ELBO increased by: 16.2111
+======= ELBO increased by: 12.9654
+======= ELBO increased by: 12.1406
+======= ELBO increased by: 12.7801
+======= ELBO increased by: 11.946
+======= ELBO increased by: 9.6445
+======= ELBO increased by: 7.8636
+======= ELBO increased by: 6.8324
+======= ELBO increased by: 6.2321
+======= ELBO increased by: 7.0308
+======= ELBO increased by: 22.9338
+Removed 1 factors in iteration 802
+======= ELBO increased by: 74.46
+======= ELBO increased by: 5.5704
+======= ELBO increased by: 5.8947
+======= ELBO increased by: 6.4974
+======= ELBO increased by: 7.3219
+======= ELBO increased by: 8.4097
+======= ELBO increased by: 9.8561
+======= ELBO increased by: 11.8272
+======= ELBO increased by: 14.6091
+======= ELBO increased by: 18.6881
+======= ELBO increased by: 24.7476
+======= ELBO increased by: 32.4417
+======= ELBO increased by: 33.9993
+======= ELBO increased by: 18.2288
+======= ELBO increased by: 7.4963
+======= ELBO increased by: 12.7349
+Removed 1 factors in iteration 968
+======= ELBO increased by: 84.5759
+======= ELBO increased by: 4.1091
+======= ELBO increased by: 4.3388
+======= ELBO increased by: 4.8363
+======= ELBO increased by: 5.2849
+======= ELBO increased by: 5.8618
+======= ELBO increased by: 6.8719
+======= ELBO increased by: 8.5834
+======= ELBO increased by: 11.2111
+======= ELBO increased by: 13.0711
+======= ELBO increased by: 8.5009
+======= ELBO increased by: 9.6456
+Removed 1 factors in iteration 1088
+======= ELBO increased by: 84.8675
+======= ELBO increased by: 6.2297
+======= ELBO increased by: 8.0464
+======= ELBO increased by: 10.5424
+======= ELBO increased by: 10.8646
+======= ELBO increased by: 5.4271
+======= ELBO increased by: 4.6416
+======= ELBO increased by: 18.2915
+Removed 1 factors in iteration 1161
+======= ELBO increased by: 72.6982
+======= ELBO increased by: 7.2172
+======= ELBO increased by: 14.0756
+======= ELBO increased by: 18.3322
+======= ELBO increased by: 2.0529
+======= ELBO increased by: 1.1496
+======= ELBO increased by: 0.94357
+======= ELBO increased by: 0.80834
+======= ELBO increased by: 0.70059
+======= ELBO increased by: 0.60991
+======= ELBO increased by: 0.53207
+======= ELBO increased by: 0.46468
+======= ELBO increased by: 0.40609
+======= ELBO increased by: 0.35503
+======= ELBO increased by: 0.31048
+======= ELBO increased by: 0.27159
+======= ELBO increased by: 0.23762
+======= ELBO increased by: 0.20794
+======= ELBO increased by: 0.18201
+======= ELBO increased by: 0.15934
+======= ELBO increased by: 0.13954
+======= ELBO increased by: 0.12224
+======= ELBO increased by: 0.10711
+======= ELBO increased by: 0.093896
+======= ELBO increased by: 0.082346
+======= ELBO increased by: 0.072253
+======= ELBO increased by: 0.063432
+======= ELBO increased by: 0.055724
+======= ELBO increased by: 0.048987
+======= ELBO increased by: 0.043099
+======= ELBO increased by: 0.037953
+======= ELBO increased by: 0.033455
+======= ELBO increased by: 0.029523
+======= ELBO increased by: 0.026087
+======= ELBO increased by: 0.023083
+======= ELBO increased by: 0.020457
+Convergence at iteration: 1520
+close all
+Running MatrixTransformationsTest
+.
+Done MatrixTransformationsTest
+__________
+
+Running MatrixTransformationsTest
+.
+Done MatrixTransformationsTest
+__________
+
+Running MatrixTransformationsTest
+.
+Done MatrixTransformationsTest
+__________
+
+Running MatrixTransformationsTest
+.
+Done MatrixTransformationsTest
+__________
+
+Running MatrixTransformationsTest
+.
+Done MatrixTransformationsTest
+__________
+
+Running MatrixTransformationsTest
+.
+Done MatrixTransformationsTest
+__________
+
+sgfa_profiler
+<a href="matlab: opentoline('/Users/mzukic/Desktop/Thesis/code/models/SGFAGroup.m',141,1)">141 </a>            a = 2;
+value == value2
+
+ans =
+
+  <a href="matlab:helpPopup('logical')" style="font-weight:bold">logical</a>
+
+   0
+
+value - value2
+
+ans =
+
+  -5.0932e-11
+
+if system_dependent('IsDebugMode')==1, dbquit; end
+sgfa_profiler
+<a href="matlab: opentoline('/Users/mzukic/Desktop/Thesis/code/models/SGFAGroup.m',141,1)">141 </a>            a = 2;
+value - value2
+
+ans =
+
+   9.0949e-11
+
+if system_dependent('IsDebugMode')==1, dbquit; end
+[Warning: MATLAB could not restore all breakpoints because file
+'/Users/mzukic/Desktop/Thesis/code/models/SGFAGroup.m' was modified outside of the MATLAB
+editor.] 
+close all
+sgfa_profiler
+======= ELBO increased by: 91241.396
+======= ELBO increased by: 727.6103
+======= ELBO increased by: 180.9186
+======= ELBO increased by: 166.7262
+======= ELBO increased by: 163.233
+======= ELBO increased by: 161.9194
+======= ELBO increased by: 161.6246
+======= ELBO increased by: 162.4058
+======= ELBO increased by: 165.087
+======= ELBO increased by: 171.7088
+======= ELBO increased by: 183.2995
+======= ELBO increased by: 178.2586
+======= ELBO increased by: 148.3208
+======= ELBO increased by: 138.4978
+======= ELBO increased by: 131.3571
+======= ELBO increased by: 125.1885
+======= ELBO increased by: 120.8609
+======= ELBO increased by: 119.9976
+======= ELBO increased by: 113.6294
+======= ELBO increased by: 97.58
+======= ELBO increased by: 91.4537
+======= ELBO increased by: 86.6265
+======= ELBO increased by: 82.052
+======= ELBO increased by: 77.7016
+======= ELBO increased by: 73.6015
+======= ELBO increased by: 69.7671
+======= ELBO increased by: 66.1981
+======= ELBO increased by: 62.8855
+======= ELBO increased by: 59.8243
+======= ELBO increased by: 57.0276
+======= ELBO increased by: 54.5446
+======= ELBO increased by: 52.4895
+======= ELBO increased by: 51.0978
+======= ELBO increased by: 50.7941
+======= ELBO increased by: 51.5542
+======= ELBO increased by: 48.7994
+======= ELBO increased by: 57.1109
+Removed 1 factors in iteration 371
+======= ELBO increased by: 105.6988
+======= ELBO increased by: 37.0913
+======= ELBO increased by: 38.3641
+======= ELBO increased by: 41.5591
+======= ELBO increased by: 46.965
+======= ELBO increased by: 52.2102
+======= ELBO increased by: 59.179
+======= ELBO increased by: 75.513
+======= ELBO increased by: 59.7394
+======= ELBO increased by: 36.4992
+Removed 1 factors in iteration 480
+======= ELBO increased by: 147.9986
+Removed 1 factors in iteration 485
+======= ELBO increased by: 92.2689
+======= ELBO increased by: 10.8894
+======= ELBO increased by: 9.3284
+======= ELBO increased by: 8.515
+======= ELBO increased by: 8.0787
+======= ELBO increased by: 7.8208
+======= ELBO increased by: 7.6552
+======= ELBO increased by: 7.5564
+======= ELBO increased by: 7.5352
+======= ELBO increased by: 7.6223
+======= ELBO increased by: 7.8534
+======= ELBO increased by: 8.266
+======= ELBO increased by: 8.9081
+======= ELBO increased by: 9.8562
+======= ELBO increased by: 11.2471
+======= ELBO increased by: 13.3465
+======= ELBO increased by: 16.7319
+======= ELBO increased by: 22.8664
+======= ELBO increased by: 35.2143
+======= ELBO increased by: 38.2527
+======= ELBO increased by: 26.3888
+======= ELBO increased by: 27.8666
+======= ELBO increased by: 15.9865
+======= ELBO increased by: 15.6008
+Removed 1 factors in iteration 728
+======= ELBO increased by: 94.3352
+======= ELBO increased by: 10.3184
+======= ELBO increased by: 14.0583
+======= ELBO increased by: 21.8764
+======= ELBO increased by: 25.0174
+======= ELBO increased by: 6.381
+======= ELBO increased by: 2.056
+======= ELBO increased by: 1.2464
+======= ELBO increased by: 0.93902
+======= ELBO increased by: 0.7813
+======= ELBO increased by: 0.6855
+======= ELBO increased by: 0.62201
+======= ELBO increased by: 0.57846
+======= ELBO increased by: 0.54873
+======= ELBO increased by: 0.52933
+======= ELBO increased by: 0.5181
+======= ELBO increased by: 0.5136
+======= ELBO increased by: 0.51485
+======= ELBO increased by: 0.52119
+======= ELBO increased by: 0.53217
+======= ELBO increased by: 0.54752
+======= ELBO increased by: 0.56709
+======= ELBO increased by: 0.59086
+======= ELBO increased by: 0.61892
+======= ELBO increased by: 0.65144
+======= ELBO increased by: 0.68874
+======= ELBO increased by: 0.7312
+======= ELBO increased by: 0.77939
+======= ELBO increased by: 0.83399
+======= ELBO increased by: 0.89589
+======= ELBO increased by: 0.96623
+======= ELBO increased by: 1.0465
+======= ELBO increased by: 1.1384
+======= ELBO increased by: 1.2445
+======= ELBO increased by: 1.3679
+======= ELBO increased by: 1.513
+======= ELBO increased by: 1.6855
+======= ELBO increased by: 1.8938
+======= ELBO increased by: 2.1499
+======= ELBO increased by: 2.472
+======= ELBO increased by: 2.8884
+======= ELBO increased by: 3.4465
+======= ELBO increased by: 4.2285
+======= ELBO increased by: 5.3865
+======= ELBO increased by: 7.1998
+======= ELBO increased by: 9.9682
+======= ELBO increased by: 11.5995
+======= ELBO increased by: 7.504
+Removed 1 factors in iteration 1210
+======= ELBO increased by: 85.5538
+======= ELBO increased by: 1.6436
+======= ELBO increased by: 1.8917
+======= ELBO increased by: 2.1885
+======= ELBO increased by: 2.5416
+======= ELBO increased by: 2.9812
+======= ELBO increased by: 3.58
+======= ELBO increased by: 4.4781
+======= ELBO increased by: 5.9289
+======= ELBO increased by: 8.3332
+======= ELBO increased by: 11.181
+======= ELBO increased by: 8.7787
+======= ELBO increased by: 17.6392
+Removed 1 factors in iteration 1332
+======= ELBO increased by: 68.3468
+======= ELBO increased by: 0.045664
+======= ELBO increased by: 0.034517
+======= ELBO increased by: 0.026362
+======= ELBO increased by: 0.020325
+Convergence at iteration: 1380
+close all
+sgfa_profiler
+Removed 1 factors in iteration 409
+Removed 1 factors in iteration 490
+Removed 1 factors in iteration 690
+Removed 1 factors in iteration 1015
+Removed 1 factors in iteration 1017
+Removed 1 factors in iteration 1868
+Convergence at iteration: 1880
+close all
+sgfa_profiler
+Removed 1 factors in iteration 264
+Removed 1 factors in iteration 394
+Removed 1 factors in iteration 495
+Removed 1 factors in iteration 558
+Removed 1 factors in iteration 620
+Removed 1 factors in iteration 1116
+Convergence at iteration: 1240

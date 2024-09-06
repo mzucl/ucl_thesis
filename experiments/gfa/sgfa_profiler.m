@@ -11,8 +11,8 @@ diary(logFileName); % start logging
 
 % Model settings
 settings = ModelSettings.getInstance();
-% settings.VALIDATE = false;
-% settings.DEBUG = false;
+settings.VALIDATE = false;
+settings.DEBUG = false;
 
 
 %% Generate data and train the model

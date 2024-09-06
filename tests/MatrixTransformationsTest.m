@@ -267,5 +267,27 @@ classdef MatrixTransformationsTest < matlab.unittest.TestCase
 
             testCase.verifyEqual(startEq, endEq);
         end
+
+        % q(tau) update
+        %% trace(W * Z * (X - mu)') == sum(sum((W * Z) .* (X - mu)))
+        %% X * ones(N, 1) = sum(X, 2)
+        function testIdentityGFANew4(testCase)
+            % Setup
+            K = 10;
+            N = 50;
+            D = 20;
+
+            X = Utility.generateRandomIntMatrix(D, N);
+            W = Utility.generateRandomIntMatrix(D, K);
+            Z = Utility.generateRandomIntMatrix(K, N);
+            mu = Utility.generateRandomIntMatrix(D, 1);
+
+            tr1 = trace(W * Z * (X - mu)');
+            
+            tr2 = sum(sum((W * Z) .* (X - mu)));
+
+            testCase.verifyEqual(tr1, tr2);
+            testCase.verifyEqual(X * ones(N, 1), sum(X, 2));
+        end
     end
 end

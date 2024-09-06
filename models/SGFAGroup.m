@@ -106,33 +106,33 @@ classdef SGFAGroup < handle
 
         function obj = qMuUpdate(obj)
             covNew = (1/(obj.mu.priorPrec + obj.N * obj.tau.E)) * eye(obj.D);
-            muNew = obj.tau.E * covNew * (obj.X.X - obj.W.E * obj.Z.E) * ones(obj.N, 1);
+            muNew = obj.tau.E * (covNew * (obj.X.X * ones(obj.N, 1) - obj.W.E * obj.Z.E * ones(obj.N, 1)));
             
             obj.mu.updateParameters(muNew, covNew);
         end
 
         function obj = qTauUpdate(obj)
             bNew = obj.tau.prior.b + 1/2 * ( ...
-                trace(obj.X.X' * obj.X.X) - 2 * obj.mu.E_Xt * obj.X.X * ones(obj.N, 1) + ...
-                obj.N * obj.mu.E_XtX - 2 * trace(obj.W.E * obj.Z.E * (obj.X.X - obj.mu.E)') + ...
-                trace(obj.W.E_XtX * obj.Z.E_XXt));
-            
+                obj.X.Tr_XtX - 2 * obj.mu.E_Xt * sum(obj.X.X, 2) + ...
+                obj.N * obj.mu.E_XtX - 2 * sum(sum((obj.W.E * obj.Z.E) .* (obj.X.X - obj.mu.E))) + ...
+                sum(sum(obj.W.E_XtX' .* obj.Z.E_XXt)));
+
             obj.tau.updateB(bNew);
         end
     
 
 
         function value = getExpectationLnW(obj)
-            % The sum in the eq implemented as a dot product
             value = obj.W.E_SNC' * obj.alpha.E;
             value = -1/2 * value + obj.D/2 * (obj.alpha.E_LnX - obj.K.Val * log(2*pi));
         end
 
+        % TODO (medium): The value can be reused from the qTauUpdate method
         function value = getExpectationLnPX(obj)
-            value = (obj.N * obj.D)/2 * obj.tau.E_LnX - obj.N * obj.D/2 * log(2 * pi) - obj.tau.E/2 * ...
-                (trace(obj.X.X' * obj.X.X) - 2 * obj.mu.E_Xt * obj.X.X * ones(obj.N, 1) + ...
-                obj.N * obj.mu.E_XtX - 2 * trace(obj.W.E * obj.Z.E * (obj.X.X - obj.mu.E)') + ...
-                trace(obj.W.E_XtX * obj.Z.E_XXt));
+            k = (obj.N * obj.D)/2;
+            value = k * (obj.tau.E_LnX - log(2 * pi)) - obj.tau.E/2 * (obj.X.Tr_XtX - 2 * obj.mu.E_Xt * sum(obj.X.X, 2) + ...
+                obj.N * obj.mu.E_XtX - 2 * sum(sum((obj.W.E * obj.Z.E) .* (obj.X.X - obj.mu.E))) + ...
+                sum(sum(obj.W.E_XtX' .* obj.Z.E_XXt)));
         end
     end
 end
