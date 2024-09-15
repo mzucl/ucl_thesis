@@ -134,12 +134,16 @@ classdef BinaryView < handle
                 covNew = (4 / obj.N + obj.mu.priorPrec) * eye(obj.D);
                 muNew = covNew * ((obj.X.X + obj.bound.t() - 1/4 * obj.W.E * obj.Z.E) * ...
                     ones(obj.N, 1));
-                
+
             elseif isa(obj.bound, JaakkolaBound)
+                covNew = Utility.matrixInverse(diag(obj.bound.h() * ones(obj.N, 1)) + ...
+                    obj.mu.priorPrec * eye(obj.D));
+                muNew = covNew * ((obj.X.X + obj.bound.t() - obj.bound.h() .* (obj.W.E * obj.Z.E)) * ...
+                    ones(obj.N, 1));
             end
             
             obj.mu.updateParameters(muNew, covNew);
-            end
+        end
 
 
 
