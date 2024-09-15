@@ -1,6 +1,6 @@
 classdef BohningBound < Bound
     methods
-        function result = h(obj)
+        function result = h(~)
             result = 1/4;
         end
     end

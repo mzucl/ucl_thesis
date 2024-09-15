@@ -6,10 +6,12 @@ classdef BoundsTest < matlab.unittest.TestCase
             c = bM.c();
             g = bM.g();
             h = bM.h();
+            t = bM.t();
 
             testCase.verifyTrue(all(c(:) == bS.c()));
             testCase.verifyTrue(all(g(:) == bS.g()));
             testCase.verifyTrue(all(h(:) == bS.h()));
+            testCase.verifyTrue(all(t(:) == bS.t()));
         end
     end
 

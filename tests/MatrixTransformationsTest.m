@@ -420,21 +420,41 @@ classdef MatrixTransformationsTest < matlab.unittest.TestCase
 
 
         % 'Monster' expectation in q(W) for the binary extension - part 1
-        % Tr(A' * (H .* A)) = sum(sum(...))
+        % Tr(Y' * (H .* Y)) = sum(sum(...))
         function testIdentityBinary3_1(testCase)
             D = 10;
             N = 100;
-            A = Utility.generateRandomIntMatrix(D, N); % A = WZ
+            Y = Utility.generateRandomIntMatrix(D, N); % Y = WZ
             H = Utility.generateRandomIntMatrix(D, N);
 
-            res1 = trace(A' * (H .* A));
+            res1 = trace(Y' * (H .* Y));
             res2 = 0;
 
             for n = 1:N
                 for d = 1:D
-                    res2 = res2 + A(d, n)^2 * H(d, n);
+                    res2 = res2 + Y(d, n)^2 * H(d, n);
                 end
             end
+            testCase.verifyEqual(res1, res2);
+        end
+
+        % 'Monster' expectation in q(W) for the binary extension - part 1
+        % Tr(Y' * (H .* Y)) = sum(sum(...))
+        function testIdentityBinary3_1_1(testCase)
+            D = 10;
+            N = 100;
+            H = Utility.generateRandomIntMatrix(D, N); % A = WZ
+            Tr = Utility.generateRandomIntMatrix(D, N); % Matrix of traces
+
+            res1 = sum(sum(H .* Tr));
+
+            res2 = 0;
+            for n = 1:N
+                for d = 1:D
+                    res2 = res2 + H(d, n) * Tr(d, n);
+                end
+            end
+
             testCase.verifyEqual(res1, res2);
         end
 

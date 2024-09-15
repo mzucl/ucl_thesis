@@ -63,7 +63,8 @@ classdef BinaryView < handle
 
     methods
         %% Constructors
-        function obj = BinaryView(data, Z, K, featuresInCols)
+        function obj = BinaryView(data, Z, K, featuresInCols, bound)
+            % TODO: Deal with the default values in a proper way
             if nargin < 3
                 error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
             elseif nargin < 4
@@ -78,6 +79,12 @@ classdef BinaryView < handle
             obj.D = obj.X.D;
             obj.N = obj.X.N;
 
+            if nargin < 5 || bound == 'B'
+                obj.bound = BohningBound(randn(obj.D, obj.N));
+            elseif bound == 'J'
+                obj.bound = JaakkolaBound(randn(obj.D, obj.N));
+            end
+
             %% Model setup and initialization
             %                          type, size_, a, b, prior
             obj.alpha = GammaContainer("SD", obj.K.Val, SGFAGroup.SETTINGS.DEFAULT_GAMMA_A, SGFAGroup.SETTINGS.DEFAULT_GAMMA_B);
@@ -85,8 +92,12 @@ classdef BinaryView < handle
             %                  dim, mu,    cov,  priorPrec
             obj.mu = Gaussian(obj.D, 0, eye(obj.D), 10^3);
 
-            %                         type, size_, cols,   dim,        mu, cov, priorPrec
-            obj.W = GaussianContainer("DS", obj.D, false, obj.K.Val, randn(obj.K.Val, obj.D));
+            if isa(obj.bound, BohningBound)
+                %                         type, size_, cols,   dim,        mu, cov, priorPrec
+                obj.W = GaussianContainer("DS", obj.D, false, obj.K.Val, randn(obj.K.Val, obj.D));
+            elseif isa(obj.bound, JaakkolaBound)
+                obj.W = GaussianContainer("DD", obj.D, false, obj.K.Val, randn(obj.K.Val, obj.D));
+            end
 
             % Model initialization - second part
             % The first update equation is for W, so we need to initialize
@@ -146,6 +157,12 @@ classdef BinaryView < handle
         end
 
 
+        function obj = xiUpdate(obj)
+            if isa(obj.bound, BohningBound)
+                xiNew = obj.W.E * obj.Z.E + obj.mu.E;
+            elseif isa(obj.bound, JaakkolaBound)
+            end
+        end
 
 
 

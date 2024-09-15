@@ -1,11 +1,11 @@
 classdef JaakkolaBound < Bound
     methods
         function value = lambda(obj)
-            value = (1./(1 + exp(-obj.a)) - 0.5) ./ (2 * obj.a);
+            value = (1./(1 + exp(-obj.xi)) - 0.5) ./ (2 * obj.xi);
         end
 
         function result = g(obj)
-            result =  0.5 + 2 * obj.lambda() .* obj.a;
+            result =  0.5 + 2 * obj.lambda() .* obj.xi;
         end
 
         function result = h(obj)
