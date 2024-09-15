@@ -35,4 +35,4 @@ end
 
 
 %% Visualize
-Visualization.hintonDiagramPlot({W_PPCA, obj.W.E}, 'figures/pca', 'W_ppca_bpca', false);
+Visualization.plotHintonDiagrams({W_PPCA, obj.W.E}, 'W_ppca_bpca', 'pca');

@@ -291,5 +291,42 @@ classdef Utility
                 diagElementsOrValue = [];
             end
         end
+    
+    
+
+
+    
+        %% 3D tensor computations
+        % For matrix MU compute outer product of each column with itself;
+        % store the result in 3D array;
+        function result = outerProduct3D(MU)
+            [n, m] = size(MU);
+            
+            % Reshape MU to create a 3D tensor where each column of MU is along the 3rd dimension
+            MU_reshaped = reshape(MU, [n, 1, m]);
+            
+            % Perform element-wise multiplication to get the outer products
+            result = bsxfun(@times, MU_reshaped, permute(MU_reshaped, [2, 1, 3]));
+        end
+
+        function A = flatten3DTo2D(M)
+            [K, ~, D] = size(M);
+            
+            % Reshape the 3D tensor into a 2D matrix where each column is a flattened [K x K] matrix
+            A = reshape(M, [K*K, D]);
+        end
+
+        % Takes the matrix M and transforms it into the 3D tensor where
+        % each matrix is a diag(column(M))
+        function result = colsTo3D(M)
+            [rows, cols] = size(M);
+            
+            % Create an identity matrix and replicate it across the 3rd dimension
+            I = repmat(eye(rows), [1, 1, cols]);
+            
+            M_3D = reshape(M, [rows, 1, cols]);
+            
+            result = bsxfun(@times, I, M_3D);
+        end
     end
 end

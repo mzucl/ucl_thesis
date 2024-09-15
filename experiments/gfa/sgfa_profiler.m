@@ -7,6 +7,9 @@ if ~exist('logs', 'dir')
     mkdir('logs');
 end
 
+% Figures folder
+figsSubfolder = 'sgfa';
+
 diary(logFileName); % start logging
 
 % Model settings
@@ -31,36 +34,11 @@ sgfaModel = SGFA({X1', X2'}, K);
 profile off;
 profile viewer;
 
-
-%% Visualize true and recovered latent factors
-% True factors
-trueNumOfFactors = size(data.Z, 2);
-
-figure;
-for i = 1:trueNumOfFactors
-    subplot(trueNumOfFactors, 1, i);
-    factor = data.Z(:, i);
-    plot(factor, '.', 'MarkerSize', 4);
-    hold on;
-end
-sgtitle('True latent factors');
-
-% Recovered latent factors
-expZ = sgfaModel.Z.E;
-
-% Effective number of factors
-numEffFactors = size(expZ, 1);
-
-figure;
-for i = 1:numEffFactors
-    subplot(numEffFactors, 1, i);
-    factor = expZ(i, :);
-    plot(factor, '.', 'MarkerSize', 4);
-    hold on;
-end
-sgtitle('Latent factors');
-
-
+%%
+%                             Z,         figureTitle,        figName,      folderName)
+Visualization.plotLatentFactors(data.Z, 'True latent factors', 'trueLatentFactors', figsSubfolder);
+Visualization.plotLatentFactors(sgfaModel.Z.E', 'Latent factors', 'latentFactors', figsSubfolder);
+% TODO: reorder these!!! no '
 
 %% Visualize loadings and alpha
 totalD = sum(sgfaModel.D); % Total number of dimensions
@@ -79,12 +57,9 @@ for m = 1:sgfaModel.M
     estAlpha(:, m) = sgfaModel.views(m).alpha.E;
 end
 
-Visualization.plotLoadings(trueW, sgfaModel.D, 'True W');
-Visualization.plotLoadings(estW, sgfaModel.D, 'Estimated W');
+%                            W,     dimList,   figTitle, figName, subfolderName
+Visualization.plotLoadings(trueW, sgfaModel.D, 'True $\mathbf{W}$', 'trueW', figsSubfolder);
+Visualization.plotLoadings(estW, sgfaModel.D, 'Estimated $\mathbf{W}$', 'estimatedW', figsSubfolder);
 
-figure;
-ax1 = subplot(1, 2, 1);
-ax2 = subplot(1, 2, 2);
-
-Visualization.hintonDiagram(-data.alpha, ax1, 'True -1 * alpha');
-Visualization.hintonDiagram(-estAlpha, ax2, 'Estimated -1 * alpha');
+% alpha
+Visualization.plotHintonDiagrams({-data.alpha', -estAlpha}, 'Lala');

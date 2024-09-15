@@ -289,5 +289,207 @@ classdef MatrixTransformationsTest < matlab.unittest.TestCase
             testCase.verifyEqual(tr1, tr2);
             testCase.verifyEqual(X * ones(N, 1), sum(X, 2));
         end
+
+
+
+
+
+        %% Code transformations for the binary extension
+        % ln q(Z) - second line
+        function testIdentityBinary1_1(testCase)
+            D = 10;
+            a = Utility.generateRandomIntMatrix(D, 1);
+            h = Utility.generateRandomIntMatrix(D, 1);
+
+            sum = 0;
+            for d = 1:D
+                sum = sum + h(d) * (a(d))^2;
+            end
+
+            altRes = a' * diag(h) * a;
+
+            testCase.verifyEqual(sum, altRes);
+        end
+
+        % For vectorization in q(Z) for Bohning bound
+        function testIdentityBinary1_2(testCase)
+            D = 10;
+            K = 8;
+            W = Utility.generateRandomIntMatrix(D, K);
+            D = 1/4 * eye(D);
+
+            testCase.verifyEqual(W' * D * W, 1/4 * (W' * W));
+        end
+
+        % For vectorization in q(mu) for Bohning bound
+        function testIdentityBinary1_2_1(testCase)
+            D = 10;
+            N = 100;
+            H = 1/4 * ones(D, N);
+            
+            res1 = diag(H * ones(N, 1));
+            res2 = N/4 * eye(D);
+
+            testCase.verifyEqual(res1, res2);
+            testCase.verifyEqual(Utility.matrixInverse(res1), 4/N * eye(D));
+        end
+
+        % For vectorization in q(mu) for Bohning bound
+        function testIdentityBinary1_2_2(testCase)
+            D = 10;
+            N = 100;
+            H = 1/4 * ones(D, N);
+            WZ = Utility.generateRandomIntMatrix(D, N);
+            
+            res1 = H .* WZ;
+            res2 = 1/4 * WZ;
+
+            testCase.verifyEqual(res1, res2);
+        end
+
+        % For vectorization in q(Z) for Bohning bound
+        function testIdentityBinary1_3(testCase)
+            D = 10;
+            N = 20;
+            T = Utility.generateRandomIntMatrix(D, N);
+            H = 1/4 * ones(D, N);
+            mu = Utility.generateRandomIntMatrix(D, 1);
+
+            testCase.verifyEqual(T - H .* mu, T - 1/4 * mu);
+        end
+
+        % E[Y^TDY] -> there is a section in the thesis with these kind of
+        % expectations;
+        % Part 1
+        function testIdentityBinary2_1(testCase)
+            D = 10;
+            K = 8;
+            MU = Utility.generateRandomIntMatrix(K, D);
+            diagMatrix = diag(Utility.generateRandomIntMatrix(D, 1));
+            Sigma = Utility.generateRandomIntMatrix(K, K);
+
+            sum = zeros(K, K);
+            for d = 1:D
+                sum = sum + diagMatrix(d, d) * (MU(:, d) * MU(:, d)' + Sigma);
+            end
+
+            altRes =  MU * diagMatrix * MU' + trace(diagMatrix) * Sigma;
+
+            testCase.verifyEqual(sum, altRes);
+        end
+
+        % Part 2
+        function testIdentityBinary2_2(testCase)
+            K = 8;
+            mu_1 = Utility.generateRandomIntMatrix(K, 1);
+            Sigma_1 = Utility.generateRandomIntMatrix(K, K);
+            D = diag(Utility.generateRandomIntMatrix(K, 1));
+
+            res1 = trace((mu_1 * mu_1' + Sigma_1) * D);
+            res2 = mu_1' * D * mu_1 + trace(Sigma_1 * D);
+
+            testCase.verifyEqual(res1, res2);
+        end
+
+        % Part 3
+        function testIdentityBinary2_3(testCase)
+            K = 8;
+            N = 100;
+            MU = Utility.generateRandomIntMatrix(K, N);
+            Sigma = Utility.generateRandomIntMatrix(K, K);
+            D = diag(Utility.generateRandomIntMatrix(K, 1));
+
+            % Test 2: D is diagonal
+            res1 = zeros(N, N);
+            for i = 1:N
+                for j = 1:N
+                    if i == j
+                        res1(i, j) = MU(:, i)' * D * MU(:, j) + trace(Sigma * D);
+                    else
+                        res1(i, j) = MU(:, i)' * D * MU(:, j);
+                    end
+                end
+            end
+
+            res2 = MU' * D * MU + trace(Sigma * D) * eye(N);
+
+            testCase.verifyEqual(res1, res2);
+        end
+
+
+
+
+        % 'Monster' expectation in q(W) for the binary extension - part 1
+        % Tr(A' * (H .* A)) = sum(sum(...))
+        function testIdentityBinary3_1(testCase)
+            D = 10;
+            N = 100;
+            A = Utility.generateRandomIntMatrix(D, N); % A = WZ
+            H = Utility.generateRandomIntMatrix(D, N);
+
+            res1 = trace(A' * (H .* A));
+            res2 = 0;
+
+            for n = 1:N
+                for d = 1:D
+                    res2 = res2 + A(d, n)^2 * H(d, n);
+                end
+            end
+            testCase.verifyEqual(res1, res2);
+        end
+
+        % 'Monster' expectation in q(W) for the binary extension - part 2
+        % Computing Tr(mu_zn * mu_zn^T * Sigma_wd) as a DxN matrix, where
+        % each element is the value of the trace for specific d and n
+        function testIdentityBinary3_2(testCase)
+            D = 20;
+            N = 100;
+            K = 12;
+            H = Utility.generateRandomIntMatrix(D, N);
+            MU_Z = Utility.generateRandomIntMatrix(K, N); % mu_zn are the cols
+
+            % randi(10, [3, 3, 5]) -> generate a 3x3x5 array of random integers between 1 and 10
+            Sigma_W = randi(10, [K, K, D]);
+
+            % Non-vectorized approach
+            res1 = zeros(D, N);
+            for n = 1:N
+                for d = 1:D
+                    res1(d, n) = trace(MU_Z(:, n) * MU_Z(:, n)' * Sigma_W(:, :, d));
+                end
+            end
+            
+            % Vectorized approach
+            res2 = Utility.flatten3DTo2D(Sigma_W)' * Utility.flatten3DTo2D(Utility.outerProduct3D(MU_Z));
+            
+            testCase.verifyEqual(res1, res2);
+        end
+
+        % 'Monster' expectation in q(W) for the binary extension - part 3
+        % Computing Tr(Sigma_zn * mu_wd * mu_wd^T) as a DxN matrix, where
+        % each element is the value of the trace for specific d and n
+        function testIdentityBinary3_3(testCase)
+            D = 20;
+            N = 100;
+            K = 12;
+            H = Utility.generateRandomIntMatrix(D, N);
+            MU_Z = Utility.generateRandomIntMatrix(K, N); % mu_zn are the cols
+
+            % randi(10, [3, 3, 5]) -> generate a 3x3x5 array of random integers between 1 and 10
+            Sigma_W = randi(10, [K, K, D]);
+
+            % Non-vectorized approach
+            res1 = zeros(D, N);
+            for n = 1:N
+                for d = 1:D
+                    res1(d, n) = trace(MU_Z(:, n) * MU_Z(:, n)' * Sigma_W(:, :, d));
+                end
+            end
+            
+            % Vectorized approach
+            res2 = Utility.flatten3DTo2D(Sigma_W)' * Utility.flatten3DTo2D(Utility.outerProduct3D(MU_Z));
+            
+            testCase.verifyEqual(res1, res2);
+        end
     end
 end

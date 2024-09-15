@@ -1,10 +1,69 @@
 classdef Visualization
+    properties(Constant)
+        FIGURES_FOLDER = 'figures';
+    end
+
     methods (Static)
+        function formatFigure(hfig)
+            set(findall(hfig, '-property','FontSize'),'FontSize', 17);
+            set(findall(hfig, '-property', 'Box'), 'Box', 'off');
+            set(findall(hfig, '-property', 'Interpreter'), 'Interpreter', 'latex');
+            set(findall(hfig, '-property', 'TickLabelInterpreter'), 'TickLabelInterpreter', 'latex');
+        end
+
         function rgb = hexToRGB(hex)
             rgb = sscanf(hex(2:end),'%2x%2x%2x',[1 3]) / 255;
         end
-        
+
+        function exportFigure(hfig, figName, subfolderName)
+            % EXPORTFIGURE Save or export a MATLAB figure to a file.
+            % hfig      : handle to the figure
+            % filename  : name of the file (e.g., 'myfigure')
+
+            % Optional parameters: subfolderName
+            if nargin < 2
+                error(['##### ERROR IN THE CLASS ' mfilename('class') ': Not enough input arguments provided.']);
+            elseif nargin > 3
+                error(['##### ERROR IN THE CLASS ' mfilename('class') ': Too many input arguments provided.']);
+            end
+            
+            width = 20;
+            ratio = 0.65; % height/weight ratio
+
+            set(hfig, 'Units', 'centimeters', ...
+                      'Position', [3 3 width ratio * width]);
+            
+            pos = get(hfig, 'Position');
+            
+            set(hfig, 'PaperPositionMode', 'Auto', ...
+                      'PaperUnits', 'centimeters', ...
+                      'PaperSize', [pos(3), pos(4)]);
+
+            folderName = Visualization.FIGURES_FOLDER;
+            if ~isempty(subfolderName)
+                folderName = [Visualization.FIGURES_FOLDER, '/', subfolderName];
+            end
+
+            % Save figure
+            if ~exist(folderName, 'dir')
+                mkdir(folderName);
+            end
+
+            % Export to .pdf
+            figNamePDF = [figName, '.pdf'];
+            filePath = fullfile(folderName, figNamePDF);
+            set(gcf, 'PaperPositionMode', 'auto');
+            exportgraphics(hfig, filePath, 'ContentType', 'vector');
+
+            % Export to .png
+            figNamePNG = [figName, '.png'];
+            filePath = fullfile(folderName, figNamePNG);
+            set(gcf, 'PaperPositionMode', 'auto');
+            exportgraphics(hfig, filePath, 'Resolution', 300);
+        end     
+    
         function hintonDiagram(matrix, ax, figureTitle)
+            % Optional parameters: ax, figureTitle
             if nargin < 2
                 % Use the current axis if none is provided
                 ax = gca;
@@ -40,20 +99,16 @@ classdef Visualization
             set(ax, 'YDir', 'reverse', 'XAxisLocation', 'top');            
             % axis(ax, 'off');
             set(ax, 'XColor', 'none', 'YColor', 'none');
+
             if ~isempty(figureTitle)
                 title(ax, figureTitle);
             end
         end
 
-        function hintonDiagramPlot(arrW, folderName, figName, saveFig)
-            % TODO (high): Change this, only 'arrW' should be non-optional
-            % parameter, remove saveFig and switch order of figName and
-            % folderName (default to current folder);
-            if nargin < 3
+        function plotHintonDiagrams(arrW, figName, subfolderName)
+            % Optional parameters: figName, subfolderName
+            if nargin < 1
                 error(['##### ERROR IN THE CLASS ' mfilename('class') ': Not enough input arguments provided.']);
-            end
-            if nargin < 4
-                saveFig = false;
             end
 
             hfig = figure;
@@ -65,93 +120,54 @@ classdef Visualization
                 Visualization.hintonDiagram(arrW{i}, ax);
             end
 
-            width = 20;
-            ratio = 0.65; % height/weight ratio
-            set(findall(hfig, '-property','FontSize'),'FontSize', 17);
-            % set(findall(hfig, '-property', 'Box'), 'Box', 'off');
-            set(findall(hfig, '-property', 'Interpreter'), 'Interpreter', 'latex');
-            set(findall(hfig, '-property', 'TickLabelInterpreter'), 'TickLabelInterpreter', 'latex');
-            
-            if saveFig
-                set(hfig, 'Units', 'centimeters', ...
-                          'Position', [3 3 width ratio * width]);
-                
-                pos = get(hfig, 'Position');
-                
-                set(hfig, 'PaperPositionMode', 'Auto', ...
-                          'PaperUnits', 'centimeters', ...
-                          'PaperSize', [pos(3), pos(4)]);
-    
-                % Save figure
-                if ~exist(folderName, 'dir')
-                    mkdir(folderName);
-                end
-    
-                % Export to .pdf
-                figNamePDF = [figName, '.pdf'];
-                filePath = fullfile(folderName, figNamePDF);
-                set(gcf, 'PaperPositionMode', 'auto');
-                exportgraphics(hfig, filePath, 'ContentType', 'vector');
-    
-                % Export to .png
-                figNamePNG = [figName, '.png'];
-                filePath = fullfile(folderName, figNamePNG);
-                set(gcf, 'PaperPositionMode', 'auto');
-                exportgraphics(hfig, filePath, 'Resolution', 300);
+            Visualization.formatFigure(hfig);
+
+            % Save figure
+            if nargin > 1
+                Visualization.exportFigure(hfig, figName, ...
+                    Utility.ternaryOpt(nargin == 2, @() '', @() subfolderName));
             end
         end
 
-        function plotStructVariables(resArr, offset)
-            if nargin < 2
-                offset = 1;
+        function plotLatentFactors(Z, figTitle, figName, subfolderName)
+            % Optional parameters: figureTitle, figName, subfolderName
+            if nargin < 1
+                error(['##### ERROR IN THE CLASS ' mfilename('class') ': Not enough input arguments provided.']);
+            elseif nargin < 2
+                figTitle = '';
             end
-            if offset < 1
-                error(['##### ERROR IN THE CLASS Visualization' ': Offset is the starting iteration, it can not be ' ...
-                    'less than 1']);
-            end
-            numIterations = length(resArr);
-            
-            % Check the first struct to get the field names
-            firstRes = resArr{1};
-            fieldNames = fieldnames(firstRes);
-            
-            numFields = length(fieldNames);
-            
-            % Determine the number of rows needed for subplots with 2 columns
-            numRows = ceil(numFields / 2);
-            
-            figure;
-            
-            for i = 1:numFields
-                subplot(numRows, 2, i);
-                
-                data = zeros(1, numIterations - (offset - 1));
-                
-                % Collect data across all iterations
-                for j = offset:numIterations
-                    data(j - (offset - 1)) = resArr{j}.(fieldNames{i});
-                end
-                
-                % Plot the data
-                plot(offset:numIterations, data, 'LineWidth', 1.5);
-                
-                % Set the title and labels
-                title(['Variable: ', fieldNames{i}]);
-                xlabel('Iteration');
-                ylabel(fieldNames{i});
-                grid on;
-            end
-            
-            sgtitle('Evolution of ELBO variables over iteration');
-        end
 
-        function plotLoadings(W, dimList, figureTitle)
+            hfig = figure;
+            numFactors = size(Z, 2);
+            for i = 1:numFactors
+                subplot(numFactors, 1, i);
+                factor = Z(:, i);
+                plot(factor, '.', 'MarkerSize', 4);
+                hold on;
+            end
+            
+            if ~isempty(figTitle)
+                sgtitle(figTitle);
+            end
+
+            Visualization.formatFigure(hfig);
+
+            % Save figure
+            if nargin > 2
+                Visualization.exportFigure(hfig, figName, ...
+                    Utility.ternaryOpt(nargin == 2, @() '', @() subfolderName));
+            end
+        end
+        
+        function plotLoadings(W, dimList, figTitle, figName, subfolderName)
             % Parameters
             % ----------
             % W : matrix, [D_total x K]
             % dimList: number of features in each view 
-            if nargin < 3
-                figureTitle = '';
+            if nargin < 2
+                error(['##### ERROR IN THE CLASS ' mfilename('class') ': Not enough input arguments provided.']);
+            elseif nargin < 3
+                figTitle = '';
             end
 
             [D, K] = size(W);
@@ -167,7 +183,7 @@ classdef Visualization
             offset = ceil(1.25 * maxHeight);
             x = linspace(1, D, D);
         
-            figure;
+            hfig = figure;
             hold on;
         
             for k = 1:K
@@ -189,8 +205,16 @@ classdef Visualization
                     'LabelHorizontalAlignment', 'left', 'Interpreter', 'latex');
             end
 
-            if ~isempty(figureTitle)
-                title(figureTitle);
+            if ~isempty(figTitle)
+                title(figTitle);
+            end
+
+            Visualization.formatFigure(hfig);
+
+            % Save figure
+            if nargin > 3
+                Visualization.exportFigure(hfig, figName, ...
+                    Utility.ternaryOpt(nargin == 3, @() '', @() subfolderName));
             end
         end
     end

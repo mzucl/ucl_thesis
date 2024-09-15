@@ -4,7 +4,7 @@
 % % Add folders to MATLAB path
 addpath('src');
 addpath('models');
-addpath('helpers');
+addpath(genpath('helpers'));
 addpath(genpath('tests'))
 addpath(genpath('experiments'))
 addpath(genpath('figures'))

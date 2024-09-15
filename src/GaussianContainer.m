@@ -267,6 +267,33 @@ classdef GaussianContainer < handle
             value = obj.expInit;
         end
 
+        % Returns E[X^TDX] or E[XDX^T] where D is a diagonal matrix
+        % TODO: Check if trace of diagonal is computed efficiently
+        % TODO: A special case of this method is the method 'getContainerExpectations'
+        % potentially merge them in code refactoring.
+        % TODO: Add tests for this method
+        function value = getExpXtDX(diagMatrix, XtDX)
+            if (obj.cols && XtDX) || (~obj.cols && ~XtDX)
+                value = obj.mu' * diagMatrix * obj.mu;
+                if obj.type == "DS"
+                    value = value + trace(obj.cov * diagMatrix) * eye(obj.Size); 
+                elseif obj.type == "DD"
+                    % TODO: Haven't test this, not sure if it returns
+                    % correct value
+                    sigmaDiagTr = squeeze(sum((obj.cov * diagMatrix) .* eye(obj.dim), [1, 2])); % returns trace for each covariance matrix * diagonalMatrix
+                    value = value + diag(sigmaDiagTr); 
+                end
+            else
+                value = obj.mu * diagMatrix * obj.mu';
+                if obj.type == "DS"
+                    value = value + trace(diagMatrix) * obj.cov;
+                elseif obj.type == "DD"
+                    diagonal = reshape(diag(diagMatrix), 1, 1, []);
+                    value = value + sum(obj.cov .* diagonal, 3);
+                end
+            end
+        end
+
 
 
 
