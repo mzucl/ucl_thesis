@@ -1,4 +1,4 @@
-classdef (Abstract) Bound
+classdef (Abstract) Bound < handle
     properties
         a
     end

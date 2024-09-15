@@ -1,3 +1,6 @@
+% TODO: View should be a base class and this should inherit from it, 
+% DRY the code!
+
 classdef BinaryView < handle
     properties         
         X               % ViewHandler instance to hold the data
@@ -123,15 +126,26 @@ classdef BinaryView < handle
             obj.alpha.updateAllDistributionsB(bNew);
         end
 
-        function obj = qMuUpdate(obj)
-            
 
-            covNew = (1/(obj.mu.priorPrec + obj.N * obj.tau.E)) * eye(obj.D);
-            muNew = obj.tau.E * (covNew * (obj.X.X * ones(obj.N, 1) - obj.W.E * obj.Z.E * ones(obj.N, 1)));
+
+
+        function obj = qMuUpdate(obj)
+            if isa(obj.bound, BohningBound)
+                covNew = (4 / obj.N + obj.mu.priorPrec) * eye(obj.D);
+                muNew = covNew * ((obj.X.X + obj.bound.t() - 1/4 * obj.W.E * obj.Z.E) * ...
+                    ones(obj.N, 1));
+                
+            elseif isa(obj.bound, JaakkolaBound)
+            end
             
             obj.mu.updateParameters(muNew, covNew);
-        end
+            end
 
+
+
+
+
+        % Same as for continuous view -> move to the base class View
         function value = getExpectationLnW(obj)
             value = obj.W.E_SNC' * obj.alpha.E;
             value = -1/2 * value + obj.D/2 * (obj.alpha.E_LnX - obj.K.Val * log(2*pi));
@@ -144,6 +158,12 @@ classdef BinaryView < handle
                 obj.N * obj.mu.E_XtX - 2 * sum(sum((obj.W.E * obj.Z.E) .* (obj.X.X - obj.mu.E))) + ...
                 sum(sum(obj.W.E_XtX' .* obj.Z.E_XXt)));
         end
+
+
+
+
+
+
 
 
 
