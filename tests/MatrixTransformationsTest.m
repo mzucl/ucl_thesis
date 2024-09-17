@@ -511,5 +511,19 @@ classdef MatrixTransformationsTest < matlab.unittest.TestCase
             
             testCase.verifyEqual(res1, res2);
         end
+
+        % q(W) update for Bohning bound
+        function testIdentityBinary4_1(testCase)
+            N = 50;
+            K = 9;
+            D = 20;
+            Z = Utility.generateRandomIntMatrix(K, N);
+            H = 1/4 * ones(D, N);
+
+            res1 = Z * diag(H(1, :)) * Z';
+            res2 = 1/4 * (Z * Z');
+
+            testCase.verifyEqual(res1, res2);
+        end
     end
 end

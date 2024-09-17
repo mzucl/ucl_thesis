@@ -581,5 +581,26 @@ classdef CodeVectorizationsTest < matlab.unittest.TestCase
 
             testCase.verifyEqual(sum_, res);
         end
+
+
+        % Vectorization for q(W) update, vectorization for mu of W under
+        % Bohning bound
+        function testIdentityBinary6(testCase)
+            D = 20;
+            N = 100;
+            K = 8;
+
+            Sigma = Utility.generateRandomIntMatrix(K, K);
+            R = Utility.generateRandomIntMatrix(D, N);
+            Z = Utility.generateRandomIntMatrix(K, N);
+
+            % Vectorized approach
+            MU = Sigma * Z * R';
+
+            for d = 1:D
+                mu_d = Sigma * Z * R(d, :)';
+                testCase.verifyEqual(mu_d, MU(:, d));
+            end
+        end
     end
 end

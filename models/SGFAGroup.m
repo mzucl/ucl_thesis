@@ -35,6 +35,8 @@ classdef SGFAGroup < handle
     methods
         %% Constructors
         function obj = SGFAGroup(data, Z, K, featuresInCols)
+            % obj@BaseView();
+            % disp('SGFAGroup');
             if nargin < 3
                 error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
             elseif nargin < 4

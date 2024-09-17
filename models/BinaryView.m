@@ -64,6 +64,7 @@ classdef BinaryView < handle
     methods
         %% Constructors
         function obj = BinaryView(data, Z, K, featuresInCols, bound)
+            % disp('BinaryView');
             % TODO: Deal with the default values in a proper way
             if nargin < 3
                 error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
@@ -87,15 +88,15 @@ classdef BinaryView < handle
 
             %% Model setup and initialization
             %                          type, size_, a, b, prior
-            obj.alpha = GammaContainer("SD", obj.K.Val, SGFAGroup.SETTINGS.DEFAULT_GAMMA_A, SGFAGroup.SETTINGS.DEFAULT_GAMMA_B);
+            obj.alpha = GammaContainer("SD", obj.K.Val, BinaryView.SETTINGS.DEFAULT_GAMMA_A, BinaryView.SETTINGS.DEFAULT_GAMMA_B);
             
             %                  dim, mu,    cov,  priorPrec
             obj.mu = Gaussian(obj.D, 0, eye(obj.D), 10^3);
 
-            if isa(obj.bound, BohningBound)
+            if isa(obj.bound, 'BohningBound')
                 %                         type, size_, cols,   dim,        mu, cov, priorPrec
                 obj.W = GaussianContainer("DS", obj.D, false, obj.K.Val, randn(obj.K.Val, obj.D));
-            elseif isa(obj.bound, JaakkolaBound)
+            elseif isa(obj.bound, 'JaakkolaBound')
                 obj.W = GaussianContainer("DD", obj.D, false, obj.K.Val, randn(obj.K.Val, obj.D));
             end
 
@@ -124,10 +125,12 @@ classdef BinaryView < handle
 
         function obj = qWUpdate(obj, it)
             alphaExp = Utility.ternary(it == 1, obj.alpha.getExpInit(true), obj.alpha.E_Diag);
-            tauExp = Utility.ternary(it == 1, obj.tau.getExpInit(), obj.tau.E);
-
-            covNew = Utility.matrixInverse(tauExp * obj.Z.E_XXt + alphaExp);
-            muNew = covNew * tauExp * obj.Z.E * (obj.X.X - obj.mu.E)';
+            
+            if isa(obj.bound, 'BohningBound')
+                covNew = Utility.matrixInverse(1/4 * obj.Z.E_XXt + alphaExp);
+                muNew = covNew * obj.Z.E * (obj.X.X + obj.bound.t() + obj.bound.h().* obj.mu.E);
+            elseif isa(obj.bound, 'JaakkolaBound')
+            end
            
             obj.W.updateDistributionsParameters(muNew, covNew);
         end
@@ -141,12 +144,12 @@ classdef BinaryView < handle
 
 
         function obj = qMuUpdate(obj)
-            if isa(obj.bound, BohningBound)
+            if isa(obj.bound, 'BohningBound')
                 covNew = (4 / obj.N + obj.mu.priorPrec) * eye(obj.D);
                 muNew = covNew * ((obj.X.X + obj.bound.t() - 1/4 * obj.W.E * obj.Z.E) * ...
                     ones(obj.N, 1));
 
-            elseif isa(obj.bound, JaakkolaBound)
+            elseif isa(obj.bound, 'JaakkolaBound')
                 covNew = Utility.matrixInverse(diag(obj.bound.h() * ones(obj.N, 1)) + ...
                     obj.mu.priorPrec * eye(obj.D));
                 muNew = covNew * ((obj.X.X + obj.bound.t() - obj.bound.h() .* (obj.W.E * obj.Z.E)) * ...
@@ -158,10 +161,13 @@ classdef BinaryView < handle
 
 
         function obj = xiUpdate(obj)
-            if isa(obj.bound, BohningBound)
+            if isa(obj.bound, 'BohningBound')
                 xiNew = obj.W.E * obj.Z.E + obj.mu.E;
-            elseif isa(obj.bound, JaakkolaBound)
+            elseif isa(obj.bound, 'JaakkolaBound')
+                xiNew = 0; % Not implemented
             end
+
+            obj.bound.updateXi(xiNew);
         end
 
 
@@ -172,35 +178,34 @@ classdef BinaryView < handle
             value = -1/2 * value + obj.D/2 * (obj.alpha.E_LnX - obj.K.Val * log(2*pi));
         end
 
-        % TODO (medium): The value can be reused from the qTauUpdate method
         function value = getExpectationLnPX(obj)
-            k = (obj.N * obj.D)/2;
-            value = k * (obj.tau.E_LnX - log(2 * pi)) - obj.tau.E/2 * (obj.X.Tr_XtX - 2 * obj.mu.E_Xt * sum(obj.X.X, 2) + ...
-                obj.N * obj.mu.E_XtX - 2 * sum(sum((obj.W.E * obj.Z.E) .* (obj.X.X - obj.mu.E))) + ...
-                sum(sum(obj.W.E_XtX' .* obj.Z.E_XXt)));
-        end
+            % TODO: optimize trace in multiple places
+            WZ_tr = (obj.W.E * obj.Z.E)';
+            term1 = trace((WZ_tr + obj.mu.E_Xt) * (obj.X.X + obj.bound.t()));
+            if isa(obj.bound, 'BohningBound')
+                term2 = 1/4 * trace(obj.W.E_XtX * obj.Z.E_XXt) + 1/2 * WZ_tr * obj.mu.E ...
+                    + obj.N/4 * obj.mu.E_XtX;
 
-
-
-
-
-
-
-
-
-        %% Dependent properties
-        function value = get.C(obj)
-            if ~obj.cacheFlags(1)
-                obj.cache.E = obj.a / obj.b;
-                obj.cacheFlags(1) = true;
+                const = sum(sum(-obj.bound.c() + obj.bound.xi .* obj.bound.g() ...
+                    -1/8 * obj.bound.xi.^2));
+                
+            elseif isa(obj.bound, 'JaakkolaBound')
+                term2 = 0; % Not implemented
+                const = sum(sum(-obj.bound.c() + obj.bound.xi .* obj.bound.g() ...
+                    -1/2 * obj.bound.xi.^2 .* obj.bound.h()));
             end
-            value = obj.cache.E;
+
+            value = term1 - 1/2 * term2 + const;
         end
 
-        function value = get.G(obj)
-        end
 
-        function value = get.H(obj)
-        end
+
+
+
+
+
+
+
+
     end
 end

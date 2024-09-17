@@ -50,6 +50,7 @@ classdef BGFA < handle
         % [NOTE] For now we have 2 datasets passed in as matrices
         %% Constructors
         function obj = BGFA(data, Mc, K, bound, maxIter, tol, doRotation) 
+            % TODO: Validate Mc somehow?
             % bound = 'J' or 'B'
             % Mc -> number of continous views
 
@@ -93,19 +94,22 @@ classdef BGFA < handle
                 obj.Z = GaussianContainer("DD", obj.N, true, obj.K.Val, randn(obj.K.Val, obj.D)); % STEP1
             end
 
-            % Initialize views
-            % TODO: If views had a base case this would be much easier
-            % obj.views = SGFAGroup.empty(obj.M, 0);
+            % obj.views(1:obj.M) = View(); % Preallocate with dummy `View` objects
+
+            % Preallocate - DONT for now!
+            % obj.views = BaseView.empty(obj.M, 0);
+            obj.views = {};
 
             for i = 1:obj.Mc
-                obj.views(i) = SGFAGroup(data{i}, obj.Z, obj.K, false); % featuresInCols = false;
+                obj.views{i} = SGFAGroup(data{i}, obj.Z, obj.K, false); % featuresInCols = false;
             end
 
             for i = obj.Mc + 1:obj.M
-                obj.views(i) = BinaryView(data{i}, obj.Z, obj.K, false, obj.bound); % featuresInCols = false;
+                obj.views{i} = BinaryView(data{i}, obj.Z, obj.K, false, obj.bound); % featuresInCols = false;
             end
 
-            obj.D = [obj.views.D];
+            obj.D = [cellfun(@(x) x.D, obj.views)];
+            % obj.D = [obj.views.D];
         end
 
 
@@ -117,13 +121,13 @@ classdef BGFA < handle
                 muNew = zeros(obj.K.Val, obj.N);
     
                 for m = 1:obj.Mc
-                    view = obj.views(m);
+                    view = obj.views{m};
                     covNew = covNew + view.tau.E * view.W.E_XtX;
                     muNew = muNew + view.tau.E * view.W.E_Xt * (view.X.X - view.mu.E);
                 end
 
                 for m = obj.Mc:obj.M
-                    view = obj.views(m);
+                    view = obj.views{m};
                     covNew = covNew + 1/4 * view.W.E_XtX;
                     muNew = muNew + view.W.E_Xt * (view.X.X + view.bound.t() - 1/4 * view.mu.E);
                 end
@@ -133,30 +137,31 @@ classdef BGFA < handle
     
                 obj.Z.updateDistributionsParameters(muNew, covNew);
             elseif obj.bound == 'J'
+                % TODO
             end
         end
 
         function obj = qWUpdate(obj, it)
             for i = 1:obj.M
-                obj.views(i).qWUpdate(it);
+                obj.views{i}.qWUpdate(it);
             end
         end
 
         function obj = qAlphaUpdate(obj)
             for i = 1:obj.M
-                obj.views(i).qAlphaUpdate();
+                obj.views{i}.qAlphaUpdate();
             end
         end
 
         function obj = qMuUpdate(obj)
             for i = 1:obj.M
-                obj.views(i).qMuUpdate();
+                obj.views{i}.qMuUpdate();
             end
         end
 
         function obj = qTauUpdate(obj)
-            for i = 1:obj.M
-                obj.views(i).qTauUpdate();
+            for i = 1:obj.Mc % for continuous views only
+                obj.views{i}.qTauUpdate();
             end
         end
 
@@ -225,10 +230,16 @@ classdef BGFA < handle
             elbo = 0;
             for m = 1:obj.M
                 % p
-                view = obj.views(m);
+                view = obj.views{m};
                 elbo = elbo + view.getExpectationLnPX() + view.getExpectationLnW() ... % p(.)
-                    + view.alpha.E_LnP + view.mu.E_LnP + view.tau.E_LnP ... % p(.)
-                    + view.W.H + view.alpha.H + view.mu.H + view.tau.H; % q(.)
+                    + view.alpha.E_LnP + view.mu.E_LnP + ... % p(.)
+                    + view.W.H + view.alpha.H + view.mu.H; % q(.)
+            end
+
+            % 'tau' for continuous views only
+            for m = 1:obj.Mc
+                view = obj.views{m};
+                elbo = elbo + view.tau.E_LnP + view.tau.H;
             end
 
             elbo = elbo + obj.Z.H + obj.Z.E_LnP;
@@ -262,8 +273,8 @@ classdef BGFA < handle
             % Remove those rows from Z, corresponding columns from W, and elements from alpha
             obj.Z.removeDimensions(removeIdx);
             for m = 1:obj.M
-                obj.views(m).alpha.removeDimensions(removeIdx);
-                obj.views(m).W.removeDimensions(removeIdx);
+                obj.views{m}.alpha.removeDimensions(removeIdx);
+                obj.views{m}.W.removeDimensions(removeIdx);
             end
         end
     
@@ -275,7 +286,7 @@ classdef BGFA < handle
         function value = get.D(obj)
             value = zeros(obj.M, 1);
             for m = 1:length(obj.views)
-                value(m) = obj.views(m).D;
+                value(m) = obj.views{m}.D;
             end
         end
     end

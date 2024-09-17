@@ -292,10 +292,14 @@ classdef Utility
             end
         end
     
+        function result = importCSV(fileName)
+            result = readmatrix(fileName);
+        end
     
 
 
     
+        
         %% 3D tensor computations
         % For matrix MU compute outer product of each column with itself;
         % store the result in 3D array;

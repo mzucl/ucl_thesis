@@ -61,3 +61,20 @@ classdef (Abstract) Bound < handle
         h(obj)
     end
 end
+
+% TODO: high!!!!
+
+        % %% Dependent properties
+        % function value = get.C(obj)
+        %     if ~obj.cacheFlags(1)
+        %         obj.cache.E = obj.a / obj.b;
+        %         obj.cacheFlags(1) = true;
+        %     end
+        %     value = obj.cache.E;
+        % end
+        % 
+        % function value = get.G(obj)
+        % end
+        % 
+        % function value = get.H(obj)
+        % end

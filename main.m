@@ -1,9 +1,20 @@
+X1 = Utility.importCSV('datasets/mnist38/pixels.csv');
+X2 = Utility.importCSV('datasets/mnist38/continuousLabels.csv');
+
+
+
+
+
+
+
+
+return;
 % % Clear the workspace
 % close all; clear; clc;
 % 
 % % Add folders to MATLAB path
 addpath('src');
-addpath('models');
+addpath(genpath('models'));
 addpath(genpath('helpers'));
 addpath(genpath('tests'))
 addpath(genpath('experiments'))
