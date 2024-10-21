@@ -9,3 +9,6 @@ figures/
 
 # Ignore any .mat files
 *.mat
+
+# Ignore datasets folder
+datasets/
