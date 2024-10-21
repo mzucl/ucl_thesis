@@ -45,7 +45,7 @@ for s = 1:stabilityRun
     
         if elboVals(end) > maxElbo
             maxElbo = elboVals(end);
-            bestModel = sgfaModel;
+            sgfaModel = sgfaModel;
             convIt = it;
         end
     end
@@ -75,7 +75,7 @@ end
 sgtitle('True latent factors');
 
 % Recovered latent factors
-expZ = bestModel.Z.E;
+expZ = sgfaModel.Z.E;
 
 % Effective number of factors
 numEffFactors = size(expZ, 1);
@@ -92,24 +92,24 @@ sgtitle('Latent factors');
 
 
 %% Visualize loadings and alpha
-totalD = sum(bestModel.D); % Total number of dimensions
+totalD = sum(sgfaModel.D); % Total number of dimensions
 
 trueW = zeros(totalD, data.trueK); % True K
-estW = zeros(totalD, bestModel.K.Val);
-estAlpha = zeros(bestModel.K.Val, bestModel.M);
+estW = zeros(totalD, sgfaModel.K.Val);
+estAlpha = zeros(sgfaModel.K.Val, sgfaModel.M);
 
 d = 0;
-for m = 1:bestModel.M
-    Dm = bestModel.views(m).D;
+for m = 1:sgfaModel.M
+    Dm = sgfaModel.views(m).D;
     trueW(d + 1 : d + Dm, :) = data.W{m};
-    estW(d + 1 : d + Dm, :) = bestModel.views(m).W.E;
+    estW(d + 1 : d + Dm, :) = sgfaModel.views(m).W.E;
     d = d + Dm;
 
-    estAlpha(:, m) = bestModel.views(m).alpha.E;
+    estAlpha(:, m) = sgfaModel.views(m).alpha.E;
 end
 
-Visualization.plotLoadings(trueW, bestModel.D, 'True W');
-Visualization.plotLoadings(estW, bestModel.D, 'Estimated W');
+Visualization.plotLoadings(trueW, sgfaModel.D, 'True W');
+Visualization.plotLoadings(estW, sgfaModel.D, 'Estimated W');
 
 figure;
 ax1 = subplot(1, 2, 1);

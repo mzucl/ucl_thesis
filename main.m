@@ -2,7 +2,16 @@ X1 = Utility.importCSV('datasets/mnist38/pixels.csv');
 X2 = Utility.importCSV('datasets/mnist38/continuousLabels.csv');
 
 
+%%
 
+hfig = confusionchart(X2_test, predictedLabel, ...
+                            'Title', 'Confusion Matrix', ...
+                            'DiagonalColor', Constants.GREEN, ...
+                            'OffDiagonalColor', Constants.RED, ...
+                            'RowSummary', 'row-normalized', ...
+                            'ColumnSummary', 'column-normalized');
+Visualization.formatFigure(hfig)
+%%
 
 
 
@@ -19,7 +28,10 @@ addpath(genpath('helpers'));
 addpath(genpath('tests'))
 addpath(genpath('experiments'))
 addpath(genpath('figures'))
+addpath(genpath('datasets'))
 addpath('logs');
+addpath('demos');
+addpath('plots');
 % 
 % % Uncomment to run tests
 % testResults = runtests('tests');

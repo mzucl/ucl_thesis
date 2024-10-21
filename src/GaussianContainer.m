@@ -272,7 +272,7 @@ classdef GaussianContainer < handle
         % TODO: A special case of this method is the method 'getContainerExpectations'
         % potentially merge them in code refactoring.
         % TODO: Add tests for this method
-        function value = getExpXtDX(diagMatrix, XtDX)
+        function value = getExpXtDX(obj, diagMatrix, XtDX)
             if (obj.cols && XtDX) || (~obj.cols && ~XtDX)
                 value = obj.mu' * diagMatrix * obj.mu;
                 if obj.type == "DS"

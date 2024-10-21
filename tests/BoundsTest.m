@@ -3,15 +3,15 @@ classdef BoundsTest < matlab.unittest.TestCase
         function verifyObject(testCase, bS, bM)
             % bS - bound when argument is a scalar
             % bM - bound when argument is a matrix
-            c = bM.c();
-            g = bM.g();
-            h = bM.h();
-            t = bM.t();
+            c = bM.C;
+            g = bM.G;
+            h = bM.H;
+            t = bM.T;
 
-            testCase.verifyTrue(all(c(:) == bS.c()));
-            testCase.verifyTrue(all(g(:) == bS.g()));
-            testCase.verifyTrue(all(h(:) == bS.h()));
-            testCase.verifyTrue(all(t(:) == bS.t()));
+            testCase.verifyTrue(all(c(:) == bS.C));
+            testCase.verifyTrue(all(g(:) == bS.G));
+            testCase.verifyTrue(all(h(:) == bS.H));
+            testCase.verifyTrue(all(t(:) == bS.T));
         end
     end
 

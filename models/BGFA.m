@@ -90,8 +90,8 @@ classdef BGFA < handle
                 %                         type, size_, cols, dim,     mu, cov, priorPrec
                 obj.Z = GaussianContainer("DS", obj.N, true, obj.K.Val, zeros(obj.K.Val, 1)); % STEP1
             elseif bound == 'J'
-                %                         type, size_, cols,   dim,   mu, cov, priorPrec
-                obj.Z = GaussianContainer("DD", obj.N, true, obj.K.Val, randn(obj.K.Val, obj.D)); % STEP1
+                %                         type, size_, cols,   dim,              mu,            -- cov, priorPrec
+                obj.Z = GaussianContainer("DD", obj.N, true, obj.K.Val, randn(obj.K.Val, obj.N)); % STEP1
             end
 
             % obj.views(1:obj.M) = View(); % Preallocate with dummy `View` objects
@@ -126,10 +126,10 @@ classdef BGFA < handle
                     muNew = muNew + view.tau.E * view.W.E_Xt * (view.X.X - view.mu.E);
                 end
 
-                for m = obj.Mc:obj.M
+                for m = obj.Mc + 1:obj.M
                     view = obj.views{m};
                     covNew = covNew + 1/4 * view.W.E_XtX;
-                    muNew = muNew + view.W.E_Xt * (view.X.X + view.bound.t() - 1/4 * view.mu.E);
+                    muNew = muNew + view.W.E_Xt * (view.X.X + view.bound.T - 1/4 * view.mu.E);
                 end
     
                 covNew = Utility.matrixInverse(eye(obj.K.Val) + covNew);
@@ -165,7 +165,11 @@ classdef BGFA < handle
             end
         end
 
-
+        function obj = qXiUpdate(obj)
+            for i = obj.Mc + 1:obj.M % for binary views only
+                obj.views{i}.qXiUpdate();
+            end
+        end
 
 
 
@@ -186,12 +190,14 @@ classdef BGFA < handle
                 obj.qZUpdate();
                 obj.qWUpdate(it);
                 obj.qMuUpdate();
+                obj.qXiUpdate();
                 % obj.qZUpdate();
                 % if it > 0
                 %     obj.updateRotation();
                 % end  
                 obj.qAlphaUpdate();
                 obj.qTauUpdate();
+
                 obj.removeFactors(it);
 
                 if it ~= 1 && mod(it, elboIterStep) ~= 0
@@ -201,7 +207,7 @@ classdef BGFA < handle
                 currElbo = obj.computeELBO();
                 elboVals(elboIdx) = currElbo;
 
-                if SGFA.SETTINGS.DEBUG
+                if BGFA.SETTINGS.DEBUG
                     if elboIdx ~= 1
                         disp(['======= ELBO increased by: ', num2str(currElbo - elboVals(elboIdx - 1))]);
                     end
@@ -252,7 +258,7 @@ classdef BGFA < handle
         %% Additional methods
         function obj = removeFactors(obj, it, threshold)
             if nargin < 3
-                threshold = SGFA.SETTINGS.LATENT_FACTORS_THRESHOLD;
+                threshold = BGFA.SETTINGS.LATENT_FACTORS_THRESHOLD;
             end
             % Calculate the average of the square of elements for each row of Z
             avgSquare = mean(obj.Z.E.^2, 2);
@@ -288,6 +294,38 @@ classdef BGFA < handle
             for m = 1:length(obj.views)
                 value(m) = obj.views{m}.D;
             end
+        end
+
+        % Variables with '_' are expectations
+        % X_tr and y_tr are used to set the threshold
+        function [K_eff, predictions_te] = makePredictions(obj, X_tr, y_tr, X_te)
+            Z_ = obj.Z.E;
+            K_eff = size(Z_, 1);
+            
+            W1_ = obj.views{1}.W.E;
+            W2_ = obj.views{2}.W.E;
+            mu1_ = obj.views{1}.mu.E;
+            mu2_ = obj.views{2}.mu.E;
+            T1_ = obj.views{1}.tau.E * eye(obj.D(1));
+            
+            sigma_Z = Utility.matrixInverse(eye(K_eff) + W1_' * T1_ * W1_);
+    
+            % Find the best threshold on the train data
+            MU_Z = sigma_Z * (W1_' * T1_ * (X_tr' - mu1_));
+            
+            predictions_tr = Bound.sigma(W2_ * MU_Z + mu2_);
+            [fpr, tpr, thresholds, ~] = perfcurve(y_tr', predictions_tr, 1);
+    
+            % Calculate G-means
+            gMeans = sqrt(tpr .* (1 - fpr));
+            [~, idx] = max(gMeans);
+            train_best_threshold = thresholds(idx);
+            
+            % Predictions on the test data
+            MU_Z = sigma_Z * (W1_' * T1_ * (X_te' - mu1_));
+            predictions_te = Bound.sigma(W2_ * MU_Z + mu2_);
+            predictions_te = predictions_te >= train_best_threshold;
+            predictions_te = double(predictions_te');
         end
     end
 end

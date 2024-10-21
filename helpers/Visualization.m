@@ -40,7 +40,7 @@ classdef Visualization
                       'PaperSize', [pos(3), pos(4)]);
 
             folderName = Visualization.FIGURES_FOLDER;
-            if ~isempty(subfolderName)
+            if nargin > 2 && ~isempty(subfolderName)
                 folderName = [Visualization.FIGURES_FOLDER, '/', subfolderName];
             end
 
@@ -49,11 +49,11 @@ classdef Visualization
                 mkdir(folderName);
             end
 
-            % Export to .pdf
-            figNamePDF = [figName, '.pdf'];
-            filePath = fullfile(folderName, figNamePDF);
-            set(gcf, 'PaperPositionMode', 'auto');
-            exportgraphics(hfig, filePath, 'ContentType', 'vector');
+            % % Export to .pdf
+            % figNamePDF = [figName, '.pdf'];
+            % filePath = fullfile(folderName, figNamePDF);
+            % set(gcf, 'PaperPositionMode', 'auto');
+            % exportgraphics(hfig, filePath, 'ContentType', 'vector');
 
             % Export to .png
             figNamePNG = [figName, '.png'];
@@ -62,20 +62,27 @@ classdef Visualization
             exportgraphics(hfig, filePath, 'Resolution', 300);
         end     
     
-        function hintonDiagram(matrix, ax, figureTitle)
-            % Optional parameters: ax, figureTitle
+        function hintonDiagram(matrix, ax, figTitle, backgroundColor)
+            % Optional parameters: ax, figTitle, backgroundColor
             if nargin < 2
                 % Use the current axis if none is provided
                 ax = gca;
             end
             if nargin < 3
-                figureTitle = '';
+                figTitle = '';
+            end
+
+            if nargin < 4
+                backgroundColor = true;
             end
             
             % Set the current axis to ax
             axes(ax);
             axis(ax, 'equal'); % same length in every direction
-            set(ax, 'Color', Visualization.hexToRGB(Constants.BLUE));
+            
+            if backgroundColor
+                set(ax, 'Color', Visualization.hexToRGB(Constants.BLUE));
+            end
 
             maxWeight = max(abs(matrix(:)));
 
@@ -100,8 +107,8 @@ classdef Visualization
             % axis(ax, 'off');
             set(ax, 'XColor', 'none', 'YColor', 'none');
 
-            if ~isempty(figureTitle)
-                title(ax, figureTitle);
+            if ~isempty(figTitle)
+                title(ax, figTitle);
             end
         end
 
@@ -130,7 +137,7 @@ classdef Visualization
         end
 
         function plotLatentFactors(Z, figTitle, figName, subfolderName)
-            % Optional parameters: figureTitle, figName, subfolderName
+            % Optional parameters: figTitle, figName, subfolderName
             if nargin < 1
                 error(['##### ERROR IN THE CLASS ' mfilename('class') ': Not enough input arguments provided.']);
             elseif nargin < 2
@@ -138,10 +145,10 @@ classdef Visualization
             end
 
             hfig = figure;
-            numFactors = size(Z, 2);
+            numFactors = size(Z, 1); % Z = [K x N]
             for i = 1:numFactors
                 subplot(numFactors, 1, i);
-                factor = Z(:, i);
+                factor = Z(i, :); % Factors are in the rows of Z
                 plot(factor, '.', 'MarkerSize', 4);
                 hold on;
             end
@@ -152,7 +159,7 @@ classdef Visualization
 
             Visualization.formatFigure(hfig);
 
-            % Save figure
+            % Save figure: if 'figTitle' is provided
             if nargin > 2
                 Visualization.exportFigure(hfig, figName, ...
                     Utility.ternaryOpt(nargin == 2, @() '', @() subfolderName));
@@ -200,7 +207,7 @@ classdef Visualization
             for k = 1:length(dimList) - 1 % Don't plot vertical line for the last view
                 linePos = linePos + dimList(k);
                 labelText = ['$D_{', num2str(k), '}$'];
-                xline(linePos, 'Color', 'blue', 'LineWidth', 1.5, ...
+                xline(linePos, 'Color', Constants.DARK_BLUE, 'LineWidth', 2, ...
                     'Label', labelText, 'LabelVerticalAlignment', 'top', ...
                     'LabelHorizontalAlignment', 'left', 'Interpreter', 'latex');
             end
@@ -212,10 +219,84 @@ classdef Visualization
             Visualization.formatFigure(hfig);
 
             % Save figure
-            if nargin > 3
+            if nargin > 2
                 Visualization.exportFigure(hfig, figName, ...
                     Utility.ternaryOpt(nargin == 3, @() '', @() subfolderName));
             end
         end
+    
+    
+
+        % TODO: DRY this: check the function above
+        function plotLoadingsAndAlpha(W, dimList, alpha, figsTitle, labelPos, figName, subfolderName)
+            % Parameters
+            % ----------
+            % W : matrix, [D_total x K]
+            % dimList: number of features in each view 
+            if nargin < 2
+                error(['##### ERROR IN THE CLASS ' mfilename('class') ': Not enough input arguments provided.']);
+            % elseif nargin < 3
+            %     figsTitle = '';
+            end
+
+            [D, K] = size(W);
+        
+            % Max height per each row
+            maxHeight = 0;
+            for k = 1:K
+                h = max(W(:, k)) - min(W(:, k));
+                if h > maxHeight
+                    maxHeight = h;
+                end
+            end
+            offset = ceil(1.25 * maxHeight);
+            x = linspace(1, D, D);
+        
+            height = 400;
+            hfig = figure('Position', [100, 100, 3.5 * height, height]); % TODO: the number * height must be a param, for 2G 2.5 was a good value
+            subplot('Position', [0.1, 0.1, 0.6, 0.8]);
+            hold on;
+        
+            for k = 1:K
+                y = W(:, k) + (K - k + 1) * offset;
+        
+                plot(x, y, 'Color', 'black', 'LineWidth', 1.5); %, 'Label', ['ind: ', k]);
+            end
+            
+            ax = gca;
+            ax.XAxis.Visible = 'off';
+            ax.YAxis.Visible = 'off';
+            
+            linePos = 0;
+            for k = 1:length(dimList) - 1 % Don't plot vertical line for the last view
+                linePos = linePos + dimList(k);
+                labelText = ['$D_{', num2str(k), '}$'];
+                xline(linePos, 'Color', Constants.DARK_BLUE, 'LineWidth', 2, ...
+                    'Label', labelText, 'LabelVerticalAlignment', labelPos, ...
+                    'LabelHorizontalAlignment', 'left', 'Interpreter', 'latex');
+            end
+
+            % if ~isempty(figTitle)
+            %     title(figTitle);
+            % end
+            
+            % title(figsTitle{1}, 'Interpreter', 'latex');
+
+            subplot('Position', [0.75, 0.1, 0.2, 0.8]);
+            Visualization.hintonDiagram(alpha, gca, '');
+
+            % title(figsTitle{2}, 'Interpreter', 'latex');
+
+            sgtitle(figsTitle, 'Interpreter', 'latex');
+
+            Visualization.formatFigure(hfig);
+
+            % % Save figure
+            % if nargin > 3
+            %     Visualization.exportFigure(hfig, figName, ...
+            %         Utility.ternaryOpt(nargin == 3, @() '', @() subfolderName));
+            % end
+        end
+        
     end
 end

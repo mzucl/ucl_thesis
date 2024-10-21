@@ -1,0 +1,2 @@
+Model,Dataset,No. of LF,bAcc,Specificity,Precision,Recall,F1 Score,NPV,Iterations,ELBO
+cGFA,connectivity__.csv,196.0000 ± 1.8708,0.9032 ± 0.0220,0.9200 ± 0.0307,0.8736 ± 0.0398,0.8864 ± 0.0466,0.8789 ± 0.0265,0.9305 ± 0.0258,1188.0000 ± 71.5542,4059703.4752 ± 10160.2544

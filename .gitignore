@@ -12,3 +12,6 @@ figures/
 
 # Ignore datasets folder
 datasets/
+
+# Ignore logs folder
+logs/

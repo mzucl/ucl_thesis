@@ -2,67 +2,67 @@
 close all; clear all; clc;
 
 % Logging
-logFileName = 'logs/sgfa_2G.txt';
+logFileName = 'logs/bgfa_2G.txt';
 if ~exist('logs', 'dir')
     mkdir('logs');
 end
 
 % Figures folder
-figsSubfolder = 'sgfa';
+figsSubfolder = 'bgfa';
 
 diary(logFileName); % start logging
 
 % Model settings
 settings = ModelSettings.getInstance();
-settings.VALIDATE = false;
-settings.DEBUG = false;
+settings.VALIDATE = true;
+settings.DEBUG = true;
 
 
-%% Generate data and train the model
-data = generateTwoViews();
+%% Import data and train the model
+folderName = 'mnist38'; 
+[X1_train, X2_train, X1_test, X2_test] = Datasets.trainTestSplitMNIST(folderName, true); % binaryLabels = true;
 
-X1 = data.X_tr{1}; % [N x D1];
-X2 = data.X_tr{2}; % [N x D2]
+% Speed up
+% X1_train = X1_train(1:500, :);
+% X2_train = X2_train(1:500, :);
 
-profile on;
+% profile on;
 
 K = 10;
 %                   data,   Mc, K, bound, maxIter, tol, doRotation 
-bgfaModel = BGFA({X1', X2'}, 1, K, 'B');
-
-return;
-[elboVals, convIt] = bgfaModel.fit(10);
-
-
-profile off;
-profile viewer;
+model = BGFA({X1_train', X2_train'}, 1, K, 'B');
 
 %%
-%                             Z,         figureTitle,        figName,      folderName)
-Visualization.plotLatentFactors(data.Z, 'True latent factors', 'trueLatentFactors', figsSubfolder);
-Visualization.plotLatentFactors(bgfaModel.Z.E', 'Latent factors', 'latentFactors', figsSubfolder);
-% TODO: reorder these!!! no '
+% return;
+[elboVals, convIt] = model.fit();
 
-%% Visualize loadings and alpha
-totalD = sum(bgfaModel.D); % Total number of dimensions
+% profile off;
+% profile viewer;
 
-trueW = zeros(totalD, data.trueK); % True K
-estW = zeros(totalD, bgfaModel.K.Val);
-estAlpha = zeros(bgfaModel.K.Val, bgfaModel.M);
+%%
+Z = model.Z.E;
+W1 = model.views{1}.W.E;
+W2 = model.views{2}.W.E;
+mu1 = model.views{1}.mu.E;
+mu2 = model.views{2}.mu.E;
 
-d = 0;
-for m = 1:bgfaModel.M
-    Dm = bgfaModel.views(m).D;
-    trueW(d + 1 : d + Dm, :) = data.W{m};
-    estW(d + 1 : d + Dm, :) = bgfaModel.views(m).W.E;
-    d = d + Dm;
+%%
+Z = model.Z.E;
+K = size(Z, 1);
+W1 = model.views{1}.W.E;
+W2 = model.views{2}.W.E;
+mu1 = model.views{1}.mu.E;
+mu2 = model.views{2}.mu.E;
+T1 = model.views{1}.tau.E * eye(model.D(1));
 
-    estAlpha(:, m) = bgfaModel.views(m).alpha.E;
-end
 
-%                            W,     dimList,   figTitle, figName, subfolderName
-Visualization.plotLoadings(trueW, bgfaModel.D, 'True $\mathbf{W}$', 'trueW', figsSubfolder);
-Visualization.plotLoadings(estW, bgfaModel.D, 'Estimated $\mathbf{W}$', 'estimatedW', figsSubfolder);
+sigma_Z = Utility.matrixInverse(eye(K) + W1' * T1 * W1);
 
-% alpha
-Visualization.plotHintonDiagrams({-data.alpha', -estAlpha}, 'Lala');
+MU_Z = sigma_Z * (W1' * T1 * (X1_test' - mu1));
+
+predictedLabels = Bound.sigma(W2 * MU_Z + mu2);
+predictedLabels = predictedLabels';
+%%
+
+predictedLabels(predictedLabels >= 0.5) = 1;  % Set elements greater than 0 to 1
+predictedLabels(predictedLabels < 0.5) = 0; % Set elements less than 0 to -1

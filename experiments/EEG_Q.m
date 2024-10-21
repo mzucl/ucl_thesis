@@ -1,49 +1,48 @@
 %% Import data
 data = readtable('control_eeg_questionnaire.csv');
-
-colsToDrop = {'ppid', 'isControl', 'gender', 'age'};
-
+colsToDrop = {'ppid', 'gender', 'age'};
 data(:, colsToDrop) = [];
+data = table2array(data);
 
-dataArray = table2array(data);
+% Extract views
+colNumEEG = 155; % Number of features in EEG dataset
+X1 = data(:, 2:colNumEEG + 1); % [N x D1]
+X2 = data(:, colNumEEG + 2:end); % [N x D2]
+X3 = data(:, 1); % 'isControl'; [N x 1]
 
-colNumEEG = 155;
+% Train test split
+% ...
 
-X1 = dataArray(:, 1:colNumEEG); % [N x D1]
-X2 = dataArray(:, colNumEEG+1:end); % [N x D2]
+cv = cvpartition(y, 'HoldOut', 0.3);
 
-% Scale datasets
-% X1 = Datasets.standardScaler(X1);
-% X2 = Datasets.standardScaler(X2);
+% Train and test split
+X_train = X(training(cv), :);
+y_train = y(training(cv), :);
+X_test = X(test(cv), :);
+y_test = y(test(cv), :);
 
-K = 50;
 
-profile on;
+% Train model on X1 and X2
+bestModel = NaN;
+bestElbo = -inf;
 
-gfaModel =  GFA({X1', X2'}, K);
-[elboVals, convIt] = gfaModel.fit(10);
+for i = 1:10
+    K = 100;
+    gfaModel =  SGFA({X1', X2'}, K, 15000);
+    [elboVals, convIt] = gfaModel.fit(10);
+    if elboVals(end) > bestElbo
+        bestModel = gfaModel;
+    end
+end
 
-profile off;
-profile viewer;
 
 
 return;
 
 %% Visualize true and recovered latent factors
-% True factors
-trueNumOfFactors = size(data.Z, 2);
-
-figure;
-for i = 1:trueNumOfFactors
-    subplot(trueNumOfFactors, 1, i);
-    factor = data.Z(:, i);
-    plot(factor, '.', 'MarkerSize', 4);
-    hold on;
-end
-sgtitle('True latent factors');
 
 % Recovered latent factors
-expZ = bestModel.Z.E;
+expZ = gfaModel.Z.E;
 
 % Effective number of factors
 numEffFactors = size(expZ, 1);
@@ -60,24 +59,26 @@ sgtitle('Latent factors');
 
 
 %% Visualize loadings and alpha
-totalD = sum(bestModel.D); % Total number of dimensions
+totalD = sum(gfaModel.D); % Total number of dimensions
 
-trueW = zeros(totalD, data.trueK); % True K
-estW = zeros(totalD, bestModel.K.Val);
-estAlpha = zeros(bestModel.K.Val, bestModel.M);
+% trueW = zeros(totalD, data.trueK); % True K
+estW = zeros(totalD, gfaModel.K.Val);
+estAlpha = zeros(gfaModel.K.Val, gfaModel.M);
 
 d = 0;
-for m = 1:bestModel.M
-    Dm = bestModel.views(m).D;
-    trueW(d + 1 : d + Dm, :) = data.W{m};
-    estW(d + 1 : d + Dm, :) = bestModel.views(m).W.E;
+for m = 1:gfaModel.M
+    Dm = gfaModel.views(m).D;
+    estW(d + 1 : d + Dm, :) = gfaModel.views(m).W.E;
     d = d + Dm;
 
-    estAlpha(:, m) = bestModel.views(m).alpha.E;
+    estAlpha(:, m) = gfaModel.views(m).alpha.E;
 end
 
-Visualization.plotLoadings(trueW, bestModel.D, 'True W');
-Visualization.plotLoadings(estW, bestModel.D, 'Estimated W');
+imshow(estW);
+
+return; 
+% Visualization.plotLoadings(trueW, gfaModel.D, 'True W');
+Visualization.plotLoadings(estW, gfaModel.D, 'Estimated W', '');
 
 figure;
 ax1 = subplot(1, 2, 1);

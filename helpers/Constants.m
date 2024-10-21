@@ -6,6 +6,7 @@ classdef Constants
         PURPLE = '#E1D5E7';
         RED = '#F8CECC';
         DARK_BLUE = '#6C8EBF';
+        GREEN = '#D5E8D4';
 
         % Tolerance for comparison of floating point values
         % if(a == b) -> if(abs(a - b) < Constants.TOL)

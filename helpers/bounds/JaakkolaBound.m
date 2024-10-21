@@ -1,5 +1,5 @@
 classdef JaakkolaBound < Bound
-    methods
+    methods(Access = private)
         function value = lambda(obj)
             value = (1./(1 + exp(-obj.xi)) - 0.5) ./ (2 * obj.xi);
         end

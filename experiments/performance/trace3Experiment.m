@@ -2,7 +2,7 @@ clc;
 A = Utility.generateRandomIntMatrix(50, 6000);
 B = Utility.generateRandomIntMatrix(6000, 50);
 C = Utility.generateRandomIntMatrix(50, 50);
-nruns = 1000;
+nruns = 100;
 
 tic;
 for i = 1:nruns
@@ -31,26 +31,25 @@ fprintf('Tr(CAB): %.4f seconds\n', elapsedTime);
 tic;
 for i = 1:nruns
     D = (A * B)';
-    tr4 = sum(D(:) .* C(:));
+    tr4 = sum(sum(D .* C));
 end
 elapsedTime = toc;
 fprintf('Elapsed time (AB)''C: %.4f seconds\n', elapsedTime);
 
 
-
-
 tic;
 for i = 1:nruns
     D = A * B;
-    tr5 = C(:)' * D(:);
+    tr5 = sum(sum(C' * D));
 end
 elapsedTime = toc;
 fprintf('Elapsed time (AB)C'': %.4f seconds\n', elapsedTime);
 
+
 tic;
 for i = 1:nruns
-    D = B * C;
-    tr6 = D(:)' * A(:);
+    D = (B * C)';
+    tr6 = sum(sum(D .* A));
 end
 elapsedTime = toc;
 fprintf('Elapsed time (BC)''A: %.4f seconds\n', elapsedTime);
@@ -58,11 +57,13 @@ fprintf('Elapsed time (BC)''A: %.4f seconds\n', elapsedTime);
 tic;
 for i = 1:nruns
     D = B * C;
-    tr7 = A(:)' * D(:);
+    tr7 = sum(sum(A' .* D));
 end
 elapsedTime = toc;
 fprintf('Elapsed time (BC)A'': %.4f seconds\n', elapsedTime);
 
+
+return;
 tic;
 for i = 1:nruns
     D = C * A;
