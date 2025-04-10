@@ -22,7 +22,7 @@ settings = ModelSettings.getInstance();
 
 
 %% BPCA - no initialization setup
-stabilityRun = 20;
+stabilityRun = 2;
 modelSelectionIter = 10;
 convItAvg = 0;
 
@@ -56,8 +56,9 @@ for s = 1:stabilityRun
 
     % arrW{s} = bestW;
 
+
     %% Visualize
-    Visualization.hintonDiagramPlot({W_PPCA, bestW}, 'figures/pca_no_init', ['W_ppca_bpca_', num2str(s)], true);
+    Visualization.plotHintonDiagrams({W_PPCA, bestW}, {'PPCA', 'BPCA'}, '', ['W_ppca_bpca_', num2str(s)], 'bpca');
 end
 
 elapsedTime = toc;

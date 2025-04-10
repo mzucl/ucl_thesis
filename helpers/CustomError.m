@@ -2,6 +2,7 @@ classdef CustomError < MException
     properties (Constant)
         % Global flag to enable/disable logging
         ENABLE_LOGGING           = true;
+
         ERR_NOT_ENOUGH_INPUT_ARG = "Not enough input arguments provided.";
         ERR_TOO_MANY_INPUT_ARG   = "Too many input arguments provided.";
     end
@@ -49,7 +50,7 @@ classdef CustomError < MException
                     className = splitName{1};
                     funcName = splitName{2};
                 else
-                    className = 'Main';
+                    className = 'main';
                     funcName = fullName;
                 end
             end

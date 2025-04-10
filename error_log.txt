@@ -1,4 +1,1 @@
-##### ERROR [InputCheck] 2025-04-10 15:35:13 in Visualization > exportFigure: Missing required input x.
-##### ERROR [InputCheck] 2025-04-10 15:44:49 in Visualization > exportFigure: Not enough input arguments provided.
-##### ERROR [InputCheck] 2025-04-10 15:45:27 in Visualization > exportFigure: Not enough input arguments provided.
-##### ERROR [InputCheck] 2025-04-10 15:46:41 in Visualization > exportFigure: Not enough input arguments provided.
+##### ERROR [InputCheck] 2025-04-10 15:58:03 in Visualization > exportFigure: Not enough input arguments provided.

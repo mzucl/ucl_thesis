@@ -1,8 +1,4 @@
 classdef Visualization
-    properties(Constant)
-        FIGURES_FOLDER = 'figures';
-    end
-
     methods (Static)
         function formatFigure(hfig)
         % formatFigure Formats a MATLAB figure for publication-quality appearance.
@@ -46,6 +42,7 @@ classdef Visualization
         end
 
 
+
         function exportFigure(hfig, figName, subfolderName)
             % exportFigure - Saves or exports a MATLAB figure to a file.
             %
@@ -82,9 +79,11 @@ classdef Visualization
                       'PaperUnits', 'centimeters', ...
                       'PaperSize', [pos(3), pos(4)]);
 
-            folderName = Visualization.FIGURES_FOLDER;
+            folderName = Constants.FIGURES_FOLDER;
+
+            % If a subfolder name is specified
             if nargin > 2 && ~isempty(subfolderName)
-                folderName = [Visualization.FIGURES_FOLDER, '/', subfolderName];
+                folderName = [Constants.FIGURES_FOLDER, '/', subfolderName];
             end
 
             % Save figure
@@ -92,36 +91,66 @@ classdef Visualization
                 mkdir(folderName);
             end
 
-            % % Export to .pdf
-            % figNamePDF = [figName, '.pdf'];
-            % filePath = fullfile(folderName, figNamePDF);
-            % set(gcf, 'PaperPositionMode', 'auto');
-            % exportgraphics(hfig, filePath, 'ContentType', 'vector');
+            % Export to .pdf
+            if Constants.EXPORT_TO_PDF
+                figNamePDF = [figName, '.pdf'];
+                filePath = fullfile(folderName, figNamePDF);
+                set(gcf, 'PaperPositionMode', 'auto');
+                exportgraphics(hfig, filePath, 'ContentType', 'vector');
+            end
 
             % Export to .png
             figNamePNG = [figName, '.png'];
             filePath = fullfile(folderName, figNamePNG);
             set(gcf, 'PaperPositionMode', 'auto');
             exportgraphics(hfig, filePath, 'Resolution', 300);
-        end     
+        end
+
     
+
         function hintonDiagram(matrix, ax, figTitle, backgroundColor)
-            % Optional parameters: ax, figTitle, backgroundColor
+            % hintonDiagram - Generates a Hinton diagram to visualize matrix values.
+            %
+            % Description:
+            %   This function creates a Hinton diagram to visualize the values of 
+            %   the input matrix. The size of each square in the diagram is 
+            %   proportional to the magnitude of the corresponding matrix value, 
+            %   with positive values represented by white squares and negative 
+            %   values by black squares.
+            %
+            % Input:
+            %   matrix         - A numeric matrix whose values will be visualized 
+            %                    in the Hinton diagram.
+            %   ax (optional)  - Handle to the axis on which the diagram will be drawn. 
+            %                    If not provided, the current axis (gca) is used.
+            %   figTitle (optional) - A string specifying the title of the figure. 
+            %                         Defaults to an empty string if not provided.
+            %   backgroundColor (optional) - A boolean value indicating whether 
+            %                                to set the background color of the axis. 
+            %                                Defaults to true, which sets the background 
+            %                                color to a predefined (in Constants.m file) blue.
+            %
+            % Output:
+            %   None. The function visualizes the matrix values as a Hinton diagram
+            %   on the specified or current axis.
+            if (nargin < 1)
+                CustomError.raiseError('InputCheck', CustomError.ERR_NOT_ENOUGH_INPUT_ARG);
+            end
+
+            % Set default values for optional parameters
             if nargin < 2
-                % Use the current axis if none is provided
                 ax = gca;
             end
             if nargin < 3
                 figTitle = '';
             end
-
             if nargin < 4
                 backgroundColor = true;
             end
             
             % Set the current axis to ax
             axes(ax);
-            axis(ax, 'equal'); % same length in every direction
+            axis(ax, 'equal'); % Set the same length in every direction
             
             if backgroundColor
                 set(ax, 'Color', Visualization.hexToRGB(Constants.BLUE));
@@ -155,30 +184,81 @@ classdef Visualization
             end
         end
 
-        function plotHintonDiagrams(arrW, figName, subfolderName)
-            % Optional parameters: figName, subfolderName
-            if nargin < 1
-                error(['##### ERROR IN THE CLASS ' mfilename('class') ': Not enough input arguments provided.']);
+        
+        
+        function plotHintonDiagrams(arrW, subplotTitles, figTitle, figName, subfolderName)
+            % plotHintonDiagrams - Plots Hinton diagrams for multiple matrices side by side.
+            %
+            % Description:
+            %   This function generates Hinton diagrams for each matrix in the input array 
+            %   `arrW`. The diagrams are displayed side by side in a single figure. Optionally, 
+            %   if a `figName` is provided, the figure will be saved to a file with the specified name. 
+            %   The function also allows specifying a subfolder for saving the figure, using the 
+            %   `subfolderName` argument. 
+            %
+            %   `subplotTitles` provides the titles for each subplot. If not enough titles are provided, 
+            %   only the first subplots will have titles, and the remaining subplots will not have titles. 
+            %   If more titles are provided than there are subplots, only the first `number of subplots` 
+            %   will be used. The main figure title (`figTitle`) will be applied only if more than one subplot is created.
+            %
+            % Input:
+            %   - arrW (required): A cell array of matrices to be visualized as Hinton diagrams.
+            %   - subplotTitles (optional): A cell array of titles for each subplot. 
+            %   - figTitle (optional): The title for the entire figure. It will be applied only 
+            %                          if multiple subplots are created.
+            %   - figName (optional): The name of the file to which the figure will be exported. 
+            %                         If not provided, the figure will not be saved.
+            %   - subfolderName (optional): The subfolder where the figure will be saved. 
+            %                                If not provided, the figure will be saved in the current folder.
+            %
+            % Output:
+            %   - None. The function visualizes the Hinton diagrams on the screen and optionally exports the figure.
+
+            if (nargin < 1)
+                CustomError.raiseError('InputCheck', CustomError.ERR_NOT_ENOUGH_INPUT_ARG);
             end
 
+            saveFig = false;
+            isSubfolderSpecified = false;
+            if nargin > 3
+                saveFig = true;
+                if nargin > 4
+                    isSubfolderSpecified = true;
+                end
+            end
+
+            % Create figure
             hfig = figure;
 
             numPlots = length(arrW);
 
+            hfigAx = axes(hfig); % Moved here for optimization purposes
             for i = 1:numPlots
-                ax = subplot(1, numPlots, i);
-                Visualization.hintonDiagram(arrW{i}, ax);
+                ax = Utility.ternary(numPlots == 1, hfigAx, subplot(1, numPlots, i));
+                Visualization.hintonDiagram(arrW{i}, ax, ...
+                    Utility.ternaryOpt(i <= length(subplotTitles), @() subplotTitles{i}, @() ''));
             end
 
+            if numPlots > 1 && ~isempty(figTitle)
+                sgtitle(figTitle);
+            end
+           
+            % Format figure
             Visualization.formatFigure(hfig);
 
             % Save figure
-            if nargin > 1
+            if saveFig
                 Visualization.exportFigure(hfig, figName, ...
-                    Utility.ternaryOpt(nargin == 2, @() '', @() subfolderName));
+                    Utility.ternaryOpt(isSubfolderSpecified, @() subfolderName, @() ''));
             end
         end
 
+        
+        
+        
+        
+        
+        
         function plotLatentFactors(Z, figTitle, figName, subfolderName)
             % Optional parameters: figTitle, figName, subfolderName
             if nargin < 1
