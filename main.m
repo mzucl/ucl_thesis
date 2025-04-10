@@ -1,3 +1,31 @@
+%% Clear the workspace
+% Use clearvars when you just want to reset variables without wiping the whole environment. 
+% Use clear all when you want a completely clean slate.
+
+close all; clearvars; clc;
+
+
+
+%% Add folders to MATLAB path
+addpath(genpath('datasets'))
+addpath('demos');
+addpath(genpath('experiments'))
+addpath(genpath('figures'))
+addpath(genpath('helpers'));
+addpath('logs');
+addpath(genpath('models'));
+addpath('plots');
+addpath('src');
+addpath(genpath('tests'))
+
+
+
+%% Run tests
+testResults = runtests('tests');
+
+
+
+%% 
 X1 = Utility.importCSV('datasets/mnist38/pixels.csv');
 X2 = Utility.importCSV('datasets/mnist38/continuousLabels.csv');
 
@@ -18,24 +46,6 @@ Visualization.formatFigure(hfig)
 
 
 return;
-% % Clear the workspace
-% close all; clear; clc;
-% 
-% % Add folders to MATLAB path
-addpath('src');
-addpath(genpath('models'));
-addpath(genpath('helpers'));
-addpath(genpath('tests'))
-addpath(genpath('experiments'))
-addpath(genpath('figures'))
-addpath(genpath('datasets'))
-addpath('logs');
-addpath('demos');
-addpath('plots');
-% 
-% % Uncomment to run tests
-% testResults = runtests('tests');
-% %% 
 
 
 A = Utility.generateRandomIntMatrix(50, 6000);

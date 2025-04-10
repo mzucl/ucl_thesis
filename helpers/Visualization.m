@@ -5,30 +5,73 @@ classdef Visualization
 
     methods (Static)
         function formatFigure(hfig)
+        % formatFigure Formats a MATLAB figure for publication-quality appearance.
+        %
+        % Description:
+        % This function applies a consistent set of formatting options to the 
+        % specified MATLAB figure handle. It adjusts font size, removes boxes 
+        % around axes, and sets the text interpreters for LaTeX-style rendering.
+        %
+        % Syntax:
+        %   formatFigure(hfig)
+        %
+        % Inputs:
+        %   hfig - Handle to a MATLAB figure. The figure to be formatted.
+        %
+        % Outputs:
+        %   None. The formatting is applied directly to the provided figure handle.
             set(findall(hfig, '-property','FontSize'),'FontSize', 17);
             set(findall(hfig, '-property', 'Box'), 'Box', 'off');
             set(findall(hfig, '-property', 'Interpreter'), 'Interpreter', 'latex');
             set(findall(hfig, '-property', 'TickLabelInterpreter'), 'TickLabelInterpreter', 'latex');
         end
 
+
+
         function rgb = hexToRGB(hex)
+        % hexToRGB - Converts a hexadecimal color code to an RGB vector.
+        %
+        % Description:
+        %   This function takes a hexadecimal color code (e.g., '#FF5733') as input 
+        %   and converts it into an RGB vector with values normalized between 0 and 1.
+        %
+        % Input:
+        %   hex - A string representing the hexadecimal color code. The input must 
+        %         start with a '#' followed by six hexadecimal digits (e.g., '#RRGGBB').
+        %
+        % Output:
+        %   rgb - A 1x3 vector containing the red, green, and blue color components 
+        %         of the input hex code. Each component is a value between 0 and 1.
             rgb = sscanf(hex(2:end),'%2x%2x%2x',[1 3]) / 255;
         end
 
-        function exportFigure(hfig, figName, subfolderName)
-            % EXPORTFIGURE Save or export a MATLAB figure to a file.
-            % hfig      : handle to the figure
-            % filename  : name of the file (e.g., 'myfigure')
 
-            % Optional parameters: subfolderName
+        function exportFigure(hfig, figName, subfolderName)
+            % exportFigure - Saves or exports a MATLAB figure to a file.
+            %
+            % Description:
+            %   This function saves the specified MATLAB figure to a file with the 
+            %   given name. Optionally, the figure can be saved to a specific subfolder.
+            %   The figure is exported as a high-quality PNG image.
+            %
+            % Input:
+            %   hfig         - Handle to the figure to be saved.
+            %   figName      - A string specifying the name of the output file 
+            %                  (e.g., 'myfigure').
+            %   subfolderName (optional) - A string specifying the subfolder where 
+            %                  the figure should be saved. If not provided, the figure 
+            %                  is saved in the current working directory.
+            %
+            % Output:
+            %   None. The function saves the figure to a file.
             if nargin < 2
-                error(['##### ERROR IN THE CLASS ' mfilename('class') ': Not enough input arguments provided.']);
+                CustomError.raiseError('InputCheck', CustomError.ERR_NOT_ENOUGH_INPUT_ARG);
             elseif nargin > 3
-                error(['##### ERROR IN THE CLASS ' mfilename('class') ': Too many input arguments provided.']);
+                CustomError.raiseError('InputCheck', CustomError.ERR_TOO_MANY_INPUT_ARG);
             end
             
             width = 20;
-            ratio = 0.65; % height/weight ratio
+            ratio = 0.65; % height/weight rati
 
             set(hfig, 'Units', 'centimeters', ...
                       'Position', [3 3 width ratio * width]);

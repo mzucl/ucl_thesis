@@ -1,5 +1,5 @@
 % Clear the workspace
-close all; clear all; clc;
+close all; clearvars; clc;
 
 % Logging
 logFileName = 'logs/pca_no_init.txt';
