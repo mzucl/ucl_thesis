@@ -1,21 +1,24 @@
 classdef Visualization
     methods (Static)
         function formatFigure(hfig)
-        % formatFigure Formats a MATLAB figure for publication-quality appearance.
-        %
-        % Description:
-        % This function applies a consistent set of formatting options to the 
-        % specified MATLAB figure handle. It adjusts font size, removes boxes 
-        % around axes, and sets the text interpreters for LaTeX-style rendering.
-        %
-        % Syntax:
-        %   formatFigure(hfig)
-        %
-        % Inputs:
-        %   hfig - Handle to a MATLAB figure. The figure to be formatted.
-        %
-        % Outputs:
-        %   None. The formatting is applied directly to the provided figure handle.
+            % formatFigure Formats a MATLAB figure for publication-quality appearance.
+            %
+            % Description:
+            % This function applies a consistent set of formatting options to the 
+            % specified MATLAB figure handle. It adjusts font size, removes boxes 
+            % around axes, and sets the text interpreters for LaTeX-style rendering.
+            %
+            % Syntax:
+            %   formatFigure(hfig)
+            %
+            % Inputs:
+            %   hfig - Handle to a MATLAB figure. The figure to be formatted.
+            %
+            % Outputs:
+            %   None. The formatting is applied directly to the provided figure handle.
+            if nargin < 1
+                CustomError.raiseError('InputCheck', CustomError.ERR_NOT_ENOUGH_INPUT_ARG);
+            end
             set(findall(hfig, '-property','FontSize'),'FontSize', 17);
             set(findall(hfig, '-property', 'Box'), 'Box', 'off');
             set(findall(hfig, '-property', 'Interpreter'), 'Interpreter', 'latex');
@@ -25,19 +28,22 @@ classdef Visualization
 
 
         function rgb = hexToRGB(hex)
-        % hexToRGB - Converts a hexadecimal color code to an RGB vector.
-        %
-        % Description:
-        %   This function takes a hexadecimal color code (e.g., '#FF5733') as input 
-        %   and converts it into an RGB vector with values normalized between 0 and 1.
-        %
-        % Input:
-        %   hex - A string representing the hexadecimal color code. The input must 
-        %         start with a '#' followed by six hexadecimal digits (e.g., '#RRGGBB').
-        %
-        % Output:
-        %   rgb - A 1x3 vector containing the red, green, and blue color components 
-        %         of the input hex code. Each component is a value between 0 and 1.
+            % hexToRGB - Converts a hexadecimal color code to an RGB vector.
+            %
+            % Description:
+            %   This function takes a hexadecimal color code (e.g., '#FF5733') as input 
+            %   and converts it into an RGB vector with values normalized between 0 and 1.
+            %
+            % Input:
+            %   hex - A string representing the hexadecimal color code. The input must 
+            %         start with a '#' followed by six hexadecimal digits (e.g., '#RRGGBB').
+            %
+            % Output:
+            %   rgb - A 1x3 vector containing the red, green, and blue color components 
+            %         of the input hex code. Each component is a value between 0 and 1.
+            if nargin < 1
+                CustomError.raiseError('InputCheck', CustomError.ERR_NOT_ENOUGH_INPUT_ARG);
+            end
             rgb = sscanf(hex(2:end),'%2x%2x%2x',[1 3]) / 255;
         end
 
@@ -66,6 +72,11 @@ classdef Visualization
             elseif nargin > 3
                 CustomError.raiseError('InputCheck', CustomError.ERR_TOO_MANY_INPUT_ARG);
             end
+
+            isSubfolderSpecified = false;
+            if nargin > 2 && ~isempty(subfolderName)
+                isSubfolderSpecified = true;
+            end
             
             width = 20;
             ratio = 0.65; % height/weight rati
@@ -82,7 +93,7 @@ classdef Visualization
             folderName = Constants.FIGURES_FOLDER;
 
             % If a subfolder name is specified
-            if nargin > 2 && ~isempty(subfolderName)
+            if isSubfolderSpecified
                 folderName = [Constants.FIGURES_FOLDER, '/', subfolderName];
             end
 
@@ -99,7 +110,7 @@ classdef Visualization
                 exportgraphics(hfig, filePath, 'ContentType', 'vector');
             end
 
-            % Export to .png
+            % Export to .png <- Default export
             figNamePNG = [figName, '.png'];
             filePath = fullfile(folderName, figNamePNG);
             set(gcf, 'PaperPositionMode', 'auto');
@@ -133,19 +144,22 @@ classdef Visualization
             % Output:
             %   None. The function visualizes the matrix values as a Hinton diagram
             %   on the specified or current axis.
-            if (nargin < 1)
+            if nargin < 1
                 CustomError.raiseError('InputCheck', CustomError.ERR_NOT_ENOUGH_INPUT_ARG);
+            elseif nargin > 4
+                CustomError.raiseError('InputCheck', CustomError.ERR_TOO_MANY_INPUT_ARG);
             end
 
             % Set default values for optional parameters
-            if nargin < 2
-                ax = gca;
-            end
-            if nargin < 3
-                figTitle = '';
-            end
             if nargin < 4
                 backgroundColor = true;
+                if nargin < 3
+                    figTitle = '';
+                    if nargin < 2
+                        ax = gca;
+                    end
+                end
+
             end
             
             % Set the current axis to ax
@@ -208,24 +222,40 @@ classdef Visualization
             %                          if multiple subplots are created.
             %   - figName (optional): The name of the file to which the figure will be exported. 
             %                         If not provided, the figure will not be saved.
+            %                         If '' provided, current date and time
+            %                         will be used.
             %   - subfolderName (optional): The subfolder where the figure will be saved. 
             %                                If not provided, the figure will be saved in the current folder.
             %
             % Output:
             %   - None. The function visualizes the Hinton diagrams on the screen and optionally exports the figure.
-
-            if (nargin < 1)
+            if nargin < 1
                 CustomError.raiseError('InputCheck', CustomError.ERR_NOT_ENOUGH_INPUT_ARG);
+            elseif nargin > 5
+                CustomError.raiseError('InputCheck', CustomError.ERR_TOO_MANY_INPUT_ARG);
             end
-
+            
+            isSubplotTitlesSpecified = false;
+            addTitle = false;
             saveFig = false;
             isSubfolderSpecified = false;
-            if nargin > 3
-                saveFig = true;
-                if nargin > 4
-                    isSubfolderSpecified = true;
+            if nargin > 1
+                if ~isempty(subplotTitles)
+                    isSubplotTitlesSpecified = true;
+                end
+                if nargin > 2
+                    if ~isempty(figTitle)
+                        addTitle = true;
+                    end
+                    if nargin > 3
+                        saveFig = true;
+                        if nargin > 4 && ~isempty(subfolderName)
+                            isSubfolderSpecified = true;
+                        end
+                    end
                 end
             end
+            
 
             % Create figure
             hfig = figure;
@@ -236,10 +266,10 @@ classdef Visualization
             for i = 1:numPlots
                 ax = Utility.ternary(numPlots == 1, hfigAx, subplot(1, numPlots, i));
                 Visualization.hintonDiagram(arrW{i}, ax, ...
-                    Utility.ternaryOpt(i <= length(subplotTitles), @() subplotTitles{i}, @() ''));
+                    Utility.ternaryOpt(isSubplotTitlesSpecified && i <= length(subplotTitles), @() subplotTitles{i}, @() ''));
             end
 
-            if numPlots > 1 && ~isempty(figTitle)
+            if addTitle && numPlots > 1
                 sgtitle(figTitle);
             end
            
@@ -248,46 +278,91 @@ classdef Visualization
 
             % Save figure
             if saveFig
+                if isempty(figName)
+                    figName = string(datetime('now', 'Format', 'yyyyMMdd_HHmmss'));
+                end
                 Visualization.exportFigure(hfig, figName, ...
                     Utility.ternaryOpt(isSubfolderSpecified, @() subfolderName, @() ''));
             end
         end
 
-        
-        
-        
-        
-        
+       
         
         function plotLatentFactors(Z, figTitle, figName, subfolderName)
-            % Optional parameters: figTitle, figName, subfolderName
+            % plotLatentFactors - Plots each latent factor from a matrix Z as a separate subplot.
+            %
+            % Description:
+            %   This function visualizes the rows of the matrix `Z` as individual time series, 
+            %   plotting each row (latent factor) in a separate subplot stacked vertically. 
+            %   An optional figure title can be added using `figTitle`, and the figure can be 
+            %   exported to a file using `figName`. If a `subfolderName` is specified, the figure 
+            %   will be saved in that subfolder; otherwise, it will be saved in the `Constants.FIGURES_FOLDER`.
+            %   If `figName` is provided but it is empty, the figure will be saved 
+            %   using the current timestamp as its name.
+            %
+            % Input:
+            %   - Z (required): A matrix of size [K x N], where each row corresponds to a latent factor.
+            %   - figTitle (optional): A string specifying the overall figure title. If empty or not provided, no title is added.
+            %   - figName (optional): The name of the file to save the figure as. If empty, a timestamp is used.
+            %   - subfolderName (optional): The subfolder where the figure will be saved.
+            %
+            % Output:
+            %   - None. The function displays the latent factors in a figure and optionally saves it to a file.
             if nargin < 1
-                error(['##### ERROR IN THE CLASS ' mfilename('class') ': Not enough input arguments provided.']);
-            elseif nargin < 2
-                figTitle = '';
+                CustomError.raiseError('InputCheck', CustomError.ERR_NOT_ENOUGH_INPUT_ARG);
+            end
+            
+            addTitle = false;
+            saveFig = false;
+            isSubfolderSpecified = false;
+            if nargin > 1
+                if ~isempty(figTitle)
+                    addTitle = true;
+                end
+                if nargin > 2
+                    saveFig = true;
+                    if nargin > 3 && ~isempty(subfolderName)
+                        isSubfolderSpecified = true;
+                    end
+                end
             end
 
             hfig = figure;
-            numFactors = size(Z, 1); % Z = [K x N]
+            numFactors = size(Z, 1); % Z = [K x N], where K is the number of latent factors!
             for i = 1:numFactors
                 subplot(numFactors, 1, i);
-                factor = Z(i, :); % Factors are in the rows of Z
+                factor = Z(i, :);
                 plot(factor, '.', 'MarkerSize', 4);
                 hold on;
             end
             
-            if ~isempty(figTitle)
+            if addTitle
                 sgtitle(figTitle);
             end
 
             Visualization.formatFigure(hfig);
 
-            % Save figure: if 'figTitle' is provided
-            if nargin > 2
+            if saveFig
+                if isempty(figName)
+                    figName = string(datetime('now', 'Format', 'yyyyMMdd_HHmmss'));
+                end
                 Visualization.exportFigure(hfig, figName, ...
-                    Utility.ternaryOpt(nargin == 2, @() '', @() subfolderName));
+                    Utility.ternaryOpt(isSubfolderSpecified, @() subfolderName, @() ''));
             end
         end
+
+
+
+
+
+
+
+
+
+
+
+
+
         
         function plotLoadings(W, dimList, figTitle, figName, subfolderName)
             % Parameters
