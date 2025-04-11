@@ -35,4 +35,4 @@ end
 
 
 %% Visualize
-Visualization.plotHintonDiagrams({W_PPCA, obj.W.E}, {'PPCA', 'BPCA'}, '', 'W_ppca_bpca_', 'pca_profiler');
+Visualization.plotHintonDiagrams({W_PPCA, obj.W.E}, {'PPCA', 'BPCA'}, '', 'W_ppca_bpca_', mfilename);

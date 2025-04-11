@@ -57,7 +57,7 @@ for s = 1:stabilityRun
     % arrW{s} = bestW;
 
     %% Visualize
-    Visualization.plotHintonDiagrams({W_PPCA, bestW}, {'PPCA', 'BPCA'}, '', ['W_ppca_bpca_', num2str(s)], 'pca_init');
+    Visualization.plotHintonDiagrams({W_PPCA, bestW}, {'PPCA', 'BPCA'}, '', ['W_ppca_bpca_', num2str(s)], mfilename);
 end
 
 elapsedTime = toc;
