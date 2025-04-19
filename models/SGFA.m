@@ -268,7 +268,7 @@ classdef SGFA < handle
             end
         end
 
-        % Bit matrix alpha, containing all alphas
+        % Big matrix alpha, containing all alphas
         function value = get.alpha(obj)
             value = zeros(obj.K.Val, obj.M);
             for m = 1:obj.M

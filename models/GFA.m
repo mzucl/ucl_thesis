@@ -19,6 +19,10 @@ classdef GFA < handle
         % CONSTANT (don't change after initialization) dependent properties
         D % Array containing dimensions for each view
 
+        W
+
+        alpha
+
         doRotation
     end
 
@@ -241,6 +245,27 @@ classdef GFA < handle
             value = zeros(obj.M, 1);
             for m = 1:length(obj.views)
                 value(m) = obj.views(m).D;
+            end
+        end
+
+        % Big matrix W containing all views
+        function value = get.W(obj)
+            totalD = sum(obj.D);
+            value = zeros(totalD, obj.K.Val);
+
+            d = 0;
+            for m = 1:obj.M
+                Dm = obj.views(m).D;
+                value(d + 1 : d + Dm, :) = obj.views(m).W.E;
+                d = d + Dm;
+            end
+        end
+
+        % Big matrix alpha, containing all alphas
+        function value = get.alpha(obj)
+            value = zeros(obj.K.Val, obj.M);
+            for m = 1:obj.M
+                value(:, m) = obj.views(m).alpha.E;
             end
         end
     end
