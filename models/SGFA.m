@@ -143,7 +143,7 @@ classdef SGFA < handle
         %% fit() and ELBO
         function [elboVals, it] = fit(obj, elboIterStep)
             if nargin < 2
-                elboIterStep = 1;
+                elboIterStep = 1; % TODO: Use one from model settings!
             end
 
             elboVals = -Inf(1, obj.maxIter);
@@ -165,6 +165,8 @@ classdef SGFA < handle
                 obj.qTauUpdate();
                 obj.removeFactors(it);
 
+                % TODO: MAke sure to log the last value, it is used for
+                % model selection
                 if it ~= 1 && mod(it, elboIterStep) ~= 0
                     continue;
                 end

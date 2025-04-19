@@ -12,51 +12,55 @@ classdef ModelSettings < handle
         % Gaussian distribution
         DEFAULT_GAUSS_MU
         DEFAULT_GAUSS_DIM
-        DEFAULT_GAUSS_PRECISION
+        DEFAULT_GAUSS_PRECISION % spherical prior covariance
 
         % Noise
         DEFAULT_NOISE_VAL
 
         % Optimization parameters
         DEFAULT_MAX_ITER
-        DEFAULT_TOL
+        DEFAULT_TOL % relative tolerance for convergance
 
         % Latent factors
-        LATENT_FACTORS_THRESHOLD
+        LATENT_FACTORS_THRESHOLD % factor relevance
 
         % Diagonal loading/regulatization
         EPSILON
         
+        % Validate inputs
         VALIDATE
         DEBUG
+
+        % Experiments
+        ELBO_ITER_STEP
+        STABILITY_RUN
+        MODEL_SELECTION_ITER
     end
 
     methods (Access = private)
         function obj = ModelSettings() % private constructor
-            % Gamma distribution
             obj.DEFAULT_GAMMA_A = 10^-14;
             obj.DEFAULT_GAMMA_B = 10^-14;
-    
-            % Gaussian distribution
+
             obj.DEFAULT_GAUSS_MU = 0;
             obj.DEFAULT_GAUSS_DIM = 1;
-            obj.DEFAULT_GAUSS_PRECISION = 1; % spherical prior covariance
+            obj.DEFAULT_GAUSS_PRECISION = 1;
     
-            % Noise
             obj.DEFAULT_NOISE_VAL = 1e3;
-    
-            % Optimization parameters
+ 
             obj.DEFAULT_MAX_ITER = 5000;
-            obj.DEFAULT_TOL = 1e-6; % relative tolerance for convergance
+            obj.DEFAULT_TOL = 1e-6;
     
-            % Latent factors
-            obj.LATENT_FACTORS_THRESHOLD = 1e-6; % determine if factor is relevant
+            obj.LATENT_FACTORS_THRESHOLD = 1e-6;
     
-            % Diagonal loading/regulatization
             obj.EPSILON = 1e-2;
     
-            obj.VALIDATE = true; % Validate inputs
+            obj.VALIDATE = true;
             obj.DEBUG = true;
+
+            obj.ELBO_ITER_STEP = 1;
+            obj.STABILITY_RUN = 2;
+            obj.MODEL_SELECTION_ITER = 2;
         end
     end
 

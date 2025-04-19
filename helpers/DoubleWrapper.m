@@ -1,4 +1,4 @@
-% A wrapper class to enable passing double by reference
+% A wrapper class to enable passing double value by reference
 classdef DoubleWrapper < handle
     properties
         Val

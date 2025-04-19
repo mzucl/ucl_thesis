@@ -40,5 +40,7 @@ Visualization.plotLatentFactors(sgfaModel.Z.E, 'Inferred latent factors', '', mf
 
 
 %% Visualize loadings and alpha
-Visualization.plotFactorLoadingsAndAlpha(data.W, data.D, data.alpha, 'bottom', '', 2.5, 'True $\mathbf{W}^\top$ and \boldmath{$\alpha$}$^\top$');
-Visualization.plotFactorLoadingsAndAlpha(sgfaModel.W, sgfaModel.D, sgfaModel.alpha, 'bottom', '', 2.5, 'Inferred $\mathbf{W}^\top$ and \boldmath{$\alpha$}$^\top$');
+Visualization.plotFactorLoadingsAndAlpha(data.W, data.D, data.alpha, 'bottom', '', 2.5, ...
+    'True $\mathbf{W}^\top$ and \boldmath{$\alpha$}$^\top$');
+Visualization.plotFactorLoadingsAndAlpha(sgfaModel.W, sgfaModel.D, sgfaModel.alpha, 'bottom', '', 2.5, ...
+    'Inferred $\mathbf{W}^\top$ and \boldmath{$\alpha$}$^\top$');

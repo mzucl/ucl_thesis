@@ -25,8 +25,8 @@ classdef (Abstract) Bound < handle
     end
     
 
-    % These methods are defined as 'Static' because they are general utility 
-    % functions hat are not tied to any specific instance of the 'Bound'
+    % These methods are defined as `Static` because they are general utility 
+    % functions hat are not tied to any specific instance of the `Bound`
     % object, but still are related to the bounds.
     methods (Static)
         function value = sigma(x)
@@ -63,7 +63,6 @@ classdef (Abstract) Bound < handle
 
     methods
         function obj = Bound(xi)
-            % Default constructor
             if nargin == 0
                 obj.xi = 0;
             else
