@@ -57,5 +57,13 @@ classdef CustomError < MException
         
             throw(CustomError(category, className, funcName, message));
         end
+
+        function validateNumberOfParameters(actualNumArgs, minNumArgs, maxNumArgs)
+            if actualNumArgs < minNumArgs
+                CustomError.raiseError('InputCheck', CustomError.ERR_NOT_ENOUGH_INPUT_ARG);
+            elseif actualNumArgs > maxNumArgs
+                CustomError.raiseError('InputCheck', CustomError.ERR_TOO_MANY_INPUT_ARG);
+            end
+        end
     end
 end

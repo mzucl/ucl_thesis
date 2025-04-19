@@ -110,42 +110,61 @@ classdef Datasets
 
 
 
-        function data = generateGFA_2G()
-            % Spherical noise - check the definition for tau!
-            %
-            %
-            N_tr = 400; 
-            N_te = 100; % For predicting views
-            N = N_tr + N_te;
-        
-            M = 2;
-            D = [50, 30]; % Dimensions of the views
-        
+        function data = generateSyntheticGFAData(M, N_train, N_test)
+            CustomError.validateNumberOfParameters(nargin, 1, 3);
+
+            if M ~= 2 && M ~= 3
+                CustomError.raiseError('InputCheck', "Invalid value for M. Only M = 2 or M = 3 are supported.");
+            end
+
+            % Set default values
+            if nargin < 3
+                N_test = 100;
+                if nargin < 2
+                    N_train = 400;
+                end
+            end
+
+            N = N_train + N_test;
+
             % Latent factors
             K = 4;
             Z = zeros(K, N);
-        
+
+            % Parameter values for the case of 2 views (M = 2)
+            if M == 2
+                D = [50, 30]; % Dimensions of the views
+                tau = {5; 10}; % Noise precisions (tau) for each view; Spherical noise;
+                
+                % Alpha (alpha) for each view K values
+                alpha = zeros(K, M);
+                alpha(:, 1) = [1e6, 1, 1e6, 1];
+                alpha(:, 2) = [1, 1, 1, 1e6];
+            else
+                % Parameter values for the case of 3 views (M = 3)
+                D = [50, 30, 20]; % Dimensions of the views
+                tau = {5; 10; 8}; % Noise precisions (tau) for each view; Spherical noise;
+
+                % Alpha (alpha) for each view K values
+                alpha = zeros(K, M);
+                alpha(:, 1) = [1, 1, 1e6, 1];
+                alpha(:, 2) = [1, 1, 1, 1e6];
+                alpha(:, 3) = [1, 1e6, 1, 1e6];
+            end
+
             % Generate latent factors - row by row (in total K rows)
             n = 1:N;
             Z(1, :) = sin((n)/(N/20));
             Z(2, :) = cos((n)/(N/20));
             Z(3, :) = 2 * ((n)/N-0.5); 
             Z(4, :) = normrnd(0, 1, [N, 1]);
-        
-            % Noise precisions (tau) for each view; Spherical noise;
-            tau = {5; 10};
-            
-            % Alpha (alpha) for each view K values
-            alpha = zeros(K, M);
-            alpha(:, 1) = [1e6, 1, 1e6, 1];
-            alpha(:, 2) = [1, 1, 1, 1e6];
-            
+
             % W matrix for each view
             W = cell(M, 1);
         
             % Train and test observarions: for all views M
-            X_tr = cell(M, 1);
-            X_te = cell(M, 1);
+            X_train = cell(M, 1);
+            X_test = cell(M, 1);
             
             for m = 1:M
                 Dm = D(m);
@@ -163,95 +182,24 @@ classdef Datasets
                 X = W{m} * Z + normrnd(0, 1/sqrt(tau{m}), [Dm, N]);
         
                 % Get training and test data
-                X_tr{m} = X(:, 1:N_tr);
-                X_te{m} = X(:, N_tr+1:end);
+                X_train{m} = X(:, 1:N_train);
+                X_test{m} = X(:, N_train+1:end);
             end
-            
+
             % Latent variables for training the model    
-            Z = Z(:, 1:N_tr);
+            Z = Z(:, 1:N_train);
             
             % Store data and model parameters            
-            data.X_tr = X_tr;
-            data.X_te = X_te;
+            data.X_train = X_train;
+            data.X_test = X_test;
             data.W = W;
             data.Z = Z;
             data.tau = tau;
             data.alpha = alpha;
             data.K = K;
         end
+        
 
-    
-
-        function data = generateGFA_3G()
-            % Spherical noise - check the definition for tau!
-            %
-            %
-            N_tr = 400; 
-            N_te = 100; % For predicting views
-            N = N_tr + N_te;
-        
-            M = 3;
-            D = [50, 30, 20]; % Dimensions of the views
-        
-            % Latent factors
-            K = 4;
-            Z = zeros(K, N);
-        
-            % Generate latent factors - row by row (in total K rows)
-            n = 1:N;
-            Z(1, :) = sin((n)/(N/20));
-            Z(2, :) = cos((n)/(N/20));
-            Z(3, :) = 2 * ((n)/N-0.5); 
-            Z(4, :) = normrnd(0, 1, [N, 1]);
-        
-            % Noise precisions (tau) for each view; Spherical noise;
-            tau = {5; 10; 8};
-            
-            % Alpha (alpha) for each view K values
-            alpha = zeros(K, M);
-            alpha(:, 1) = [1, 1, 1e6, 1];
-            alpha(:, 2) = [1, 1, 1, 1e6];
-            alpha(:, 3) = [1, 1e6, 1, 1e6];
-            
-            % W matrix for each view
-            W = cell(M, 1);
-        
-            % Train and test observarions: for all views M
-            X_tr = cell(M, 1);
-            X_te = cell(M, 1);
-            
-            for m = 1:M
-                Dm = D(m);
-                W{m} = zeros(Dm, K);
-                for k = 1:K
-                    % Generate w_k (kth column of W) from p(W | alpha)
-                    alpha_m_k = alpha(k, m); % alpha (precision) for the view 'm' and column 'k'
-        
-                    % normrnd(MU,SIGMA) returns an array of random numbers chosen from a
-                    % normal distribution with mean MU and standard deviation SIGMA.
-                    W{m}(:, k) = normrnd(0, 1/sqrt(alpha_m_k), [Dm, 1]);
-                end
-        
-                % Generate X for view 'm'
-                X = W{m} * Z + normrnd(0, 1/sqrt(tau{m}), [Dm, N]);
-        
-                % Get training and test data
-                X_tr{m} = X(:, 1:N_tr);
-                X_te{m} = X(:, N_tr+1:end);
-            end
-            
-            % Latent variables for training the model    
-            Z = Z(:, 1:N_tr);
-            
-            % Store data and model parameters            
-            data.X_tr = X_tr;
-            data.X_te = X_te;
-            data.W = W;
-            data.Z = Z;
-            data.tau = tau;
-            data.alpha = alpha;
-            data.K = K;
-        end
         
         % Used for repeated train-test splits
         function [X_tr, y_tr, X_te, y_te] = trainTestSplit(X, y, verbose, testPerc)

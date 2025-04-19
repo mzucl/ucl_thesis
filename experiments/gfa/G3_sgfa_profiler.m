@@ -19,11 +19,11 @@ settings.DEBUG = false;
 
 
 %% Generate data and train the model
-data = Datasets.generateGFA_3G();
+data = Datasets.generateSyntheticGFAData(3);
 
-X1 = data.X_tr{1}; % [D1 x N];
-X2 = data.X_tr{2}; % [D2 x N]
-X3 = data.X_tr{3}; % [D3 x N]
+X1 = data.X_train{1}; % [D1 x N];
+X2 = data.X_train{2}; % [D2 x N]
+X3 = data.X_train{3}; % [D3 x N]
 
 % profile on;
 

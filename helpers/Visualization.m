@@ -1,15 +1,5 @@
 classdef Visualization
     methods (Static, Access=private)
-        function validateNumberOfParameters(actualNumArgs, minNumArgs, maxNumArgs)
-            if actualNumArgs < minNumArgs
-                CustomError.raiseError('InputCheck', CustomError.ERR_NOT_ENOUGH_INPUT_ARG);
-            elseif actualNumArgs > maxNumArgs
-                CustomError.raiseError('InputCheck', CustomError.ERR_TOO_MANY_INPUT_ARG);
-            end
-        end
-
-
-
         function formatFigure(hfig)
             % formatFigure Formats a MATLAB figure for publication-quality appearance.
             %
@@ -26,7 +16,7 @@ classdef Visualization
             %
             % Outputs:
             %   None. The formatting is applied directly to the provided figure handle.
-            Visualization.validateNumberOfParameters(nargin, 1, 1);
+            CustomError.validateNumberOfParameters(nargin, 1, 1);
 
             set(findall(hfig, '-property','FontSize'),'FontSize', 17);
             set(findall(hfig, '-property', 'Box'), 'Box', 'off');
@@ -50,7 +40,7 @@ classdef Visualization
             % Output:
             %   rgb - A 1x3 vector containing the red, green, and blue color components 
             %         of the input hex code. Each component is a value between 0 and 1.
-            Visualization.validateNumberOfParameters(nargin, 1, 1);
+            CustomError.validateNumberOfParameters(nargin, 1, 1);
 
             rgb = sscanf(hex(2:end),'%2x%2x%2x',[1 3]) / 255;
         end
@@ -75,7 +65,7 @@ classdef Visualization
             %
             % Output:
             %   None. The function saves the figure to a file.
-            Visualization.validateNumberOfParameters(nargin, 1, 3);
+            CustomError.validateNumberOfParameters(nargin, 1, 3);
 
             if nargin < 2 || isempty(figName)
                 figName = char(datetime('now', 'Format', 'yyyyMMdd_HHmmss'));
@@ -153,7 +143,7 @@ classdef Visualization
             % Output:
             %   None. The function visualizes the matrix values as a Hinton diagram
             %   on the specified or current axis.
-            Visualization.validateNumberOfParameters(nargin, 1, 4);
+            CustomError.validateNumberOfParameters(nargin, 1, 4);
 
             % Set default values for optional parameters
             if nargin < 4
@@ -205,7 +195,7 @@ classdef Visualization
 
 
         function renderFactorLoadings(W, dimList, labelPos, ax, figTitle)
-            Visualization.validateNumberOfParameters(nargin, 2, 5);
+            CustomError.validateNumberOfParameters(nargin, 2, 5);
             
             % Set default values for optional parameters
             if nargin < 5
@@ -292,7 +282,7 @@ classdef Visualization
             %
             % Output:
             %   - None. The function visualizes the Hinton diagrams on the screen and optionally exports the figure.
-            Visualization.validateNumberOfParameters(nargin, 1, 5);
+            CustomError.validateNumberOfParameters(nargin, 1, 5);
             
             isSubplotTitlesSpecified = false;
             addTitle = false;
@@ -365,7 +355,7 @@ classdef Visualization
             %
             % Output:
             %   - None. The function displays the latent factors in a figure and optionally saves it to a file.
-            Visualization.validateNumberOfParameters(nargin, 1, 4);
+            CustomError.validateNumberOfParameters(nargin, 1, 4);
 
             addTitle = false;
             saveFig = false;
@@ -434,7 +424,7 @@ classdef Visualization
             %                         If not provided, the current axis (gca) is used.
             % Output:
             %   - None.
-            Visualization.validateNumberOfParameters(nargin, 2, 5);
+            CustomError.validateNumberOfParameters(nargin, 2, 5);
             
             addTitle = false;
             saveFig = false;
@@ -479,7 +469,7 @@ classdef Visualization
             % ----------
             % W : matrix, [D_total x K]
             % dimList: number of features in each view 
-            Visualization.validateNumberOfParameters(nargin, 3, 9);
+            CustomError.validateNumberOfParameters(nargin, 3, 9);
 
             % Assign default values to optional parameters if they are missing or empty ('')
             defaultHeight = 400;
