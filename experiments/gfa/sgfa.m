@@ -15,16 +15,11 @@ settings = ModelSettings.getInstance();
 % settings.DEBUG = false;
 
 
-
 %% Generate data and train the model
 data = Datasets.generateSyntheticGFAData(2);
 
-X1 = data.X_train{1}; % [N x D1];
-X2 = data.X_train{2}; % [N x D2]
-
-% Scale datasets
-% X1 = Datasets.standardScaler(X1);
-% X2 = Datasets.standardScaler(X2);
+X1 = data.X_train{1}; % [D1 x N]
+X2 = data.X_train{2}; % [D2 x N]
 
 K = 10;
 
@@ -66,23 +61,6 @@ Visualization.plotLatentFactors(data.Z, 'True latent factors', '', mfilename);
 Visualization.plotLatentFactors(sgfaModel.Z.E, 'Inferred latent factors', '', mfilename);
 
 
-
 %% Visualize loadings and alpha
-totalD = sum(sgfaModel.D); % Total number of dimensions
-
-trueW = zeros(totalD, data.K); % True K
-estW = zeros(totalD, sgfaModel.K.Val);
-estAlpha = zeros(sgfaModel.K.Val, sgfaModel.M);
-
-d = 0;
-for m = 1:sgfaModel.M
-    Dm = sgfaModel.views(m).D;
-    trueW(d + 1 : d + Dm, :) = data.W{m};
-    estW(d + 1 : d + Dm, :) = sgfaModel.views(m).W.E;
-    d = d + Dm;
-
-    estAlpha(:, m) = sgfaModel.views(m).alpha.E;
-end
-
-Visualization.plotFactorLoadingsAndAlpha(trueW, sgfaModel.D, data.alpha, 'bottom', '', 2.5, 'True $\mathbf{W}^\top$ and \boldmath{$\alpha$}$^\top$');
-Visualization.plotFactorLoadingsAndAlpha(estW, sgfaModel.D, estAlpha, 'bottom', '', 2.5, 'Inferred $\mathbf{W}^\top$ and \boldmath{$\alpha$}$^\top$');
+Visualization.plotFactorLoadingsAndAlpha(data.W, data.D, data.alpha, 'bottom', '', 2.5, 'True $\mathbf{W}^\top$ and \boldmath{$\alpha$}$^\top$');
+Visualization.plotFactorLoadingsAndAlpha(sgfaModel.W, sgfaModel.D, sgfaModel.alpha, 'bottom', '', 2.5, 'Inferred $\mathbf{W}^\top$ and \boldmath{$\alpha$}$^\top$');

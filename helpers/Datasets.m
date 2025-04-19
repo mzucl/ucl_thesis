@@ -160,7 +160,7 @@ classdef Datasets
             Z(4, :) = normrnd(0, 1, [N, 1]);
 
             % W matrix for each view
-            W = cell(M, 1);
+            Ws = cell(M, 1);
         
             % Train and test observarions: for all views M
             X_train = cell(M, 1);
@@ -168,18 +168,18 @@ classdef Datasets
             
             for m = 1:M
                 Dm = D(m);
-                W{m} = zeros(Dm, K);
+                Ws{m} = zeros(Dm, K);
                 for k = 1:K
                     % Generate w_k (kth column of W) from p(W | alpha)
                     alpha_m_k = alpha(k, m); % alpha (precision) for the view 'm' and column 'k'
         
                     % normrnd(MU,SIGMA) returns an array of random numbers chosen from a
                     % normal distribution with mean MU and standard deviation SIGMA.
-                    W{m}(:, k) = normrnd(0, 1/sqrt(alpha_m_k), [Dm, 1]);
+                    Ws{m}(:, k) = normrnd(0, 1/sqrt(alpha_m_k), [Dm, 1]);
                 end
         
                 % Generate X for view 'm'
-                X = W{m} * Z + normrnd(0, 1/sqrt(tau{m}), [Dm, N]);
+                X = Ws{m} * Z + normrnd(0, 1/sqrt(tau{m}), [Dm, N]);
         
                 % Get training and test data
                 X_train{m} = X(:, 1:N_train);
@@ -188,12 +188,25 @@ classdef Datasets
 
             % Latent variables for training the model    
             Z = Z(:, 1:N_train);
-            
+
+            % Generate full matrix `W` containing all views; `Ws` is a cell array where
+            % `Ws{m}` corresponds to the `W` matrix for view m.
+            W = zeros(sum(D), K);
+
+            d = 0;
+            for m = 1:M
+                Dm = D(m);
+                W(d + 1 : d + Dm, :) = Ws{m};
+                d = d + Dm;
+            end
+          
             % Store data and model parameters            
             data.X_train = X_train;
             data.X_test = X_test;
+            data.Ws = Ws;
             data.W = W;
             data.Z = Z;
+            data.D = D;
             data.tau = tau;
             data.alpha = alpha;
             data.K = K;
