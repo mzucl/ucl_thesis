@@ -66,8 +66,7 @@ end
 
 
 %% W and alpha
-% Visualization.plotLoadingsAndAlpha(trueW, sgfaModel.D, -data.alpha, 'True $\mathbf{W}$ and \boldmath$\alpha$', 'trueW', figsSubfolder);
-% Visualization.plotLoadingsAndAlpha(estW, sgfaModel.D, -estAlpha, 'Estimated $\mathbf{W}$ and \boldmath$\alpha$', 'trueW', figsSubfolder);
 
-Visualization.plotLoadingsAndAlpha(trueW, sgfaModel.D, data.alpha, 'True $\mathbf{W}^\top$ and \boldmath{$\alpha$}$^\top$', 'bottom');
-Visualization.plotLoadingsAndAlpha(estW, sgfaModel.D, estAlpha, 'Inferred $\mathbf{W}^\top$ and \boldmath{$\alpha$}$^\top$', 'top');
+
+Visualization.plotFactorLoadingsAndAlpha(trueW, sgfaModel.D, data.alpha, 'bottom', '', 3.5, 'True $\mathbf{W}^\top$ and \boldmath{$\alpha$}$^\top$');
+Visualization.plotFactorLoadingsAndAlpha(estW, sgfaModel.D, estAlpha, 'bottom', '', 3.5, 'Inferred $\mathbf{W}^\top$ and \boldmath{$\alpha$}$^\top$');

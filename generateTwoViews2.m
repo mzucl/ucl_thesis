@@ -2,9 +2,9 @@ function data = GFA_Syn_2G()
     % Spherical noise - check the definition for tau!
     %
     %
-    N_tr = 400; 
-    N_te = 100; % For predicting views
-    N = N_tr + N_te;
+    N_train = 400; 
+    N_test = 100; % For predicting views
+    N = N_train + N_test;
 
     M = 2;
     D = [50, 30]; % Dimensions of the views
@@ -51,12 +51,12 @@ function data = GFA_Syn_2G()
         X = W{m} * Z + normrnd(0, 1/sqrt(tau{m}), [Dm, N]);
 
         % Get training and test data
-        X_tr{m} = X(:, 1:N_tr);
-        X_te{m} = X(:, N_tr+1:end);
+        X_tr{m} = X(:, 1:N_train);
+        X_te{m} = X(:, N_train+1:end);
     end
     
     % Latent variables for training the model    
-    Z = Z(:, 1:N_tr);
+    Z = Z(:, 1:N_train);
     
     % Store data and model parameters            
     data.X_tr = X_tr;

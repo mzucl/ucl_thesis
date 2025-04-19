@@ -52,7 +52,7 @@ for s = 1:stabilityRun
         end
     end
     convItAvg = convItAvg + convIt;
-    disp(['The best model converged in ', num2str(convIt), 'iterations.\n']);
+    disp(['The best model converged in ', num2str(convIt), ' iterations.']);
 
     % arrW{s} = bestW;
 
@@ -62,6 +62,6 @@ end
 
 elapsedTime = toc;
 fprintf('\n\n\nElapsed time: %.4f [s]\n', elapsedTime);
-fprintf('Average number of iterations: %.4f\n', convItAvg / stabilityRun);
+fprintf('Average number of iterations: %d\n', round(convItAvg / stabilityRun));
 
 diary off; 

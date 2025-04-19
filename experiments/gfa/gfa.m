@@ -28,8 +28,8 @@ X2 = data.X_tr{2}; % [N x D2]
 
 K = 10;
 
-stabilityRun = 20;
-modelSelectionIter = 10;
+stabilityRun = 2;
+modelSelectionIter = 5;
 convItAvg = 0;
 
 tic;

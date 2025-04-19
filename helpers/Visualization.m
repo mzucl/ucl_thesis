@@ -1,5 +1,15 @@
 classdef Visualization
-    methods (Static)
+    methods (Static, Access=private)
+        function validateNumberOfParameters(actualNumArgs, minNumArgs, maxNumArgs)
+            if actualNumArgs < minNumArgs
+                CustomError.raiseError('InputCheck', CustomError.ERR_NOT_ENOUGH_INPUT_ARG);
+            elseif actualNumArgs > maxNumArgs
+                CustomError.raiseError('InputCheck', CustomError.ERR_TOO_MANY_INPUT_ARG);
+            end
+        end
+
+
+
         function formatFigure(hfig)
             % formatFigure Formats a MATLAB figure for publication-quality appearance.
             %
@@ -16,9 +26,8 @@ classdef Visualization
             %
             % Outputs:
             %   None. The formatting is applied directly to the provided figure handle.
-            if nargin < 1
-                CustomError.raiseError('InputCheck', CustomError.ERR_NOT_ENOUGH_INPUT_ARG);
-            end
+            Visualization.validateNumberOfParameters(nargin, 1, 1);
+
             set(findall(hfig, '-property','FontSize'),'FontSize', 17);
             set(findall(hfig, '-property', 'Box'), 'Box', 'off');
             set(findall(hfig, '-property', 'Interpreter'), 'Interpreter', 'latex');
@@ -41,9 +50,8 @@ classdef Visualization
             % Output:
             %   rgb - A 1x3 vector containing the red, green, and blue color components 
             %         of the input hex code. Each component is a value between 0 and 1.
-            if nargin < 1
-                CustomError.raiseError('InputCheck', CustomError.ERR_NOT_ENOUGH_INPUT_ARG);
-            end
+            Visualization.validateNumberOfParameters(nargin, 1, 1);
+
             rgb = sscanf(hex(2:end),'%2x%2x%2x',[1 3]) / 255;
         end
 
@@ -55,22 +63,22 @@ classdef Visualization
             % Description:
             %   This function saves the specified MATLAB figure to a file with the 
             %   given name. Optionally, the figure can be saved to a specific subfolder.
-            %   The figure is exported as a high-quality PNG image.
+            %   The figure is exported as a high-quality PNG image. If `Constants.EXPORT_TO_PDF`
+            %   is `true`, it is also exported as a PDF.
             %
             % Input:
             %   hfig         - Handle to the figure to be saved.
-            %   figName      - A string specifying the name of the output file 
-            %                  (e.g., 'myfigure').
+            %   figName      - Name of the output file. If empty, a timestamp is used.
             %   subfolderName (optional) - A string specifying the subfolder where 
-            %                  the figure should be saved. If not provided, the figure 
-            %                  is saved in the current working directory.
+            %                  the figure should be saved. If not provided or empty, the figure 
+            %                  is saved in `Constants.FIGURES_FOLDER` directory.
             %
             % Output:
             %   None. The function saves the figure to a file.
-            if nargin < 2
-                CustomError.raiseError('InputCheck', CustomError.ERR_NOT_ENOUGH_INPUT_ARG);
-            elseif nargin > 3
-                CustomError.raiseError('InputCheck', CustomError.ERR_TOO_MANY_INPUT_ARG);
+            Visualization.validateNumberOfParameters(nargin, 1, 3);
+
+            if nargin < 2 || isempty(figName)
+                figName = char(datetime('now', 'Format', 'yyyyMMdd_HHmmss'));
             end
 
             isSubfolderSpecified = false;
@@ -78,8 +86,9 @@ classdef Visualization
                 isSubfolderSpecified = true;
             end
             
+
             width = 20;
-            ratio = 0.65; % height/weight rati
+            ratio = 0.65; % height/weight ratio
 
             set(hfig, 'Units', 'centimeters', ...
                       'Position', [3 3 width ratio * width]);
@@ -92,7 +101,7 @@ classdef Visualization
 
             folderName = Constants.FIGURES_FOLDER;
 
-            % If a subfolder name is specified
+            % If subfolder name is specified
             if isSubfolderSpecified
                 folderName = [Constants.FIGURES_FOLDER, '/', subfolderName];
             end
@@ -102,6 +111,12 @@ classdef Visualization
                 mkdir(folderName);
             end
 
+            % Export to .png
+            figNamePNG = [figName, '.png'];
+            filePath = fullfile(folderName, figNamePNG);
+            set(gcf, 'PaperPositionMode', 'auto');
+            exportgraphics(hfig, filePath, 'Resolution', 300);
+
             % Export to .pdf
             if Constants.EXPORT_TO_PDF
                 figNamePDF = [figName, '.pdf'];
@@ -109,18 +124,12 @@ classdef Visualization
                 set(gcf, 'PaperPositionMode', 'auto');
                 exportgraphics(hfig, filePath, 'ContentType', 'vector');
             end
-
-            % Export to .png <- Default export
-            figNamePNG = [figName, '.png'];
-            filePath = fullfile(folderName, figNamePNG);
-            set(gcf, 'PaperPositionMode', 'auto');
-            exportgraphics(hfig, filePath, 'Resolution', 300);
         end
 
-    
 
-        function hintonDiagram(matrix, ax, figTitle, backgroundColor)
-            % hintonDiagram - Generates a Hinton diagram to visualize matrix values.
+
+        function renderHintonDiagram(matrix, ax, figTitle, backgroundColor)
+            % renderHintonDiagram - Generates a Hinton diagram to visualize matrix values.
             %
             % Description:
             %   This function creates a Hinton diagram to visualize the values of 
@@ -144,11 +153,7 @@ classdef Visualization
             % Output:
             %   None. The function visualizes the matrix values as a Hinton diagram
             %   on the specified or current axis.
-            if nargin < 1
-                CustomError.raiseError('InputCheck', CustomError.ERR_NOT_ENOUGH_INPUT_ARG);
-            elseif nargin > 4
-                CustomError.raiseError('InputCheck', CustomError.ERR_TOO_MANY_INPUT_ARG);
-            end
+            Visualization.validateNumberOfParameters(nargin, 1, 4);
 
             % Set default values for optional parameters
             if nargin < 4
@@ -159,7 +164,6 @@ classdef Visualization
                         ax = gca;
                     end
                 end
-
             end
             
             % Set the current axis to ax
@@ -194,12 +198,71 @@ classdef Visualization
             set(ax, 'XColor', 'none', 'YColor', 'none');
 
             if ~isempty(figTitle)
-                title(ax, figTitle);
+                title(ax, figTitle, 'Interpreter', 'latex');
+            end
+        end
+
+
+
+        function renderFactorLoadings(W, dimList, labelPos, ax, figTitle)
+            Visualization.validateNumberOfParameters(nargin, 2, 5);
+            
+            % Set default values for optional parameters
+            if nargin < 5
+                figTitle = '';
+                if nargin < 4
+                    ax = gca;
+                    if nargin < 3
+                        labelPos = 'top';
+                    end
+                end
+            end
+            
+            % Set the current axis to ax
+            axes(ax);
+
+            [D, K] = size(W);
+        
+            % Max height per each row
+            maxHeight = 0;
+            for k = 1:K
+                h = max(W(:, k)) - min(W(:, k));
+                if h > maxHeight
+                    maxHeight = h;
+                end
+            end
+            offset = ceil(1.25 * maxHeight);
+            x = linspace(1, D, D);
+
+            for k = 1:K
+                y = W(:, k) + (K - k + 1) * offset;
+                plot(x, y, 'Color', 'black', 'LineWidth', 1.5); %, 'Label', ['ind: ', k]);
+                hold on;
+            end
+            
+            ax.XAxis.Visible = 'off';
+            ax.YAxis.Visible = 'off';
+            
+            linePos = 0;
+            for k = 1:length(dimList) - 1 % Don't plot vertical line for the last view!
+                linePos = linePos + dimList(k);
+                labelText = ['$D_{', num2str(k), '}$'];
+                xline(linePos, 'Color', Constants.DARK_BLUE, 'LineWidth', 2, ...
+                    'Label', labelText, 'LabelVerticalAlignment', labelPos, ...
+                    'LabelHorizontalAlignment', 'left', 'Interpreter', 'latex');
+            end
+
+            if ~isempty(figTitle)
+                title(ax, figTitle, 'Interpreter', 'latex');
             end
         end
 
         
-        
+    end
+
+
+
+    methods (Static, Access=public)
         function plotHintonDiagrams(arrW, subplotTitles, figTitle, figName, subfolderName)
             % plotHintonDiagrams - Plots Hinton diagrams for multiple matrices side by side.
             %
@@ -229,16 +292,11 @@ classdef Visualization
             %
             % Output:
             %   - None. The function visualizes the Hinton diagrams on the screen and optionally exports the figure.
-            if nargin < 1
-                CustomError.raiseError('InputCheck', CustomError.ERR_NOT_ENOUGH_INPUT_ARG);
-            elseif nargin > 5
-                CustomError.raiseError('InputCheck', CustomError.ERR_TOO_MANY_INPUT_ARG);
-            end
+            Visualization.validateNumberOfParameters(nargin, 1, 5);
             
             isSubplotTitlesSpecified = false;
             addTitle = false;
             saveFig = false;
-            isSubfolderSpecified = false;
             if nargin > 1
                 if ~isempty(subplotTitles)
                     isSubplotTitlesSpecified = true;
@@ -249,8 +307,8 @@ classdef Visualization
                     end
                     if nargin > 3
                         saveFig = true;
-                        if nargin > 4 && ~isempty(subfolderName)
-                            isSubfolderSpecified = true;
+                        if nargin == 4 % `subfolderName` is not provided!
+                            subfolderName = '';
                         end
                     end
                 end
@@ -265,7 +323,7 @@ classdef Visualization
             hfigAx = axes(hfig); % Moved here for optimization purposes
             for i = 1:numPlots
                 ax = Utility.ternary(numPlots == 1, hfigAx, subplot(1, numPlots, i));
-                Visualization.hintonDiagram(arrW{i}, ax, ...
+                Visualization.renderHintonDiagram(arrW{i}, ax, ...
                     Utility.ternaryOpt(isSubplotTitlesSpecified && i <= length(subplotTitles), @() subplotTitles{i}, @() ''));
             end
 
@@ -275,19 +333,18 @@ classdef Visualization
            
             % Format figure
             Visualization.formatFigure(hfig);
-
+            
             % Save figure
             if saveFig
-                if isempty(figName)
-                    figName = string(datetime('now', 'Format', 'yyyyMMdd_HHmmss'));
-                end
-                Visualization.exportFigure(hfig, figName, ...
-                    Utility.ternaryOpt(isSubfolderSpecified, @() subfolderName, @() ''));
+                Visualization.exportFigure(hfig, figName, subfolderName);
             end
         end
 
-       
-        
+
+
+        % [NOTE] The number of inferred latent factors may differ from the true
+        % number of latent factors. As a result, they are not plotted as subplots
+        % in a single figure.
         function plotLatentFactors(Z, figTitle, figName, subfolderName)
             % plotLatentFactors - Plots each latent factor from a matrix Z as a separate subplot.
             %
@@ -308,21 +365,18 @@ classdef Visualization
             %
             % Output:
             %   - None. The function displays the latent factors in a figure and optionally saves it to a file.
-            if nargin < 1
-                CustomError.raiseError('InputCheck', CustomError.ERR_NOT_ENOUGH_INPUT_ARG);
-            end
-            
+            Visualization.validateNumberOfParameters(nargin, 1, 4);
+
             addTitle = false;
             saveFig = false;
-            isSubfolderSpecified = false;
             if nargin > 1
                 if ~isempty(figTitle)
                     addTitle = true;
                 end
                 if nargin > 2
                     saveFig = true;
-                    if nargin > 3 && ~isempty(subfolderName)
-                        isSubfolderSpecified = true;
+                    if nargin == 3 % `subfolderName` is not specified
+                        subfolderName = '';
                     end
                 end
             end
@@ -335,166 +389,155 @@ classdef Visualization
                 plot(factor, '.', 'MarkerSize', 4);
                 hold on;
             end
-            
+
             if addTitle
                 sgtitle(figTitle);
             end
 
             Visualization.formatFigure(hfig);
 
-            if saveFig
-                if isempty(figName)
-                    figName = string(datetime('now', 'Format', 'yyyyMMdd_HHmmss'));
-                end
-                Visualization.exportFigure(hfig, figName, ...
-                    Utility.ternaryOpt(isSubfolderSpecified, @() subfolderName, @() ''));
-            end
-        end
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-        function plotLoadings(W, dimList, figTitle, figName, subfolderName)
-            % Parameters
-            % ----------
-            % W : matrix, [D_total x K]
-            % dimList: number of features in each view 
-            if nargin < 2
-                error(['##### ERROR IN THE CLASS ' mfilename('class') ': Not enough input arguments provided.']);
-            elseif nargin < 3
-                figTitle = '';
-            end
-
-            [D, K] = size(W);
-        
-            % Max height per each row
-            maxHeight = 0;
-            for k = 1:K
-                h = max(W(:, k)) - min(W(:, k));
-                if h > maxHeight
-                    maxHeight = h;
-                end
-            end
-            offset = ceil(1.25 * maxHeight);
-            x = linspace(1, D, D);
-        
-            hfig = figure;
-            hold on;
-        
-            for k = 1:K
-                y = W(:, k) + (K - k + 1) * offset;
-        
-                plot(x, y, 'Color', 'black', 'LineWidth', 1.5); %, 'Label', ['ind: ', k]);
-            end
-            
-            ax = gca;
-            ax.XAxis.Visible = 'off';
-            ax.YAxis.Visible = 'off';
-            
-            linePos = 0;
-            for k = 1:length(dimList) - 1 % Don't plot vertical line for the last view
-                linePos = linePos + dimList(k);
-                labelText = ['$D_{', num2str(k), '}$'];
-                xline(linePos, 'Color', Constants.DARK_BLUE, 'LineWidth', 2, ...
-                    'Label', labelText, 'LabelVerticalAlignment', 'top', ...
-                    'LabelHorizontalAlignment', 'left', 'Interpreter', 'latex');
-            end
-
-            if ~isempty(figTitle)
-                title(figTitle);
-            end
-
-            Visualization.formatFigure(hfig);
-
             % Save figure
+            if saveFig
+                Visualization.exportFigure(hfig, figName, subfolderName);
+            end
+        end
+
+
+
+        function plotFactorLoadings(W, dimList, figTitle, figName, subfolderName)
+            % plotLoadings - Visualizes the factor loadings for all views as a heatmap.
+            %
+            % Description:
+            %   This function plots the transpose of the factor loading matrix `W`, such that
+            %   each row corresponds to a single latent factor and each column corresponds to 
+            %   a feature. The matrix `W` is assumed to concatenate 
+            %   loadings from multiple views, and the boundaries between views are indicated 
+            %   with vertical lines based on the `dimList` input.
+            %
+            %   An optional title can be added using `figTitle`, and the figure can be saved 
+            %   by specifying `figName`. If `subfolderName` is also provided, the figure 
+            %   will be saved to the specified subfolder; otherwise, it will be saved in 
+            %   `Constants.FIGURES_FOLDER` directory.
+            %
+            % Input:
+            %   - W (required): A matrix of size [D_total x K], where D_total is the sum of 
+            %                  feature dimensions across all views and K is the number of latent factors.
+            %   - dimList (required): A vector specifying the number of features in each view. 
+            %                         Used to draw vertical lines that separate views in the plot.
+            %   - figTitle (optional): Title for the entire figure. If empty or not provided, 
+            %                          no title is added.
+            %   - figName (optional): Name of the file to which the figure will be saved. 
+            %                         If not provided, the figure will not be saved. 
+            %                         If provided as an empty value, a timestamp will be used as the filename.
+            %   - subfolderName (optional): Subfolder in which the figure will be saved.
+            %   - ax (optional):      Handle to the axis on which the diagram will be drawn. 
+            %                         If not provided, the current axis (gca) is used.
+            % Output:
+            %   - None.
+            Visualization.validateNumberOfParameters(nargin, 2, 5);
+            
+            addTitle = false;
+            saveFig = false;
             if nargin > 2
-                Visualization.exportFigure(hfig, figName, ...
-                    Utility.ternaryOpt(nargin == 3, @() '', @() subfolderName));
+                if ~isempty(figTitle)
+                    addTitle = true;
+                end
+                if nargin > 3
+                    saveFig = true;
+                    if nargin == 4 % `subfolderName` is not provided!
+                        subfolderName = '';
+                    end
+                end
+            end
+
+            % Create figure
+            hfig = figure;
+
+            % [NOTE] We don't have subplots here, so we don't pass
+            % `figTitle` to `renderFactorLoadings`, we simple add it below.
+            Visualization.renderFactorLoadings(W, dimList);
+
+            if addTitle
+                title(figTitle, 'Interpreter', 'latex');
+            end
+
+            % Format figure
+            Visualization.formatFigure(hfig);
+            
+            % Save figure
+            if saveFig
+                Visualization.exportFigure(hfig, figName, subfolderName);
             end
         end
     
-    
 
-        % TODO: DRY this: check the function above
-        function plotLoadingsAndAlpha(W, dimList, alpha, figsTitle, labelPos, figName, subfolderName)
+   
+        % [NOTE] This function can be extended with `subplotTitles` param.
+        function plotFactorLoadingsAndAlpha(W, dimList, alpha, labelPos, height, widthToHeightRatio, ...
+                figTitle, figName, subfolderName)
             % Parameters
             % ----------
             % W : matrix, [D_total x K]
             % dimList: number of features in each view 
-            if nargin < 2
-                error(['##### ERROR IN THE CLASS ' mfilename('class') ': Not enough input arguments provided.']);
-            % elseif nargin < 3
-            %     figsTitle = '';
-            end
+            Visualization.validateNumberOfParameters(nargin, 3, 9);
 
-            [D, K] = size(W);
-        
-            % Max height per each row
-            maxHeight = 0;
-            for k = 1:K
-                h = max(W(:, k)) - min(W(:, k));
-                if h > maxHeight
-                    maxHeight = h;
+            % Assign default values to optional parameters if they are missing or empty ('')
+            defaultHeight = 400;
+            defaultWidthToHeightRatio = 2.5;
+            defaultLabelPos = 'top';
+            if nargin < 6
+                widthToHeightRatio = defaultWidthToHeightRatio; % Optimal value for 2 views (at least for synth data)
+                if nargin < 5
+                    height = defaultHeight;
+                    if nargin < 4
+                        labelPos = defaultLabelPos;
+                    end
                 end
             end
-            offset = ceil(1.25 * maxHeight);
-            x = linspace(1, D, D);
-        
-            height = 400;
-            hfig = figure('Position', [100, 100, 3.5 * height, height]); % TODO: the number * height must be a param, for 2G 2.5 was a good value
+            
+            addTitle = false;
+            saveFig = false;
+            if nargin > 6
+                if isempty(labelPos)
+                    labelPos = defaultLabelPos;
+                end
+                if isempty(height)
+                    height = defaultHeight;
+                end
+                if isempty(widthToHeightRatio)
+                    widthToHeightRatio = defaultWidthToHeightRatio;
+                end
+
+                if ~isempty(figTitle)
+                    addTitle = true;
+                end
+                if nargin > 7
+                    saveFig = true;
+                    if nargin == 8 % `subfolderName` is not provided!
+                        subfolderName = '';
+                    end
+                end
+            end
+
+            % Create figure
+            hfig = figure('Position', [100, 100, widthToHeightRatio * height, height]);
             subplot('Position', [0.1, 0.1, 0.6, 0.8]);
-            hold on;
-        
-            for k = 1:K
-                y = W(:, k) + (K - k + 1) * offset;
-        
-                plot(x, y, 'Color', 'black', 'LineWidth', 1.5); %, 'Label', ['ind: ', k]);
-            end
+            Visualization.renderFactorLoadings(W, dimList, labelPos);
             
-            ax = gca;
-            ax.XAxis.Visible = 'off';
-            ax.YAxis.Visible = 'off';
-            
-            linePos = 0;
-            for k = 1:length(dimList) - 1 % Don't plot vertical line for the last view
-                linePos = linePos + dimList(k);
-                labelText = ['$D_{', num2str(k), '}$'];
-                xline(linePos, 'Color', Constants.DARK_BLUE, 'LineWidth', 2, ...
-                    'Label', labelText, 'LabelVerticalAlignment', labelPos, ...
-                    'LabelHorizontalAlignment', 'left', 'Interpreter', 'latex');
-            end
-
-            % if ~isempty(figTitle)
-            %     title(figTitle);
-            % end
-            
-            % title(figsTitle{1}, 'Interpreter', 'latex');
-
             subplot('Position', [0.75, 0.1, 0.2, 0.8]);
-            Visualization.hintonDiagram(alpha, gca, '');
+            Visualization.renderHintonDiagram(alpha);
 
-            % title(figsTitle{2}, 'Interpreter', 'latex');
+            if addTitle
+                sgtitle(figTitle, 'Interpreter', 'latex');
+            end
 
-            sgtitle(figsTitle, 'Interpreter', 'latex');
-
+            % Format figure
             Visualization.formatFigure(hfig);
-
-            % % Save figure
-            % if nargin > 3
-            %     Visualization.exportFigure(hfig, figName, ...
-            %         Utility.ternaryOpt(nargin == 3, @() '', @() subfolderName));
-            % end
+            
+            % Save figure
+            if saveFig
+                Visualization.exportFigure(hfig, figName, subfolderName);
+            end
         end
-        
     end
 end
