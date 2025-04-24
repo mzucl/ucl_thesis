@@ -1,10 +1,12 @@
 % Clear the workspace
 close all; clearvars; clc;
 
+
 %% Generate data and run the experiment
 data = Datasets.generateSyntheticGFAData(2);
 
 bestOverallModel = Experiment('sgfa', 10, {data.X_train{1}, data.X_train{2}}, mfilename).run();
+
 
 %% [NOTE] The visualization functionality is deliberately kept outside of 
 % the `Experiment` class to allow for greater flexibility and control over 

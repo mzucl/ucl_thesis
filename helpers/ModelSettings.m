@@ -25,7 +25,8 @@ classdef ModelSettings < handle
         LATENT_FACTORS_THRESHOLD % factor relevance
 
         % Diagonal loading/regulatization
-        EPSILON
+        % EPSILON
+        DIAG_REGULARIZER
         
         % Validate inputs
         VALIDATE
@@ -53,7 +54,7 @@ classdef ModelSettings < handle
     
             obj.LATENT_FACTORS_THRESHOLD = 1e-6;
     
-            obj.EPSILON = 1e-2;
+            obj.DIAG_REGULARIZER = 1e-2;
     
             obj.VALIDATE = true;
             obj.DEBUG = true;

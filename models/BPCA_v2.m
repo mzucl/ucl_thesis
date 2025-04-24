@@ -1,3 +1,6 @@
+% John had an idea to share alpha between cols, I think this was when the
+% cols weren't going to zero!
+
 classdef BPCA_v2 < handle
     properties 
         view            % ViewHandler

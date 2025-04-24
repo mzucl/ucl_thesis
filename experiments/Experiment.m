@@ -93,6 +93,8 @@ classdef Experiment
                     switch lower(obj.modelName)
                         case 'sgfa'
                             model = SGFA(obj.views, obj.K);
+                        case 'gfa'
+                            model = GFA(obj.views, obj.K);
                         otherwise
                             CustomError.raiseError('InputCheck', CustomError.ERR_UNKNOWN_MODEL);
                     end

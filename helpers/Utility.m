@@ -344,5 +344,105 @@ classdef Utility
             
             result = bsxfun(@times, I, M_3D);
         end
+
+
+
+
+
+        function [constants, descriptions] = loadConstants(filename)
+            disp("LODA");
+            if nargin == 0 
+                filename = 'config.txt';
+            end
+
+            lines = readlines(filename);
+            constants = struct();
+            descriptions = struct();
+            currentSection = '';
+        
+            for i = 1:length(lines)
+                line = strtrim(lines(i));
+        
+                % Skip empty lines and full-line comments
+                if line == "" || startsWith(line, "#") || startsWith(line, "%")
+                    continue;
+                end
+        
+                % Detect section header
+                if startsWith(line, "[") && endsWith(line, "]")
+                    currentSection = extractBetween(line, "[", "]");
+                    currentSection = currentSection{1};
+                    constants.(currentSection) = struct();
+                    descriptions.(currentSection) = struct();
+                    continue;
+                end
+        
+                % Remove semicolon if present
+                if endsWith(line, ";")
+                    line = extractBefore(line, ";");
+                end
+        
+                % Handle key = value # comment
+                if contains(line, "=")
+                    kv = split(line, "=");
+                    key = strtrim(kv(1));
+                    rest = strtrim(kv(2));
+        
+                    % Split value and comment (on '#' or '%')
+                    valueStr = rest;
+                    commentSplit = regexp(rest, '[#%]', 'split');
+                    if ~isempty(commentSplit)
+                        valueStr = strtrim(commentSplit{1});
+                    end
+        
+                    value = str2double(valueStr);
+                    if isnan(value)
+                        value = valueStr; % fallback for string values
+                    end
+        
+                    constants.(currentSection).(key) = value;
+        
+                    % Extract description if present
+                    descMatch = regexp(rest, '[#%](.*)$', 'tokens');
+                    if ~isempty(descMatch)
+                        descriptions.(currentSection).(key) = strtrim(descMatch{1}{1});
+                    else
+                        descriptions.(currentSection).(key) = '';
+                    end
+                end
+            end
+        end
+    
+        function val = getConstant(section, key, filename)
+            CustomError.validateNumberOfParameters(nargin, 2, 3);
+            
+            if nargin < 3
+                filename = 'config.txt';
+            end
+
+            persistent constants
+        
+            if isempty(constants)
+                [constants, ~] = Utility.loadConstants(filename);
+            end
+        
+            val = constants.(section).(key);
+        end
+
+        function desc = getDescription(section, key, filename)
+            CustomError.validateNumberOfParameters(nargin, 1, 3);
+
+            if nargin < 3
+                filename = 'config.txt';
+            end
+
+            persistent descriptions
+        
+            if isempty(descriptions)
+                [~, descriptions] = Utility.loadConstants(filename);
+            end
+        
+            desc = descriptions.(section).(key);
+        end
     end
 end
