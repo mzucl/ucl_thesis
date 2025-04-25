@@ -1,29 +1,29 @@
 [Distribution]
-DEFAULT_GAMMA_A = 10^-14              # Shape parameter for default Gamma prior
-DEFAULT_GAMMA_B = 10^-14              # Rate parameter for default Gamma prior
-DEFAULT_GAUSS_MU = 0                  # Mean of the default Gaussian prior
-DEFAULT_GAUSS_DIM = 1                 # Dimensionality of the default Gaussian prior
-DEFAULT_GAUSS_PRECISION = 1           # Precision (inverse variance) of the default Gaussian prior
+DEFAULT_GAMMA_A = 10^-14              % Shape parameter for default Gamma prior
+DEFAULT_GAMMA_B = 10^-14              % Rate parameter for default Gamma prior
+DEFAULT_GAUSS_MU = 0                  % Mean of the default Gaussian prior
+DEFAULT_GAUSS_DIM = 1                 % Dimensionality of the default Gaussian prior
+DEFAULT_GAUSS_PRECISION = 1           % Precision (inverse variance) of the default Gaussian prior
 
 [Model]
-DEFAULT_NOISE_VAL = 1e3               # Initial noise precision for observed data
-LATENT_FACTORS_THRESHOLD = 1e-6       # Threshold to prune inactive latent components
+DEFAULT_NOISE_VAL = 1e3               % Initial noise precision for observed data
+LATENT_FACTORS_THRESHOLD = 1e-6       % Threshold to prune inactive latent components
 
 [Optimization]
-DEFAULT_MAX_ITER = 5000               # Maximum number of iterations for optimization
-DEFAULT_TOL = 1e-6                    # Tolerance for convergence in iterative algorithms
+DEFAULT_MAX_ITER = 5000               % Maximum number of iterations for optimization
+DEFAULT_TOL = 1e-6                    % Tolerance for convergence in iterative algorithms
 
 [General]
-DIAG_REGULARIZER = 1e-2               # Small positive value added to diagonals for numerical stability
-TOL = 1e-9                            # Tolerance used when comparing floating-point values: replaces exact comparison `a == b` with approximate check `abs(a - b) < TOL`  
+DIAG_REGULARIZER = 1e-2               % Small positive value added to diagonals for numerical stability
+TOL = 1e-9                            % Tolerance used when comparing floating-point values: replaces exact comparison `a == b` with approximate check `abs(a - b) < TOL`  
 
 [Export]
-FIGURES_FOLDER = 'figures';           # Default directory for saving generated figures
-EXPORT_TO_PDF = false;                # Flag to control whether figures are exported to PDF format (in addition to PNG format)
+FIGURES_FOLDER = figures              % Default directory for saving generated figures
+EXPORT_TO_PDF = false                 % Flag to control whether figures are exported to PDF format (in addition to PNG format)
 
-[Visualization]
-BLUE = '#DAE8FC'
-PURPLE = '#E1D5E7'
-RED = '#F8CECC'
-DARK_BLUE = '#6C8EBF'
-GREEN = '#D5E8D4'
+[Colors]
+BLUE = #DAE8FC
+PURPLE = #E1D5E7
+RED = #F8CECC
+DARK_BLUE = #6C8EBF
+GREEN = #D5E8D4

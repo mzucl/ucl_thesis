@@ -1,30 +1,51 @@
 % TODO (medium): Create a base class for all models with optimization params
 % and some other stuff
-classdef SGFA < handle
+classdef SGFA < BaseModel
     properties
-        K               % Number of latent dimensions/principal components
+        % K               % Number of latent dimensions/principal components
     
-        N               % Number of observations
+        % N               
 
-        M               % Number of groups
+        % M               % Number of groups
 
-        Z               % [K x N] GaussianContainer [size: N; for each latent variable zn]
+        % Z               % [K x N] GaussianContainer [size: N; for each latent variable zn]
         
-        views           % An array of GFAGroup instances
+        % views           % An array of GFAGroup instances
 
         % Optimization parameters
-        maxIter
-        tol
+        % maxIter
+        % tol
 
         % CONSTANT (don't change after initialization) dependent properties
-        D % Array containing dimensions for each view
+        % D % Array containing dimensions for each view
 
-        W
+        % W
+        % 
+        % alpha
 
-        alpha
-
-        doRotation
+        % doRotation
     end
+
+    % The next two sections of variables support `dependent properties` that 
+    % are initialized in the constructor and should remain immutable afterward
+    % properties (Dependent, SetAccess = private)
+    %     M               % Number of views/groups
+    %     N               % Number of observations
+    %     D               % Array containing dimensions for each view
+    % end
+    % 
+    % % Backing variables
+    % properties (Access = private) 
+    %     M_
+    %     N_
+    %     D_
+    % end
+
+
+    % properties (Access = public, Dependent)
+    %     W               % The `big W` matrix, containing the `W` matrices of all views
+    %     alpha           % The `big alpha` matrix, containing the `alpha` vectors of all views
+    % end
 
     % TODO (high): Implement
     % methods(Access = private)
@@ -47,47 +68,48 @@ classdef SGFA < handle
         % [NOTE] For now we have 2 datasets passed in as matrices
         %% Constructors
         function obj = SGFA(data, K, maxIter, tol, doRotation)
-            % Optional parameters: maxIter, tol
-            if nargin < 2
-                error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
-            end
-
-            % TODO (very high!): Implementent method below as soon as the
-            % toy example with 2 views starts working
-            % [obj.M, obj.N] = obj.validateSources(...)
-            obj.M = length(data);
-            obj.N = size(data{1}, 2); % Data passed in is DxN
-
-            obj.K = DoubleWrapper(K);
-
-            obj.maxIter = Utility.getConfigValue('Optimization', 'DEFAULT_MAX_ITER');
-            obj.tol = Utility.getConfigValue('Optimization', 'DEFAULT_TOL');
-            obj.doRotation = false;
-
-            if nargin > 2
-                obj.maxIter = maxIter;
-                if nargin > 3
-                    obj.tol = tol;
-                    if nargin > 4
-                        obj.doRotation = doRotation;
-                    end
-                end
-            end
-
-            %% Model setup and initialization
-            initZMu = randn(obj.K.Val, 1);
-
-            %                         type, size_, cols, dim,     mu, cov, priorPrec
-            obj.Z = GaussianContainer("DS", obj.N, true, obj.K.Val, zeros(obj.K.Val, 1)); % STEP1
-
-            % Initialize views
-            obj.views = SGFAGroup.empty(obj.M, 0);
-
-            for i = 1:obj.M
-                obj.views(i) = SGFAGroup(data{i}, obj.Z, obj.K, false); % featuresInCols = false;
-            end
-
-            obj.D = [obj.views.D];
+            obj = obj@BaseModel(data, K);
+            % % Optional parameters: maxIter, tol
+            % if nargin < 2
+            %     error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
+            % end
+            % 
+            % % TODO (very high!): Implementent method below as soon as the
+            % % toy example with 2 views starts working
+            % % [obj.M, obj.N] = obj.validateSources(...)
+            % obj.M_ = length(data);
+            % obj.N_ = size(data{1}, 2); % Data passed in is DxN
+            % 
+            % obj.K = DoubleWrapper(K);
+            % 
+            % obj.maxIter = Utility.getConfigValue('Optimization', 'DEFAULT_MAX_ITER');
+            % obj.tol = Utility.getConfigValue('Optimization', 'DEFAULT_TOL');
+            % obj.doRotation = false;
+            % 
+            % if nargin > 2
+            %     obj.maxIter = maxIter;
+            %     if nargin > 3
+            %         obj.tol = tol;
+            %         if nargin > 4
+            %             obj.doRotation = doRotation;
+            %         end
+            %     end
+            % end
+            % 
+            % %% Model setup and initialization
+            % initZMu = randn(obj.K.Val, 1);
+            % 
+            % %                         type, size_, cols, dim,     mu, cov, priorPrec
+            % obj.Z = GaussianContainer("DS", obj.N, true, obj.K.Val, zeros(obj.K.Val, 1)); % STEP1
+            % 
+            % % Initialize views
+            % obj.views = SGFAGroup.empty(obj.M, 0);
+            % 
+            % for i = 1:obj.M
+            %     obj.views(i) = SGFAGroup(data{i}, obj.Z, obj.K, false); % featuresInCols = false;
+            % end
+            % 
+            % obj.D_ = [obj.views.D];
         end
 
 
@@ -109,29 +131,29 @@ classdef SGFA < handle
             obj.Z.updateDistributionsParameters(muNew, covNew);
         end
 
-        function obj = qWUpdate(obj, it)
-            for i = 1:obj.M
-                obj.views(i).qWUpdate(it);
-            end
-        end
-
-        function obj = qAlphaUpdate(obj)
-            for i = 1:obj.M
-                obj.views(i).qAlphaUpdate();
-            end
-        end
-
-        function obj = qMuUpdate(obj)
-            for i = 1:obj.M
-                obj.views(i).qMuUpdate();
-            end
-        end
-
-        function obj = qTauUpdate(obj)
-            for i = 1:obj.M
-                obj.views(i).qTauUpdate();
-            end
-        end
+        % function obj = qWUpdate(obj, it)
+        %     for i = 1:obj.M
+        %         obj.views(i).qWUpdate(it);
+        %     end
+        % end
+        % 
+        % function obj = qAlphaUpdate(obj)
+        %     for i = 1:obj.M
+        %         obj.views(i).qAlphaUpdate();
+        %     end
+        % end
+        % 
+        % function obj = qMuUpdate(obj)
+        %     for i = 1:obj.M
+        %         obj.views(i).qMuUpdate();
+        %     end
+        % end
+        % 
+        % function obj = qTauUpdate(obj)
+        %     for i = 1:obj.M
+        %         obj.views(i).qTauUpdate();
+        %     end
+        % end
 
 
 
@@ -247,33 +269,42 @@ classdef SGFA < handle
 
 
         %% Getters
-        function value = get.D(obj)
-            value = zeros(obj.M, 1);
-            for m = 1:length(obj.views)
-                value(m) = obj.views(m).D;
-            end
-        end
-
-        % Big matrix W containing all views
-        function value = get.W(obj)
-            totalD = sum(obj.D);
-            value = zeros(totalD, obj.K.Val);
-
-            d = 0;
-            for m = 1:obj.M
-                Dm = obj.views(m).D;
-                value(d + 1 : d + Dm, :) = obj.views(m).W.E;
-                d = d + Dm;
-            end
-        end
-
-        % Big matrix alpha, containing all alphas
-        function value = get.alpha(obj)
-            value = zeros(obj.K.Val, obj.M);
-            for m = 1:obj.M
-                value(:, m) = obj.views(m).alpha.E;
-            end
-        end
+        % function value = get.M(obj)
+        %     value = obj.M_;
+        % end
+        % 
+        % function value = get.N(obj)
+        %     value = obj.N_;
+        % end
+        % 
+        % function value = get.D(obj)
+        %     value = obj.D_;
+        % end
+        % 
+        % 
+        % 
+        % 
+        % 
+        % % Big matrix W containing all views
+        % function value = get.W(obj)
+        %     totalD = sum(obj.D);
+        %     value = zeros(totalD, obj.K.Val);
+        % 
+        %     d = 0;
+        %     for m = 1:obj.M
+        %         Dm = obj.views(m).D;
+        %         value(d + 1 : d + Dm, :) = obj.views(m).W.E;
+        %         d = d + Dm;
+        %     end
+        % end
+        % 
+        % % Big matrix alpha, containing all alphas
+        % function value = get.alpha(obj)
+        %     value = zeros(obj.K.Val, obj.M);
+        %     for m = 1:obj.M
+        %         value(:, m) = obj.views(m).alpha.E;
+        %     end
+        % end
 
         % Variables with '_' are expectations
         % X_tr and y_tr are used to set the threshold

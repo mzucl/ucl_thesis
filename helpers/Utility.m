@@ -25,7 +25,7 @@ classdef Utility
                 line = strtrim(lines(i));
         
                 % Skip empty lines and full-line comments
-                if line == "" || startsWith(line, "#") || startsWith(line, "%")
+                if line == "" || startsWith(line, "%")
                     continue;
                 end
         
@@ -51,7 +51,7 @@ classdef Utility
         
                     % Split value and comment (on '#' or '%')
                     valueStr = rest;
-                    commentSplit = regexp(rest, '[#%]', 'split');
+                    commentSplit = regexp(rest, '[%]', 'split');
                     if ~isempty(commentSplit)
                         valueStr = strtrim(commentSplit{1});
                     end
@@ -73,7 +73,7 @@ classdef Utility
                     constants.(currentSection).(key) = value;
         
                     % Extract description if present
-                    descMatch = regexp(rest, '[#%](.*)$', 'tokens');
+                    descMatch = regexp(rest, '[%](.*)$', 'tokens');
                     if ~isempty(descMatch)
                         descriptions.(currentSection).(key) = strtrim(descMatch{1}{1});
                     else

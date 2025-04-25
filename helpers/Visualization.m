@@ -53,7 +53,7 @@ classdef Visualization
             % Description:
             %   This function saves the specified MATLAB figure to a file with the 
             %   given name. Optionally, the figure can be saved to a specific subfolder.
-            %   The figure is exported as a high-quality PNG image. If `Constants.EXPORT_TO_PDF`
+            %   The figure is exported as a high-quality PNG image. If `config.EXPORT_TO_PDF`
             %   is `true`, it is also exported as a PDF.
             %
             % Input:
@@ -61,7 +61,7 @@ classdef Visualization
             %   figName      - Name of the output file. If empty, a timestamp is used.
             %   subfolderName (optional) - A string specifying the subfolder where 
             %                  the figure should be saved. If not provided or empty, the figure 
-            %                  is saved in `Constants.FIGURES_FOLDER` directory.
+            %                  is saved in `config.FIGURES_FOLDER` directory.
             %
             % Output:
             %   None. The function saves the figure to a file.
@@ -89,11 +89,11 @@ classdef Visualization
                       'PaperUnits', 'centimeters', ...
                       'PaperSize', [pos(3), pos(4)]);
 
-            folderName = Constants.FIGURES_FOLDER;
+            folderName = Utility.getConfigValue('Export', 'FIGURES_FOLDER');
 
             % If subfolder name is specified
             if isSubfolderSpecified
-                folderName = [Constants.FIGURES_FOLDER, '/', subfolderName];
+                folderName = [folderName, '/', subfolderName];
             end
 
             % Save figure
@@ -101,14 +101,14 @@ classdef Visualization
                 mkdir(folderName);
             end
 
-            % Export to .png
+            % Export to PNG
             figNamePNG = [figName, '.png'];
             filePath = fullfile(folderName, figNamePNG);
             set(gcf, 'PaperPositionMode', 'auto');
             exportgraphics(hfig, filePath, 'Resolution', 300);
 
-            % Export to .pdf
-            if Constants.EXPORT_TO_PDF
+            % Export to PDF
+            if Utility.getConfigValue('Export', 'EXPORT_TO_PDF')
                 figNamePDF = [figName, '.pdf'];
                 filePath = fullfile(folderName, figNamePDF);
                 set(gcf, 'PaperPositionMode', 'auto');
@@ -138,7 +138,7 @@ classdef Visualization
             %   backgroundColor (optional) - A boolean value indicating whether 
             %                                to set the background color of the axis. 
             %                                Defaults to true, which sets the background 
-            %                                color to a predefined (in Constants.m file) blue.
+            %                                color to a predefined (in config.txt file) blue.
             %
             % Output:
             %   None. The function visualizes the matrix values as a Hinton diagram
@@ -161,7 +161,7 @@ classdef Visualization
             axis(ax, 'equal'); % Set the same length in every direction
             
             if backgroundColor
-                set(ax, 'Color', Visualization.hexToRGB(Constants.BLUE));
+                set(ax, 'Color', Visualization.hexToRGB(Utility.getConfigValue('Colors', 'BLUE')));
             end
 
             maxWeight = max(abs(matrix(:)));
@@ -237,7 +237,7 @@ classdef Visualization
             for k = 1:length(dimList) - 1 % Don't plot vertical line for the last view!
                 linePos = linePos + dimList(k);
                 labelText = ['$D_{', num2str(k), '}$'];
-                xline(linePos, 'Color', Constants.DARK_BLUE, 'LineWidth', 2, ...
+                xline(linePos, 'Color', Utility.getConfigValue('Colors', 'DARK_BLUE'), 'LineWidth', 2, ...
                     'Label', labelText, 'LabelVerticalAlignment', labelPos, ...
                     'LabelHorizontalAlignment', 'left', 'Interpreter', 'latex');
             end
@@ -343,7 +343,7 @@ classdef Visualization
             %   plotting each row (latent factor) in a separate subplot stacked vertically. 
             %   An optional figure title can be added using `figTitle`, and the figure can be 
             %   exported to a file using `figName`. If a `subfolderName` is specified, the figure 
-            %   will be saved in that subfolder; otherwise, it will be saved in the `Constants.FIGURES_FOLDER`.
+            %   will be saved in that subfolder; otherwise, it will be saved in the `config.FIGURES_FOLDER`.
             %   If `figName` is provided but it is empty, the figure will be saved 
             %   using the current timestamp as its name.
             %
@@ -407,7 +407,7 @@ classdef Visualization
             %   An optional title can be added using `figTitle`, and the figure can be saved 
             %   by specifying `figName`. If `subfolderName` is also provided, the figure 
             %   will be saved to the specified subfolder; otherwise, it will be saved in 
-            %   `Constants.FIGURES_FOLDER` directory.
+            %   `config.FIGURES_FOLDER` directory.
             %
             % Input:
             %   - W (required): A matrix of size [D_total x K], where D_total is the sum of 
