@@ -1,8 +1,8 @@
-% Enable passeing these to the experient
-  % 
-  % obj.maxIter = Utility.getConfigValue('Optimization', 'DEFAULT_MAX_ITER');
-  %           obj.tol = Utility.getConfigValue('Optimization', 'DEFAULT_TOL');
-  %           obj.doRotation = false;
+% Enable passing these to the `Experiment`
+% 
+% obj.maxIter = Utility.getConfigValue('Optimization', 'DEFAULT_MAX_ITER');
+% obj.tol = Utility.getConfigValue('Optimization', 'DEFAULT_TOL');
+% obj.doRotation = false;
 
 classdef Experiment
     properties

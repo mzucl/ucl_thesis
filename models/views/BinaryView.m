@@ -1,10 +1,8 @@
 % TODO: View should be a base class and this should inherit from it, 
 % DRY the code!
 
-classdef BinaryView < handle
+classdef BinaryView < BaseView
     properties         
-        X               % ViewHandler instance to hold the data
-
         W               % [D x K] GaussianContainer      
                         %       --- [size: D; for each row in W matrix]
 
@@ -24,12 +22,6 @@ classdef BinaryView < handle
         bound           % Jaakkola or Bohning bound
     
 
-        Z
-        K
-
-        % CONSTANT (don't change after initialization) dependent properties
-        D
-        N
     end
     
 
@@ -37,6 +29,7 @@ classdef BinaryView < handle
     methods
         %% Constructors
         function obj = BinaryView(data, Z, K, featuresInCols, bound)
+            obj@BaseView(data, Z, K, false);
             % disp('BinaryView');
             % TODO: Deal with the default values in a proper way
             if nargin < 3
@@ -45,13 +38,6 @@ classdef BinaryView < handle
                 featuresInCols = true;
             end
 
-            obj.X = ViewHandler(data, featuresInCols);
-            obj.Z = Z;
-            obj.K = K;
-
-            % Dependent properties
-            obj.D = obj.X.D;
-            obj.N = obj.X.N;
 
             if nargin < 5 || bound == 'B'
                 obj.bound = BohningBound(randn(obj.D, obj.N));
@@ -187,15 +173,5 @@ classdef BinaryView < handle
 
             value = term1 - 1/2 * term2 + const;
         end
-
-
-
-
-
-
-
-
-
-
     end
 end

@@ -1,26 +1,22 @@
 % Clear the workspace
-close all; clear all; clc;
+close all; clearvars; clc;
+
+rc = RunConfig.getInstance();
+rc.inputValidation = true;
+rc.enableLogging = true;
 
 % Logging
-logFileName = 'logs/bgfa_2G.txt';
+logFileName = ['logs/', mfilename, '.txt'];
 if ~exist('logs', 'dir')
     mkdir('logs');
 end
 
-% Figures folder
-figsSubfolder = 'bgfa';
-
 diary(logFileName); % start logging
-
-% Model settings
-settings = ModelSettings.getInstance();
-settings.VALIDATE = true;
-settings.DEBUG = true;
-
 
 %% Import data and train the model
 folderName = 'mnist38'; 
-[X1_train, X2_train, X1_test, X2_test] = Datasets.trainTestSplitMNIST(folderName, true); % binaryLabels = true;
+%                                                                             binaryLabels
+[X1_train, X2_train, X1_test, X2_test] = Datasets.trainTestSplitMNIST(folderName, true); 
 
 % Speed up
 % X1_train = X1_train(1:500, :);
@@ -41,19 +37,19 @@ model = BGFA({X1_train', X2_train'}, 1, K, 'B');
 
 %%
 Z = model.Z.E;
-W1 = model.views{1}.W.E;
-W2 = model.views{2}.W.E;
-mu1 = model.views{1}.mu.E;
-mu2 = model.views{2}.mu.E;
+W1 = model.views(1).W.E;
+W2 = model.views(2).W.E;
+mu1 = model.views(1).mu.E;
+mu2 = model.views(2).mu.E;
 
 %%
 Z = model.Z.E;
 K = size(Z, 1);
-W1 = model.views{1}.W.E;
-W2 = model.views{2}.W.E;
-mu1 = model.views{1}.mu.E;
-mu2 = model.views{2}.mu.E;
-T1 = model.views{1}.tau.E * eye(model.D(1));
+W1 = model.views(1).W.E;
+W2 = model.views(2).W.E;
+mu1 = model.views(1).mu.E;
+mu2 = model.views(2).mu.E;
+T1 = model.views(1).tau.E * eye(model.D(1));
 
 
 sigma_Z = Utility.matrixInverse(eye(K) + W1' * T1 * W1);

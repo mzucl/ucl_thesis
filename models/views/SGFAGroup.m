@@ -1,7 +1,5 @@
-classdef SGFAGroup < handle
+classdef SGFAGroup < BaseView
     properties         
-        X               % ViewHandler instance to hold the data
-
         W               % [D x K] GaussianContainer      
                         %       --- [size: D; for each row in W matrix]
 
@@ -17,35 +15,20 @@ classdef SGFAGroup < handle
         mu              % [D x 1] Gaussian
 
         tau             % [scalar] Gamma         
-
-        Z
-        K
-
-        % CONSTANT (don't change after initialization) dependent properties
-        D
-        N
     end
-    
 
+  
 
     methods
         %% Constructors
         function obj = SGFAGroup(data, Z, K, featuresInCols)
-            % obj@BaseView();
+            obj@BaseView(data, Z, K, false);
             % disp('SGFAGroup');
             if nargin < 3
                 error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
             elseif nargin < 4
                 featuresInCols = true;
             end
-
-            obj.X = ViewHandler(data, featuresInCols);
-            obj.Z = Z;
-            obj.K = K;
-
-            % Dependent properties
-            obj.D = obj.X.D;
-            obj.N = obj.X.N;
 
             %% Model setup and initialization
             %  type, size_, a, b, prior
@@ -68,12 +51,11 @@ classdef SGFAGroup < handle
             %                         type, size_, cols,   dim,        mu, cov, priorPrec
             obj.W = GaussianContainer("DS", obj.D, false, obj.K.Val, randn(obj.K.Val, obj.D));
 
-            % Model initialization - second part
-            % The first update equation is for W, so we need to initialize
-            % everything that is used in those two equations and those
-            % initilizations are given below.
+            % Model initialization – second stage
+            % The first update is for W, so we initialize all components required for
+            % the W and alpha update equations here. These include:
             %   obj.T.expInit
-            %   obj.alpha.ExpInit
+            %   obj.alpha.expInit
             % ----------------------------------------------------------------
             obj.tau.setExpInit(1000);        
             obj.alpha.setExpInit(repmat(1e-1, obj.K.Val, 1));

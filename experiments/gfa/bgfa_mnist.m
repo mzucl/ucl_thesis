@@ -1,32 +1,25 @@
 % Clear the workspace
-close all; clear all; clc;
+close all; clearvars; clc;
+
+rc = RunConfig.getInstance();
+rc.inputValidation = true;
+rc.enableLogging = true;
 
 % Logging
-logFileName = 'logs/sgfa_mnist.txt';
+logFileName = ['logs/', mfilename, '.txt'];
 if ~exist('logs', 'dir')
     mkdir('logs');
 end
 
-% Figures folder
-% figsSubfolder = 'sgfa_mnist';
-
-% diary(logFileName); % start logging
-
-% Model settings
-settings = ModelSettings.getInstance();
-settings.VALIDATE = false;
-settings.DEBUG = false;
-
-folderName = 'mnist38'; % mnist38
+diary(logFileName); % start logging
 
 %% Import data and train the model
-[X, y] = Datasets.getMNISTData(folderName, true, 500);
+[X, y] = Datasets.getMNISTData('mnist38', true, 500);
 shuffle_indices = randperm(size(X, 1));
             
 % Shuffle rows of both matrices using the same permutation
 X = X(shuffle_indices, :);
 y = y(shuffle_indices, :);
-
 
 % Number of folds
 k = 5;

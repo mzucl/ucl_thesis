@@ -85,6 +85,9 @@ classdef (Abstract) BaseModel < handle
             obj.maxIter = maxIter;
             obj.tol = tol;
             obj.doRotation = doRotation;
+
+            % Initialize views
+            obj.views = BaseView.empty(obj.M, 0);
         end
 
 
@@ -149,8 +152,22 @@ classdef (Abstract) BaseModel < handle
             end
         end
 
-        % [IDEA]: Make elboRecalcInterval adaptive, based on how close 
+        % [IDEA] Make elboRecalcInterval adaptive, based on how close 
         % the model is to convergence.
+
+        % [NOTE] Added because in BGFA there is also `qXiUpdate`
+        function stepUpdate(obj, it)
+            obj.qZUpdate();
+            obj.qWUpdate(it);
+            obj.qMuUpdate();
+            % if it > 0
+            %     obj.updateRotation();
+            % end  
+            obj.qAlphaUpdate();
+            obj.qTauUpdate();
+            obj.removeFactors(it);
+        end
+        
         function [elboVals, it] = fit(obj, elboRecalcInterval)
             CustomError.validateNumberOfParameters(nargin, 1, 2);
             if nargin < 2
@@ -165,15 +182,7 @@ classdef (Abstract) BaseModel < handle
             % for the fact that the ELBO is computed in the first iteration.
             elboIdx = 1;
             for it = 1:obj.maxIter
-                obj.qZUpdate();
-                obj.qWUpdate(it);
-                obj.qMuUpdate();
-                % if it > 0
-                %     obj.updateRotation();
-                % end  
-                obj.qAlphaUpdate();
-                obj.qTauUpdate();
-                obj.removeFactors(it);
+                obj.stepUpdate(it);
 
                 if it ~= 1 && mod(it, elboRecalcInterval) ~= 0
                     continue;
@@ -248,39 +257,38 @@ classdef (Abstract) BaseModel < handle
 
 
 
-        % 
-        % % Variables with '_' are expectations
-        % % X_tr and y_tr are used to set the threshold
-        % function [K_eff, predictions_te] = makePredictions(obj, X_tr, y_tr, X_te)
-        %     Z_ = obj.Z.E;
-        %     K_eff = size(Z_, 1);
-        % 
-        %     W1_ = obj.views(1).W.E;
-        %     W2_ = obj.views(2).W.E;
-        %     mu1_ = obj.views(1).mu.E;
-        %     mu2_ = obj.views(2).mu.E;
-        %     T1_ = obj.views(1).tau.E * eye(obj.D(1));
-        % 
-        %     sigma_Z = Utility.matrixInverse(eye(K_eff) + W1_' * T1_ * W1_);
-        % 
-        %     % Find the best threshold on the train data
-        %     MU_Z = sigma_Z * (W1_' * T1_ * (X_tr' - mu1_));
-        % 
-        %     % [NOTE] Even though this is sigmoid, the value we get is not
-        %     % probability, this is used just to clip it to the [0, 1] range
-        %     predictions_tr = Bound.sigma(W2_ * MU_Z + mu2_);
-        %     [fpr, tpr, thresholds, ~] = perfcurve(y_tr', predictions_tr, 1);
-        % 
-        %     % Calculate G-means
-        %     gMeans = sqrt(tpr .* (1 - fpr));
-        %     [~, idx] = max(gMeans);
-        %     train_best_threshold = thresholds(idx);
-        % 
-        %     % Predictions on the test data
-        %     MU_Z = sigma_Z * (W1_' * T1_ * (X_te' - mu1_));
-        %     predictions_te = Bound.sigma(W2_ * MU_Z + mu2_); 
-        %     predictions_te = predictions_te >= train_best_threshold;
-        %     predictions_te = double(predictions_te');
-        % end
+        % Variables ending with '_' denote expectations.
+        % `X_train` and `y_train` are used solely for threshold selection.
+        function [K_eff, predictions_test] = makePredictions(obj, X_train, y_train, X_test)
+            Z_ = obj.Z.E;
+            K_eff = size(Z_, 1);
+
+            W1_ = obj.views(1).W.E;
+            W2_ = obj.views(2).W.E;
+            mu1_ = obj.views(1).mu.E;
+            mu2_ = obj.views(2).mu.E;
+            T1_ = obj.views(1).tau.E * eye(obj.D(1));
+
+            sigma_Z = Utility.matrixInverse(eye(K_eff) + W1_' * T1_ * W1_);
+
+            % Find the best threshold on the train data
+            MU_Z = sigma_Z * (W1_' * T1_ * (X_train' - mu1_));
+
+            % [NOTE] Although this is a sigmoid function, the output is not 
+            % a probability; it's used purely to clip values to the [0, 1] range.
+            predictions_tr = Bound.sigma(W2_ * MU_Z + mu2_);
+            [fpr, tpr, thresholds, ~] = perfcurve(y_train', predictions_tr, 1);
+
+            % Calculate G-means
+            gMeans = sqrt(tpr .* (1 - fpr));
+            [~, idx] = max(gMeans);
+            train_best_threshold = thresholds(idx);
+
+            % Predictions on the test data
+            MU_Z = sigma_Z * (W1_' * T1_ * (X_test' - mu1_));
+            predictions_test = Bound.sigma(W2_ * MU_Z + mu2_); 
+            predictions_test = predictions_test >= train_best_threshold;
+            predictions_test = double(predictions_test');
+        end
     end   
 end
