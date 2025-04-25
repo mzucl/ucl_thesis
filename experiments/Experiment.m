@@ -114,7 +114,7 @@ classdef Experiment
             end
             
             elapsedTime = toc;
-            fprintf('\n\n=== Experiment Summary ===\n');
+            fprintf('\n\n### Experiment Summary ###\n');
             fprintf('Elapsed time: %.4f seconds\n', elapsedTime);
             fprintf('Average number of convergence iterations: %d\n', round(convItAvg / obj.numStabilityRuns));
             fprintf('Best overall model converged in %d iterations\n', bestOverallConvIt);

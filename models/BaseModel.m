@@ -1,5 +1,6 @@
 classdef (Abstract) BaseModel < handle
     properties
+        % Model parameters
         K               % Number of latent dimensions/principal components
         Z               % [K x N] GaussianContainer [size: N; for each latent variable zn]
         views           % An array of views
@@ -7,13 +8,6 @@ classdef (Abstract) BaseModel < handle
         % Optimization parameters
         maxIter
         tol
-
-        % CONSTANT (don't change after initialization) dependent properties
-        % D % Array containing dimensions for each view
-
-        % W
-        % 
-        % alpha
 
         doRotation
     end
@@ -33,18 +27,12 @@ classdef (Abstract) BaseModel < handle
         D_
     end
 
-
     properties (Access = public, Dependent)
         W               % The `big W` matrix, containing the `W` matrices of all views
         alpha           % The `big alpha` matrix, containing the `alpha` vectors of all views
     end
 
-    % TODO (high): Implement
-    % methods(Access = private)
-    %     function [M, N] = validateSources(obj, idx)
-    % 
-    %     end
-    % end
+
 
     methods (Abstract)
         qZUpdate(obj) 
@@ -62,16 +50,22 @@ classdef (Abstract) BaseModel < handle
         % viceversa
 
         % [NOTE] For now we have 2 datasets passed in as matrices
-        %% Constructors
-        function obj = BaseModel(data, K, maxIter, tol, doRotation)
-            % Optional parameters: maxIter, tol
-            if nargin < 2
-                error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
-            end
 
-            % TODO (very high!): Implementent method below as soon as the
+        % Closely related to the commnet in the contructor
+        % TODO (high): Implement
+        % methods(Access = private)
+        %     function [M, N] = validateSources(obj, idx)
+        % 
+        %     end
+        % end
+        % TODO (very high!): Implementent method below as soon as the
             % toy example with 2 views starts working
             % [obj.M, obj.N] = obj.validateSources(...)
+
+
+        function obj = BaseModel(data, K, maxIter, tol, doRotation)
+            CustomError.validateNumberOfParameters(nargin, 2, 5);
+
             obj.M_ = numel(data);
             obj.N_ = size(data{1}, 2);
 
@@ -82,37 +76,16 @@ classdef (Abstract) BaseModel < handle
 
             obj.K = DoubleWrapper(K);
 
-            obj.maxIter = Utility.getConfigValue('Optimization', 'DEFAULT_MAX_ITER');
-            obj.tol = Utility.getConfigValue('Optimization', 'DEFAULT_TOL');
-            obj.doRotation = false;
+            % Set default values
+            if nargin < 5, doRotation = false; end
+            if nargin < 4, tol = Utility.getConfigValue('Optimization', 'DEFAULT_TOL'); end
+            if nargin < 3, maxIter = Utility.getConfigValue('Optimization', 'DEFAULT_MAX_ITER'); end
 
-            if nargin > 2
-                obj.maxIter = maxIter;
-                if nargin > 3
-                    obj.tol = tol;
-                    if nargin > 4
-                        obj.doRotation = doRotation;
-                    end
-                end
-            end
-
-            % %% Model setup and initialization
-            % initZMu = randn(obj.K.Val, 1);
-            % 
-            % %                         type, size_, cols, dim,     mu, cov, priorPrec
-            % obj.Z = GaussianContainer("DS", obj.N, true, obj.K.Val, zeros(obj.K.Val, 1)); % STEP1
-
-            % % Initialize views
-            % obj.views = SGFAGroup.empty(obj.M, 0);
-            % 
-            % for i = 1:obj.M
-            %     obj.views(i) = SGFAGroup(data{i}, obj.Z, obj.K, false); % featuresInCols = false;
-            % end
-
-            % obj.D_ = [obj.views.D];
+            % Assign to properties
+            obj.maxIter = maxIter;
+            obj.tol = tol;
+            obj.doRotation = doRotation;
         end
-
-
 
 
 
@@ -143,86 +116,27 @@ classdef (Abstract) BaseModel < handle
 
 
 
-
-        % 
-        % %% fit() and ELBO
-        function [elboVals, it] = fit(obj, elboRecalcInterval)
-            if nargin < 2
-                elboRecalcInterval = RunConfig.getInstance().elboRecalcInterval;
-            end
-
-            elboVals = -Inf(1, obj.maxIter);
-            % [NOTE] When elboIterStep ~= 1, indexing into elbo array is not done
-            % using 'iter'; iter / elboIterStep + 1, but having independent
-            % counter is cleaner; '+ 1' because we compute elbo in the
-            % first iteration.
-            elboIdx = 1;
-
-            for it = 1:obj.maxIter
-                obj.qZUpdate();
-                obj.qWUpdate(it);
-                obj.qMuUpdate();
-                % obj.qZUpdate();
-                % if it > 0
-                %     obj.updateRotation();
-                % end  
-                obj.qAlphaUpdate();
-                obj.qTauUpdate();
-                obj.removeFactors(it);
-
-                % TODO: MAke sure to log the last value, it is used for
-                % model selection
-                if it ~= 1 && mod(it, elboRecalcInterval) ~= 0
-                    continue;
-                end
-
-                currElbo = obj.computeELBO();
-                elboVals(elboIdx) = currElbo;
-
-                if RunConfig.getInstance().enableLogging
-                    if elboIdx ~= 1
-                        disp(['======= ELBO increased by: ', num2str(currElbo - elboVals(elboIdx - 1))]);
-                    end
-                end
-
-                % ELBO has to increase from iteration to iteration
-                if elboIdx ~= 1 && currElbo < elboVals(elboIdx - 1)
-                    fprintf(2, 'ELBO decreased in iteration %d by %f\n!!!', it, abs(currElbo - elboVals(elboIdx - 1)));
-                end 
-
-                % Check for convergence
-                if elboIdx ~= 1 && abs(currElbo - elboVals(elboIdx - 1)) / abs(currElbo) < obj.tol
-                    disp(['Convergence at iteration: ', num2str(it)]);
-                    elboVals = elboVals(1:elboIdx); % cut the -Inf values at the end
-                    break;
-                end
-                elboIdx = elboIdx + 1;
-
-                if it == obj.maxIter
-                    fprintf(2, 'Model did not converge in %d\n!!!', obj.maxIter);
-                end
-            end
-        end
-
-
-
-        %% Additional methods
+        %% Model training
         function obj = removeFactors(obj, it, threshold)
+            CustomError.validateNumberOfParameters(nargin, 2, 3);
             if nargin < 3
                 threshold = Utility.getConfigValue('Model', 'LATENT_FACTORS_THRESHOLD');
             end
+
             % Calculate the average of the square of elements for each row of Z
             avgSquare = mean(obj.Z.E.^2, 2);
 
             removeIdx = find(avgSquare < threshold);
-
             if isempty(removeIdx)
                 return;
             end
 
-            % if obj.DEBUG
-            disp(['Removed ', num2str(length(removeIdx)), ' factors in iteration ', num2str(it)]);
-            % end
+            if (RunConfig.getInstance().enableLogging)
+                numRemovedFactors = length(removeIdx);
+                factorText = Utility.ternary(numRemovedFactors == 1, 'factor', 'factors');
+                
+                fprintf('Removed %d %s in iteration %d\n', numRemovedFactors, factorText, it);
+            end
 
             % Update number of factors
             obj.K.Val = obj.K.Val - length(removeIdx);
@@ -235,7 +149,68 @@ classdef (Abstract) BaseModel < handle
             end
         end
 
+        % [IDEA]: Make elboRecalcInterval adaptive, based on how close 
+        % the model is to convergence.
+        function [elboVals, it] = fit(obj, elboRecalcInterval)
+            CustomError.validateNumberOfParameters(nargin, 1, 2);
+            if nargin < 2
+                elboRecalcInterval = RunConfig.getInstance().elboRecalcInterval;
+            end
 
+            elboVals = -Inf(1, obj.maxIter);
+
+            % [NOTE] When `elboIterStep` is not equal to 1, the `elbo` array is indexed 
+            % differently. Instead of using `iter`, we use `iter / elboIterStep + 1`. 
+            % However, using a separate counter for clarity is preferred. The `+ 1` accounts 
+            % for the fact that the ELBO is computed in the first iteration.
+            elboIdx = 1;
+            for it = 1:obj.maxIter
+                obj.qZUpdate();
+                obj.qWUpdate(it);
+                obj.qMuUpdate();
+                % if it > 0
+                %     obj.updateRotation();
+                % end  
+                obj.qAlphaUpdate();
+                obj.qTauUpdate();
+                obj.removeFactors(it);
+
+                if it ~= 1 && mod(it, elboRecalcInterval) ~= 0
+                    continue;
+                end
+
+                currElbo = obj.computeELBO();
+                elboVals(elboIdx) = currElbo;
+
+                if elboIdx ~= 1
+                    prevElbo = elboVals(elboIdx - 1);
+                end
+                if RunConfig.getInstance().enableLogging
+                    if elboIdx ~= 1
+                        fprintf('------ ELBO increased by: %.4f\n', currElbo - prevElbo);
+                    end
+                end
+
+                % The ELBO must increase with each iteration. This is a critical error,
+                % so it is logged regardless of the `RunConfig.getInstance().enableLogging` setting.
+                if elboIdx ~= 1 && currElbo < elboVals(elboIdx - 1)
+                    fprintf(2, '[ERROR] ELBO decreased in iteration %d by %f!\n', it, abs(currElbo - prevElbo));
+                end 
+
+                % Check for convergence
+                if elboIdx ~= 1 && abs(currElbo - prevElbo) / abs(currElbo) < obj.tol
+                    fprintf('### Convergence at iteration: %d\n', it);
+                    elboVals = elboVals(1:elboIdx); % cut the -Inf values at the end
+                    break;
+                end
+
+                elboIdx = elboIdx + 1;
+
+                if it == obj.maxIter
+                    fprintf(2, '[ERROR] Model did not converge in %d iterations!\n', obj.maxIter);
+                end
+            end
+        end
 
 
 
