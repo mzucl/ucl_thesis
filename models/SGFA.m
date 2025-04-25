@@ -26,34 +26,6 @@ classdef SGFA < BaseModel
         % doRotation
     end
 
-    % The next two sections of variables support `dependent properties` that 
-    % are initialized in the constructor and should remain immutable afterward
-    % properties (Dependent, SetAccess = private)
-    %     M               % Number of views/groups
-    %     N               % Number of observations
-    %     D               % Array containing dimensions for each view
-    % end
-    % 
-    % % Backing variables
-    % properties (Access = private) 
-    %     M_
-    %     N_
-    %     D_
-    % end
-
-
-    % properties (Access = public, Dependent)
-    %     W               % The `big W` matrix, containing the `W` matrices of all views
-    %     alpha           % The `big alpha` matrix, containing the `alpha` vectors of all views
-    % end
-
-    % TODO (high): Implement
-    % methods(Access = private)
-    %     function [M, N] = validateSources(obj, idx)
-    % 
-    %     end
-    % end
-
 
     methods
         % [NOTE] We need to deal with the form of the datasets here (e.g.
@@ -69,6 +41,16 @@ classdef SGFA < BaseModel
         %% Constructors
         function obj = SGFA(data, K, maxIter, tol, doRotation)
             obj = obj@BaseModel(data, K);
+
+            %                         type, size_, cols, dim,     mu, cov, priorPrec
+            obj.Z = GaussianContainer("DS", obj.N, true, obj.K.Val, zeros(obj.K.Val, 1)); % STEP1
+
+            % Initialize views
+            obj.views = SGFAGroup.empty(obj.M, 0);
+            for i = 1:obj.M
+                obj.views(i) = SGFAGroup(data{i}, obj.Z, obj.K, false); % featuresInCols = false;
+            end
+
             % % Optional parameters: maxIter, tol
             % if nargin < 2
             %     error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
@@ -131,92 +113,66 @@ classdef SGFA < BaseModel
             obj.Z.updateDistributionsParameters(muNew, covNew);
         end
 
-        % function obj = qWUpdate(obj, it)
-        %     for i = 1:obj.M
-        %         obj.views(i).qWUpdate(it);
-        %     end
-        % end
-        % 
-        % function obj = qAlphaUpdate(obj)
-        %     for i = 1:obj.M
-        %         obj.views(i).qAlphaUpdate();
-        %     end
-        % end
-        % 
-        % function obj = qMuUpdate(obj)
-        %     for i = 1:obj.M
-        %         obj.views(i).qMuUpdate();
-        %     end
-        % end
-        % 
-        % function obj = qTauUpdate(obj)
-        %     for i = 1:obj.M
-        %         obj.views(i).qTauUpdate();
-        %     end
-        % end
-
-
-
 
 
         %% fit() and ELBO
-        function [elboVals, it] = fit(obj, elboRecalcInterval)
-            if nargin < 2
-                elboRecalcInterval = RunConfig.getInstance().elboRecalcInterval;
-            end
-
-            elboVals = -Inf(1, obj.maxIter);
-            % [NOTE] When elboIterStep ~= 1, indexing into elbo array is not done
-            % using 'iter'; iter / elboIterStep + 1, but having independent
-            % counter is cleaner; '+ 1' because we compute elbo in the
-            % first iteration.
-            elboIdx = 1;
-
-            for it = 1:obj.maxIter
-                obj.qZUpdate();
-                obj.qWUpdate(it);
-                obj.qMuUpdate();
-                % obj.qZUpdate();
-                % if it > 0
-                %     obj.updateRotation();
-                % end  
-                obj.qAlphaUpdate();
-                obj.qTauUpdate();
-                obj.removeFactors(it);
-
-                % TODO: MAke sure to log the last value, it is used for
-                % model selection
-                if it ~= 1 && mod(it, elboRecalcInterval) ~= 0
-                    continue;
-                end
-
-                currElbo = obj.computeELBO();
-                elboVals(elboIdx) = currElbo;
-
-                if RunConfig.getInstance().enableLogging
-                    if elboIdx ~= 1
-                        disp(['======= ELBO increased by: ', num2str(currElbo - elboVals(elboIdx - 1))]);
-                    end
-                end
-
-                % ELBO has to increase from iteration to iteration
-                if elboIdx ~= 1 && currElbo < elboVals(elboIdx - 1)
-                    fprintf(2, 'ELBO decreased in iteration %d by %f\n!!!', it, abs(currElbo - elboVals(elboIdx - 1)));
-                end 
-
-                % Check for convergence
-                if elboIdx ~= 1 && abs(currElbo - elboVals(elboIdx - 1)) / abs(currElbo) < obj.tol
-                    disp(['Convergence at iteration: ', num2str(it)]);
-                    elboVals = elboVals(1:elboIdx); % cut the -Inf values at the end
-                    break;
-                end
-                elboIdx = elboIdx + 1;
-
-                if it == obj.maxIter
-                    fprintf(2, 'Model did not converge in %d\n!!!', obj.maxIter);
-                end
-            end
-        end
+        % function [elboVals, it] = fit(obj, elboRecalcInterval)
+        %     if nargin < 2
+        %         elboRecalcInterval = RunConfig.getInstance().elboRecalcInterval;
+        %     end
+        % 
+        %     elboVals = -Inf(1, obj.maxIter);
+        %     % [NOTE] When elboIterStep ~= 1, indexing into elbo array is not done
+        %     % using 'iter'; iter / elboIterStep + 1, but having independent
+        %     % counter is cleaner; '+ 1' because we compute elbo in the
+        %     % first iteration.
+        %     elboIdx = 1;
+        % 
+        %     for it = 1:obj.maxIter
+        %         obj.qZUpdate();
+        %         obj.qWUpdate(it);
+        %         obj.qMuUpdate();
+        %         % obj.qZUpdate();
+        %         % if it > 0
+        %         %     obj.updateRotation();
+        %         % end  
+        %         obj.qAlphaUpdate();
+        %         obj.qTauUpdate();
+        %         obj.removeFactors(it);
+        % 
+        %         % TODO: MAke sure to log the last value, it is used for
+        %         % model selection
+        %         if it ~= 1 && mod(it, elboRecalcInterval) ~= 0
+        %             continue;
+        %         end
+        % 
+        %         currElbo = obj.computeELBO();
+        %         elboVals(elboIdx) = currElbo;
+        % 
+        %         if RunConfig.getInstance().enableLogging
+        %             if elboIdx ~= 1
+        %                 disp(['======= ELBO increased by: ', num2str(currElbo - elboVals(elboIdx - 1))]);
+        %             end
+        %         end
+        % 
+        %         % ELBO has to increase from iteration to iteration
+        %         if elboIdx ~= 1 && currElbo < elboVals(elboIdx - 1)
+        %             fprintf(2, 'ELBO decreased in iteration %d by %f\n!!!', it, abs(currElbo - elboVals(elboIdx - 1)));
+        %         end 
+        % 
+        %         % Check for convergence
+        %         if elboIdx ~= 1 && abs(currElbo - elboVals(elboIdx - 1)) / abs(currElbo) < obj.tol
+        %             disp(['Convergence at iteration: ', num2str(it)]);
+        %             elboVals = elboVals(1:elboIdx); % cut the -Inf values at the end
+        %             break;
+        %         end
+        %         elboIdx = elboIdx + 1;
+        % 
+        %         if it == obj.maxIter
+        %             fprintf(2, 'Model did not converge in %d\n!!!', obj.maxIter);
+        %         end
+        %     end
+        % end
 
         function elbo = computeELBO(obj)
             elbo = 0;
@@ -236,75 +192,35 @@ classdef SGFA < BaseModel
 
 
         %% Additional methods
-        function obj = removeFactors(obj, it, threshold)
-            if nargin < 3
-                threshold = Utility.getConfigValue('Model', 'LATENT_FACTORS_THRESHOLD');
-            end
-            % Calculate the average of the square of elements for each row of Z
-            avgSquare = mean(obj.Z.E.^2, 2);
-        
-            removeIdx = find(avgSquare < threshold);
-
-            if isempty(removeIdx)
-                return;
-            end
-
-            % if obj.DEBUG
-            disp(['Removed ', num2str(length(removeIdx)), ' factors in iteration ', num2str(it)]);
-            % end
-            
-            % Update number of factors
-            obj.K.Val = obj.K.Val - length(removeIdx);
-        
-            % Remove those rows from Z, corresponding columns from W, and elements from alpha
-            obj.Z.removeDimensions(removeIdx);
-            for m = 1:obj.M
-                obj.views(m).alpha.removeDimensions(removeIdx);
-                obj.views(m).W.removeDimensions(removeIdx);
-            end
-        end
+        % function obj = removeFactors(obj, it, threshold)
+        %     if nargin < 3
+        %         threshold = Utility.getConfigValue('Model', 'LATENT_FACTORS_THRESHOLD');
+        %     end
+        %     % Calculate the average of the square of elements for each row of Z
+        %     avgSquare = mean(obj.Z.E.^2, 2);
+        % 
+        %     removeIdx = find(avgSquare < threshold);
+        % 
+        %     if isempty(removeIdx)
+        %         return;
+        %     end
+        % 
+        %     % if obj.DEBUG
+        %     disp(['Removed ', num2str(length(removeIdx)), ' factors in iteration ', num2str(it)]);
+        %     % end
+        % 
+        %     % Update number of factors
+        %     obj.K.Val = obj.K.Val - length(removeIdx);
+        % 
+        %     % Remove those rows from Z, corresponding columns from W, and elements from alpha
+        %     obj.Z.removeDimensions(removeIdx);
+        %     for m = 1:obj.M
+        %         obj.views(m).alpha.removeDimensions(removeIdx);
+        %         obj.views(m).W.removeDimensions(removeIdx);
+        %     end
+        % end
     
 
-
-
-
-        %% Getters
-        % function value = get.M(obj)
-        %     value = obj.M_;
-        % end
-        % 
-        % function value = get.N(obj)
-        %     value = obj.N_;
-        % end
-        % 
-        % function value = get.D(obj)
-        %     value = obj.D_;
-        % end
-        % 
-        % 
-        % 
-        % 
-        % 
-        % % Big matrix W containing all views
-        % function value = get.W(obj)
-        %     totalD = sum(obj.D);
-        %     value = zeros(totalD, obj.K.Val);
-        % 
-        %     d = 0;
-        %     for m = 1:obj.M
-        %         Dm = obj.views(m).D;
-        %         value(d + 1 : d + Dm, :) = obj.views(m).W.E;
-        %         d = d + Dm;
-        %     end
-        % end
-        % 
-        % % Big matrix alpha, containing all alphas
-        % function value = get.alpha(obj)
-        %     value = zeros(obj.K.Val, obj.M);
-        %     for m = 1:obj.M
-        %         value(:, m) = obj.views(m).alpha.E;
-        %     end
-        % end
 
         % Variables with '_' are expectations
         % X_tr and y_tr are used to set the threshold
