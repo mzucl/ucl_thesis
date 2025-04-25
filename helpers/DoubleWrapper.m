@@ -1,5 +1,10 @@
-% A wrapper class to enable passing double value by reference
 classdef DoubleWrapper < handle
+    % DoubleWrapper
+    % A handle class that wraps a double value, enabling pass-by-reference semantics.
+    %
+    % Usage:
+    %   w = DoubleWrapper(5);      % Create wrapper with initial value 5
+
     properties
         Val
     end
