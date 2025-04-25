@@ -1,35 +1,30 @@
 % Clear the workspace
 close all; clearvars; clc;
 
+rc = RunConfig.getInstance();
+rc.inputValidation = false;
+rc.enableLogging = false;
+
 % Logging
-logFileName = 'logs/sgfa_2G.txt';
+logFileName = ['logs/', mfilename, '.txt'];
 if ~exist('logs', 'dir')
     mkdir('logs');
 end
 
-% Figures folder
-figsSubfolder = 'sgfa';
-
-diary(logFileName); % start logging
-
-% Model settings
-settings = ModelSettings.getInstance();
-settings.VALIDATE = false;
-settings.DEBUG = false;
-
+% Start logging: only potential errors will be logged, since in the 
+% profiler scripts we prefer to skip validation and logging to focus 
+% solely on profiling the actual computational code.
+diary(logFileName);
 
 %% Generate data and train the model
 data = Datasets.generateSyntheticGFAData(2);
 
-X1 = data.X_train{1}; % [D1 x N]
-X2 = data.X_train{2}; % [D2 x N]
-
 profile on;
 
 K = 10;
-sgfaModel = SGFA({X1, X2}, K);
-[elboVals, convIt] = sgfaModel.fit(10);
-
+elboRecalcInterval = 10;
+sgfaModel = SGFA(data.X_train, K);
+[elboVals, convIt] = sgfaModel.fit(elboRecalcInterval);
 
 profile off;
 profile viewer;
