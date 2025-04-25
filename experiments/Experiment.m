@@ -26,15 +26,15 @@ classdef Experiment
             obj.K = K;
             obj.views = views;
 
-            cfg = ModelSettings.getInstance();
+            params = Utility.getParams();
 
             % Default values for optional parameters
             obj.logFileName = '';
-            obj.elboIterStep = cfg.ELBO_ITER_STEP;
-            obj.stabilityRun = cfg.STABILITY_RUN;
-            obj.modelSelectionIter = cfg.MODEL_SELECTION_ITER;
-            obj.validateInputs = cfg.VALIDATE;
-            obj.debugMode = cfg.DEBUG;
+            obj.elboIterStep = params.Experiment.ELBO_ITER_STEP;
+            obj.stabilityRun = params.Experiment.STABILITY_RUN;
+            obj.modelSelectionIter = params.Experiment.MODEL_SELECTION_ITER;
+            obj.validateInputs = params.Training.VALIDATE;
+            obj.debugMode = params.Training.DEBUG;
 
             % Override default values with provided arguments if available
             if nargin >= 4 && ~isempty(logFileName)

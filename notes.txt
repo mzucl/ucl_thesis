@@ -1,3 +1,5 @@
+closeNoPrompt(matlab.desktop.editor.getAll);
+
 % %% Code optimization TODOs
 % % memory allocation (e.g. preallocating arrays)
 % % matrix inverses (Choleskey)

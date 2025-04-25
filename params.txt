@@ -1,0 +1,8 @@
+[Training]
+VALIDATE = true
+DEBUG = true
+
+[Experiment]
+ELBO_ITER_STEP = 1
+STABILITY_RUN = 2
+MODEL_SELECTION_ITER = 2

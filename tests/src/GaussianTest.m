@@ -17,11 +17,6 @@ classdef GaussianTest < matlab.unittest.TestCase
 
 
 
-    properties(Access = private, Constant)
-        SETTINGS = ModelSettings.getInstance();
-    end
-
-
     methods (Test)
         %% Deep copy and operators overloading
         function testDeepCopy(testCase)
@@ -125,8 +120,10 @@ classdef GaussianTest < matlab.unittest.TestCase
             obj = Gaussian();
 
             GaussianTest.verifyObject(testCase, obj, ...
-                GaussianTest.SETTINGS.DEFAULT_GAUSS_MU, 1/GaussianTest.SETTINGS.DEFAULT_GAUSS_PRECISION, ...
-                GaussianTest.SETTINGS.DEFAULT_GAUSS_PRECISION, GaussianTest.SETTINGS.DEFAULT_GAUSS_DIM);
+                Utility.getConfigValue('Distribution', 'DEFAULT_GAUSS_MU'), ...
+                1/Utility.getConfigValue('Distribution', 'DEFAULT_GAUSS_PRECISION'), ...
+                Utility.getConfigValue('Distribution', 'DEFAULT_GAUSS_PRECISION'), ...
+                Utility.getConfigValue('Distribution', 'DEFAULT_GAUSS_DIM'));
         end
 
         function testOneParameterConstructor(testCase)
@@ -140,8 +137,8 @@ classdef GaussianTest < matlab.unittest.TestCase
             dim = 5;
             obj = Gaussian(dim);
             GaussianTest.verifyObject(testCase, obj, ...
-                repmat(GaussianTest.SETTINGS.DEFAULT_GAUSS_MU, dim, 1), eye(5), ...
-                GaussianTest.SETTINGS.DEFAULT_GAUSS_PRECISION, dim);
+                repmat(Utility.getConfigValue('Distribution', 'DEFAULT_GAUSS_MU'), dim, 1), eye(5), ...
+                Utility.getConfigValue('Distribution', 'DEFAULT_GAUSS_PRECISION'), dim);
         end
 
         function testTwoParameterConstructor(testCase)
@@ -151,14 +148,14 @@ classdef GaussianTest < matlab.unittest.TestCase
             mu = 7;
             obj = Gaussian(dim, 7);    
             GaussianTest.verifyObject(testCase, obj, repmat(mu, dim, 1), eye(dim), ...
-                GaussianTest.SETTINGS.DEFAULT_GAUSS_PRECISION, dim);
+                Utility.getConfigValue('Distribution', 'DEFAULT_GAUSS_PRECISION'), dim);
 
             % OPTION 2: 'mu' is a column vector
             mu = [1; 2; 3; 4; 5];
             obj = Gaussian(dim, mu);
 
             GaussianTest.verifyObject(testCase, obj, mu, eye(dim), ...
-                GaussianTest.SETTINGS.DEFAULT_GAUSS_PRECISION, dim);
+                Utility.getConfigValue('Distribution', 'DEFAULT_GAUSS_PRECISION'), dim);
         end
 
         function testThreeParameterConstructor(testCase)
@@ -171,7 +168,7 @@ classdef GaussianTest < matlab.unittest.TestCase
             obj = Gaussian(dim, mu, cov);
 
             GaussianTest.verifyObject(testCase, obj, mu, cov * eye(dim), ...
-                GaussianTest.SETTINGS.DEFAULT_GAUSS_PRECISION, dim);
+                Utility.getConfigValue('Distribution', 'DEFAULT_GAUSS_PRECISION'), dim);
 
             % Test 2
             % mu: array
@@ -182,7 +179,7 @@ classdef GaussianTest < matlab.unittest.TestCase
             obj = Gaussian(dim, mu, cov);
 
             GaussianTest.verifyObject(testCase, obj, mu, diag(cov), ...
-                GaussianTest.SETTINGS.DEFAULT_GAUSS_PRECISION, dim);
+                Utility.getConfigValue('Distribution', 'DEFAULT_GAUSS_PRECISION'), dim);
 
             % Test 3
             % mu: array
@@ -193,7 +190,7 @@ classdef GaussianTest < matlab.unittest.TestCase
             obj = Gaussian(dim, mu, cov);
 
             GaussianTest.verifyObject(testCase, obj, mu, cov, ...
-                GaussianTest.SETTINGS.DEFAULT_GAUSS_PRECISION, dim);
+                Utility.getConfigValue('Distribution', 'DEFAULT_GAUSS_PRECISION'), dim);
 
             % Test 4
             % mu: scalar
@@ -204,7 +201,7 @@ classdef GaussianTest < matlab.unittest.TestCase
             obj = Gaussian(dim, mu, cov);
 
             GaussianTest.verifyObject(testCase, obj, repmat(mu, dim, 1), cov * eye(dim), ...
-                GaussianTest.SETTINGS.DEFAULT_GAUSS_PRECISION, dim);
+                Utility.getConfigValue('Distribution', 'DEFAULT_GAUSS_PRECISION'), dim);
 
             % Test 5
             % mu: scalar
@@ -215,7 +212,7 @@ classdef GaussianTest < matlab.unittest.TestCase
             obj = Gaussian(dim, mu, cov);
 
             GaussianTest.verifyObject(testCase, obj, repmat(mu, dim, 1), diag(cov), ...
-                GaussianTest.SETTINGS.DEFAULT_GAUSS_PRECISION, dim);
+                Utility.getConfigValue('Distribution', 'DEFAULT_GAUSS_PRECISION'), dim);
 
             % Test 6
             % mu: scalar
@@ -226,7 +223,7 @@ classdef GaussianTest < matlab.unittest.TestCase
             obj = Gaussian(dim, mu, cov);
 
             GaussianTest.verifyObject(testCase, obj, repmat(mu, dim, 1), cov, ...
-                GaussianTest.SETTINGS.DEFAULT_GAUSS_PRECISION, dim);
+                Utility.getConfigValue('Distribution', 'DEFAULT_GAUSS_PRECISION'), dim);
         end
 
         function testFourParameterConstructor(testCase)
@@ -356,7 +353,7 @@ classdef GaussianTest < matlab.unittest.TestCase
 
             obj.updateMu(muNew);
 
-            GaussianTest.verifyObject(testCase, obj, muNew, eye(dim), GaussianTest.SETTINGS.DEFAULT_GAUSS_PRECISION, dim);
+            GaussianTest.verifyObject(testCase, obj, muNew, eye(dim), Utility.getConfigValue('Distribution', 'DEFAULT_GAUSS_PRECISION'), dim);
         end
 
         function testUpdateCovariance(testCase)
@@ -370,7 +367,7 @@ classdef GaussianTest < matlab.unittest.TestCase
 
             obj.updateParameters(muNew, covNew);
 
-            GaussianTest.verifyObject(testCase, obj, muNew, covNew, GaussianTest.SETTINGS.DEFAULT_GAUSS_PRECISION, dim);
+            GaussianTest.verifyObject(testCase, obj, muNew, covNew, Utility.getConfigValue('Distribution', 'DEFAULT_GAUSS_PRECISION'), dim);
         end
 
         function testUpdateParameters(testCase)
@@ -383,7 +380,7 @@ classdef GaussianTest < matlab.unittest.TestCase
 
             obj.updateCovariance(covNew);
 
-            GaussianTest.verifyObject(testCase, obj, zeros(dim, 1), covNew, GaussianTest.SETTINGS.DEFAULT_GAUSS_PRECISION, dim);
+            GaussianTest.verifyObject(testCase, obj, zeros(dim, 1), covNew, Utility.getConfigValue('Distribution', 'DEFAULT_GAUSS_PRECISION'), dim);
         end
 
         function testRemoveDimensions(testCase)
@@ -406,7 +403,7 @@ classdef GaussianTest < matlab.unittest.TestCase
             testCase.verifyEqual(obj.E, [exp(2); exp(4)]);
             testCase.verifyEqual(obj.cov, [5, 1; 1, 6]);
             testCase.verifyEqual(obj.mu, [2; 4]);
-            testCase.verifyEqual(obj.priorPrec, GaussianTest.SETTINGS.DEFAULT_GAUSS_PRECISION);
+            testCase.verifyEqual(obj.priorPrec, Utility.getConfigValue('Distribution', 'DEFAULT_GAUSS_PRECISION'));
         end
     end
 end

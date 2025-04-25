@@ -158,7 +158,7 @@ classdef GaussianContainer < handle
             obj.type = type;
             obj.cols = cols;
             obj.dim = dim;
-            obj.priorPrec = GaussianContainer.SETTINGS.DEFAULT_GAUSS_PRECISION;
+            obj.priorPrec = Utility.getConfigValue('Distribution', 'DEFAULT_GAUSS_PRECISION');
 
             % Preallocate + default values
             obj.mu = zeros(obj.dim, size_);
@@ -317,11 +317,7 @@ classdef GaussianContainer < handle
             if GaussianContainer.SETTINGS.VALIDATE && nargin < 2
                 error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
             end
-            
-            % if obj.type == "DS"
-            %     cov = cov + GaussianContainer.SETTINGS.EPSILON * eye(size(cov));
-            % end
-            
+           
             obj.cov = cov;
 
             % Clear cache
@@ -332,10 +328,6 @@ classdef GaussianContainer < handle
             if GaussianContainer.SETTINGS.VALIDATE && nargin < 3
                 error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
             end
-
-            % if obj.type == "DS"
-            %     cov = cov + GaussianContainer.SETTINGS.EPSILON * eye(size(cov));
-            % end
             
             obj.mu = mu;
             obj.cov = cov;

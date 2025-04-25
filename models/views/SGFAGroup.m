@@ -27,10 +27,6 @@ classdef SGFAGroup < handle
     end
     
 
-    properties(Access = private, Constant)
-        SETTINGS = ModelSettings.getInstance();
-    end
-
 
     methods
         %% Constructors
@@ -52,14 +48,21 @@ classdef SGFAGroup < handle
             obj.N = obj.X.N;
 
             %% Model setup and initialization
-            %                          type, size_, a, b, prior
-            obj.alpha = GammaContainer("SD", obj.K.Val, SGFAGroup.SETTINGS.DEFAULT_GAMMA_A, SGFAGroup.SETTINGS.DEFAULT_GAMMA_B);
+            %  type, size_, a, b, prior
+            obj.alpha = GammaContainer( ...
+                "SD", ...
+                obj.K.Val, ...
+                Utility.getConfigValue('Distribution', 'DEFAULT_GAMMA_A'), ...
+                Utility.getConfigValue('Distribution', 'DEFAULT_GAMMA_B'));
             
             %                  dim, mu,    cov,  priorPrec
             obj.mu = Gaussian(obj.D, 0, eye(obj.D), 10^3);
             
             %
-            tauPrior = Gamma(SGFAGroup.SETTINGS.DEFAULT_GAMMA_A, SGFAGroup.SETTINGS.DEFAULT_GAMMA_B);
+            tauPrior = Gamma( ...
+                Utility.getConfigValue('Distribution', 'DEFAULT_GAMMA_A'), ...
+                Utility.getConfigValue('Distribution', 'DEFAULT_GAMMA_B'));
+
             obj.tau = Gamma(tauPrior);
 
             %                         type, size_, cols,   dim,        mu, cov, priorPrec

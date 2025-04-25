@@ -18,6 +18,78 @@ classdef Utility
 
 
 
+    methods (Static, Access = private)
+        function [constants, descriptions] = loadConstants(filename)
+            CustomError.validateNumberOfParameters(nargin, 1, 1);
+                
+            lines = readlines(filename);
+            constants = struct();
+            descriptions = struct();
+            currentSection = '';
+        
+            for i = 1:length(lines)
+                line = strtrim(lines(i));
+        
+                % Skip empty lines and full-line comments
+                if line == "" || startsWith(line, "#") || startsWith(line, "%")
+                    continue;
+                end
+        
+                % Detect section header
+                if startsWith(line, "[") && endsWith(line, "]")
+                    currentSection = extractBetween(line, "[", "]");
+                    currentSection = currentSection{1};
+                    constants.(currentSection) = struct();
+                    descriptions.(currentSection) = struct();
+                    continue;
+                end
+        
+                % Remove semicolon if present
+                if endsWith(line, ";")
+                    line = extractBefore(line, ";");
+                end
+        
+                % Handle key = value # comment
+                if contains(line, "=")
+                    kv = split(line, "=");
+                    key = strtrim(kv(1));
+                    rest = strtrim(kv(2));
+        
+                    % Split value and comment (on '#' or '%')
+                    valueStr = rest;
+                    commentSplit = regexp(rest, '[#%]', 'split');
+                    if ~isempty(commentSplit)
+                        valueStr = strtrim(commentSplit{1});
+                    end
+        
+                    % `valueStr` is boolean
+                    if ismember(valueStr, {'true', 'false'})
+                        value = strcmp(valueStr, 'true');
+
+                    elseif contains(valueStr, '^')  % Check if the value has an exponent (e.g. '10^-14') 
+                            % Convert exponential string (e.g., '10^-14') to a number
+                        value = eval(valueStr);
+                    else
+                        value = str2double(valueStr);
+                        if isnan(value)
+                            value = valueStr; % fallback for string values
+                        end
+                    end
+        
+                    constants.(currentSection).(key) = value;
+        
+                    % Extract description if present
+                    descMatch = regexp(rest, '[#%](.*)$', 'tokens');
+                    if ~isempty(descMatch)
+                        descriptions.(currentSection).(key) = strtrim(descMatch{1}{1});
+                    else
+                        descriptions.(currentSection).(key) = '';
+                    end
+                end
+            end
+        end
+    end
+
 
 
     methods (Static)
@@ -348,88 +420,24 @@ classdef Utility
 
 
 
-
-        function [constants, descriptions] = loadConstants(filename)
-            disp("LODA");
-            if nargin == 0 
-                filename = 'config.txt';
-            end
-
-            lines = readlines(filename);
-            constants = struct();
-            descriptions = struct();
-            currentSection = '';
         
-            for i = 1:length(lines)
-                line = strtrim(lines(i));
-        
-                % Skip empty lines and full-line comments
-                if line == "" || startsWith(line, "#") || startsWith(line, "%")
-                    continue;
-                end
-        
-                % Detect section header
-                if startsWith(line, "[") && endsWith(line, "]")
-                    currentSection = extractBetween(line, "[", "]");
-                    currentSection = currentSection{1};
-                    constants.(currentSection) = struct();
-                    descriptions.(currentSection) = struct();
-                    continue;
-                end
-        
-                % Remove semicolon if present
-                if endsWith(line, ";")
-                    line = extractBefore(line, ";");
-                end
-        
-                % Handle key = value # comment
-                if contains(line, "=")
-                    kv = split(line, "=");
-                    key = strtrim(kv(1));
-                    rest = strtrim(kv(2));
-        
-                    % Split value and comment (on '#' or '%')
-                    valueStr = rest;
-                    commentSplit = regexp(rest, '[#%]', 'split');
-                    if ~isempty(commentSplit)
-                        valueStr = strtrim(commentSplit{1});
-                    end
-        
-                    value = str2double(valueStr);
-                    if isnan(value)
-                        value = valueStr; % fallback for string values
-                    end
-        
-                    constants.(currentSection).(key) = value;
-        
-                    % Extract description if present
-                    descMatch = regexp(rest, '[#%](.*)$', 'tokens');
-                    if ~isempty(descMatch)
-                        descriptions.(currentSection).(key) = strtrim(descMatch{1}{1});
-                    else
-                        descriptions.(currentSection).(key) = '';
-                    end
-                end
-            end
-        end
-    
-        function val = getConstant(section, key, filename)
+        function val = getConfigValue(section, key, filename)
             CustomError.validateNumberOfParameters(nargin, 2, 3);
             
             if nargin < 3
                 filename = 'config.txt';
             end
 
-            persistent constants
+            persistent configVals
         
-            if isempty(constants)
-                [constants, ~] = Utility.loadConstants(filename);
+            if isempty(configVals)
+                [configVals, ~] = Utility.loadConstants(filename);
             end
         
-            val = constants.(section).(key);
+            val = configVals.(section).(key);
         end
 
-        function desc = getDescription(section, key, filename)
+        function desc = getConfigDescription(section, key, filename)
             CustomError.validateNumberOfParameters(nargin, 1, 3);
 
             if nargin < 3
@@ -443,6 +451,20 @@ classdef Utility
             end
         
             desc = descriptions.(section).(key);
+        end
+    
+        function val = getParams(filename)
+            if nargin < 1
+                filename = 'params.txt';
+            end
+
+            persistent params
+        
+            if isempty(params)
+                [params, ~] = Utility.loadConstants(filename);
+            end
+        
+            val = params; % returned by value!
         end
     end
 end

@@ -1,3 +1,6 @@
+
+
+
 % Settings are defined on the level of the model. These are general
 % settings that are relevant for all models
 
@@ -75,11 +78,3 @@ classdef ModelSettings < handle
         end
     end
 end
-
-
-
-
-
-
-
-        

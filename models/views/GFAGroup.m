@@ -24,11 +24,7 @@ classdef GFAGroup < handle
         D
         N
     end
-    
-
-    properties(Access = private, Constant)
-        SETTINGS = ModelSettings.getInstance();
-    end
+   
 
 
     methods
@@ -50,10 +46,20 @@ classdef GFAGroup < handle
 
             %% Model setup and initialization
             %                          type, size_, a, b, prior
-            obj.alpha = GammaContainer("SD", obj.K.Val, GFAGroup.SETTINGS.DEFAULT_GAMMA_A, GFAGroup.SETTINGS.DEFAULT_GAMMA_B);
+            obj.alpha = GammaContainer( ...
+                "SD", ...
+                obj.K.Val, ...
+                Utility.getConfigValue('Distribution', 'DEFAULT_GAMMA_A'), ...
+                Utility.getConfigValue('Distribution', 'DEFAULT_GAMMA_B') ...
+                );
 
             %                      type, size_, a, b, prior
-            obj.T = GammaContainer("SD", obj.D, GFAGroup.SETTINGS.DEFAULT_GAMMA_A, GFAGroup.SETTINGS.DEFAULT_GAMMA_B);
+            obj.T = GammaContainer( ...
+                "SD", ...
+                obj.D, ...
+                Utility.getConfigValue('Distribution', 'DEFAULT_GAMMA_A'), ...
+                Utility.getConfigValue('Distribution', 'DEFAULT_GAMMA_B') ...
+                );
 
             %                         type, size_, cols,   dim,   mu, cov, priorPrec
             obj.W = GaussianContainer("DD", obj.D, false, obj.K.Val, randn(obj.K.Val, obj.D));
@@ -112,11 +118,6 @@ classdef GFAGroup < handle
             alpha_3D = repmat(alphaExp, 1, 1, obj.D);
 
             cov_inv = pagemtimes(ZZt_3D, T_3D) + alpha_3D;
-
-            % [NOTE]: It is added here for the "DD" type instead of the
-            % GaussianContainer class update methods
-            % cov_inv = cov_inv + GFAGroup.SETTINGS.EPSILON * eye(size(cov_inv, 1), size(cov_inv, 2), ...
-            %     'like', cov_inv);
 
             covNew = arrayfun(@(i) Utility.matrixInverse(cov_inv(:,:,i)), ...
                 1:size(cov_inv, 3), 'UniformOutput', false);

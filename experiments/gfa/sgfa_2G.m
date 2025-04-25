@@ -6,7 +6,7 @@ close all; clearvars; clc;
 data = Datasets.generateSyntheticGFAData(2);
 
 bestOverallModel = Experiment('sgfa', 10, {data.X_train{1}, data.X_train{2}}, mfilename).run();
-
+return;
 
 %% [NOTE] The visualization functionality is deliberately kept outside of 
 % the `Experiment` class to allow for greater flexibility and control over 

@@ -1,9 +1,13 @@
-% The Gamma distribution is defined as the distribution of a sum of 
-% independent exponential random variables, where the shape parameter 'a'
-% corresponds to the number of such variables and the rate parameter 'b' 
-% (or the inverse scale parameter) controls the rate of the exponential decay.
-%   -> a, b must always be strictly positive 
-%
+% The Gamma distribution is the distribution of the sum of 
+% independent exponential random variables. It is characterized by:
+% 
+% - The shape parameter 'a', which represents the number of 
+%   exponential random variables being summed.
+% - The rate parameter 'b' (also known as the inverse scale parameter), 
+%   which governs the rate of exponential decay.
+% 
+% Note:
+% - Both 'a' and 'b' must always be strictly positive.
 %
 %%
 classdef Gamma < handle
@@ -103,29 +107,30 @@ classdef Gamma < handle
         end
 
 
+
+        %% Constructor Options for Gamma
+
+        % ZERO PARAMETERS:
+        % - Default values are assigned to 'a' and 'b'.
+        % - The 'prior' is set to NaN.
         
-        %% Options for the constructor Gamma
-        % ZERO PARAMETERS
-        % -> default values for 'a' and 'b'; prior = NaN;
-        %
         % 1 PARAMETER: a
-        % OPTION 1: 'a' is an instance of Gamma
-        %       -> set 'obj' and 'prior' to that value
-        % OPTION 2: 'a' is a scalar
-        %       -> set 'a' and 'b' to that value
-        % 
+        % OPTION 1: 'a' is an instance of Gamma.
+        %   - Set 'obj' and 'prior' to the provided Gamma instance.
+        % OPTION 2: 'a' is a scalar.
+        %   - Set both 'a' and 'b' to the scalar value.
+        
         % 2 PARAMETERS: a, b
-        % -> Gamma(a, b)
-        %
+        % - The constructor is called as Gamma(a, b).
+        
         % 3 PARAMETERS: a, b, prior
-        % -> same as previous constructor, but the prior is set
-        %
-        %
+        % - Same as the previous constructor, but with the 'prior' set to the given value.
+        
         %%
         function obj = Gamma(a, b, prior)
             % Default param values
-            obj.a = Gamma.SETTINGS.DEFAULT_GAMMA_A;
-            obj.b = Gamma.SETTINGS.DEFAULT_GAMMA_B;
+            obj.a = Utility.getConfigValue('Distribution', 'DEFAULT_GAMMA_A');
+            obj.b = Utility.getConfigValue('Distribution', 'DEFAULT_GAMMA_B');
             obj.prior = NaN;
 
             switch nargin

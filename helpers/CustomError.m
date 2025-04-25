@@ -3,8 +3,24 @@ classdef CustomError < MException
         % Global flag to enable/disable logging
         ENABLE_LOGGING           = true;
 
+        % FileIO
+        % Validation
         ERR_NOT_ENOUGH_INPUT_ARG = "Not enough input arguments provided.";
         ERR_TOO_MANY_INPUT_ARG   = "Too many input arguments provided.";
+
+
+
+        ERR_INVALID_ARGUMENTS = 'Invalid arguments provided. Please check your input values.';
+        ERR_INVALID_PRIOR_PARAMETER = 'The prior parameter is invalid. It must be of type Gamma.';
+        ERR_TOO_FEW_ARGUMENTS = 'Insufficient arguments provided. At least the required parameters must be specified.';
+        ERR_INVALID_PARAMETERS = 'Invalid parameters. Both parameters must be numeric values.';
+        ERR_PARAMETERS_POSITIVE = 'Parameters must be strictly positive values.';
+        ERR_EXPECTATION_POSITIVE = 'The expectation must be a strictly positive value.';
+        ERR_INVALID_PARAMETER_A = 'Parameter "a" must be a strictly positive value.';
+        ERR_INVALID_PARAMETER_B = 'Parameter "b" must be a strictly positive value.';
+
+
+
         ERR_UNKNOWN_MODEL        = "Unknown model name";
     end
     

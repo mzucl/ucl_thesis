@@ -92,10 +92,10 @@ classdef Gaussian < handle
         function [dim, mu, cov, priorPrec] = initParameters(varargin)
 
             % Default values
-            dim = Gaussian.SETTINGS.DEFAULT_GAUSS_DIM;
-            mu = Gaussian.SETTINGS.DEFAULT_GAUSS_MU;
-            cov = 1/Gaussian.SETTINGS.DEFAULT_GAUSS_PRECISION;
-            priorPrec = Gaussian.SETTINGS.DEFAULT_GAUSS_PRECISION;
+            dim = Utility.getConfigValue('Distribution', 'DEFAULT_GAUSS_DIM');
+            mu = Utility.getConfigValue('Distribution', 'DEFAULT_GAUSS_MU');
+            cov = 1/Utility.getConfigValue('Distribution', 'DEFAULT_GAUSS_PRECISION');
+            priorPrec = Utility.getConfigValue('Distribution', 'DEFAULT_GAUSS_PRECISION');
 
             switch nargin
                 case 1 % dim
@@ -257,7 +257,6 @@ classdef Gaussian < handle
         end
 
         function obj = updateCovariance(obj, cov)
-            % cov = cov + Gaussian.SETTINGS.EPSILON * eye(size(cov));
             if Gaussian.SETTINGS.VALIDATE
                 if nargin < 2
                     error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
@@ -276,7 +275,6 @@ classdef Gaussian < handle
         end
 
         function updateParameters(obj, mu, cov)
-            % cov = cov + Gaussian.SETTINGS.EPSILON * eye(size(cov));
             if Gaussian.SETTINGS.VALIDATE
                 if nargin < 3
                     error(['##### ERROR IN THE THE CLASS ' class(obj) ': Too few arguments passed.']);
