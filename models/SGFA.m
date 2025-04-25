@@ -33,9 +33,6 @@ classdef SGFA < handle
     %     end
     % end
 
-    properties(Access = private, Constant)
-        SETTINGS = ModelSettings.getInstance();
-    end
 
     methods
         % [NOTE] We need to deal with the form of the datasets here (e.g.
@@ -63,8 +60,8 @@ classdef SGFA < handle
 
             obj.K = DoubleWrapper(K);
 
-            obj.maxIter = SGFA.SETTINGS.DEFAULT_MAX_ITER;
-            obj.tol = SGFA.SETTINGS.DEFAULT_TOL;
+            obj.maxIter = Utility.getConfigValue('Optimization', 'DEFAULT_MAX_ITER');
+            obj.tol = Utility.getConfigValue('Optimization', 'DEFAULT_TOL');
             obj.doRotation = false;
 
             if nargin > 2
@@ -141,9 +138,9 @@ classdef SGFA < handle
 
 
         %% fit() and ELBO
-        function [elboVals, it] = fit(obj, elboIterStep)
+        function [elboVals, it] = fit(obj, elboRecalcInterval)
             if nargin < 2
-                elboIterStep = 1; % TODO: Use one from model settings!
+                elboRecalcInterval = RunConfig.getInstance().elboRecalcInterval;
             end
 
             elboVals = -Inf(1, obj.maxIter);
@@ -167,14 +164,14 @@ classdef SGFA < handle
 
                 % TODO: MAke sure to log the last value, it is used for
                 % model selection
-                if it ~= 1 && mod(it, elboIterStep) ~= 0
+                if it ~= 1 && mod(it, elboRecalcInterval) ~= 0
                     continue;
                 end
 
                 currElbo = obj.computeELBO();
                 elboVals(elboIdx) = currElbo;
 
-                if SGFA.SETTINGS.DEBUG
+                if RunConfig.getInstance().enableLogging
                     if elboIdx ~= 1
                         disp(['======= ELBO increased by: ', num2str(currElbo - elboVals(elboIdx - 1))]);
                     end
@@ -219,7 +216,7 @@ classdef SGFA < handle
         %% Additional methods
         function obj = removeFactors(obj, it, threshold)
             if nargin < 3
-                threshold = SGFA.SETTINGS.LATENT_FACTORS_THRESHOLD;
+                threshold = Utility.getConfigValue('Model', 'LATENT_FACTORS_THRESHOLD');
             end
             % Calculate the average of the square of elements for each row of Z
             avgSquare = mean(obj.Z.E.^2, 2);

@@ -23,9 +23,6 @@ classdef GaussianContainer < handle
         Size                % Number of distributions in the container
     end
 
-    properties(Access = private, Constant)
-        SETTINGS = ModelSettings.getInstance();
-    end
 
     properties(Access = private)
         expInit
@@ -146,7 +143,7 @@ classdef GaussianContainer < handle
         function obj = GaussianContainer(type, size_, cols, dim, mu, cov, priorPrec)
             % Non-optional parameters: type, size_, cols, dim: 'size_' is the
             % size of the container, and 'dim' is the Gaussian dimension 
-            if GaussianContainer.SETTINGS.VALIDATE
+            if RunConfig.getInstance().inputValidation
                 if nargin < 4
                     error(['##### ERROR IN THE CLASS ' class(obj) ': Too few argumentes passed in.']);
                 end
@@ -173,13 +170,13 @@ classdef GaussianContainer < handle
                     obj.mu = mu * ones(obj.dim, size_);
                  
                 elseif Utility.isArray(mu)
-                    if GaussianContainer.SETTINGS.VALIDATE && ~isequal(size(mu), [obj.dim, 1])
+                    if RunConfig.getInstance().inputValidation && ~isequal(size(mu), [obj.dim, 1])
                         error(['##### ERROR IN THE CLASS ' mfilename ': Parameter mu dimensionality doesn''t match.']);
                     end
                     obj.mu = repmat(mu, 1, size_);
 
                 elseif Utility.isMatrix(mu)
-                    if GaussianContainer.SETTINGS.VALIDATE && ~isequal(size(mu), [obj.dim, size_])
+                    if RunConfig.getInstance().inputValidation && ~isequal(size(mu), [obj.dim, size_])
                         error(['##### ERROR IN THE CLASS ' mfilename ': Parameter mu dimensionality doesn''t match.']);
                     end
                     obj.mu = mu;
@@ -189,20 +186,20 @@ classdef GaussianContainer < handle
                     compCov = zeros(obj.dim, obj.dim); % Preallocate
 
                     if Utility.isSingleNumber(cov)
-                        if GaussianContainer.SETTINGS.VALIDATE && cov <= 0
+                        if RunConfig.getInstance().inputValidation && cov <= 0
                             error(['##### ERROR IN THE CLASS ' mfilename ': Covariance parameter must be greater than 0.']);
                         end
                         compCov = cov * eye(dim); % Spherical
                         
                     elseif Utility.isArray(cov)
-                        if GaussianContainer.SETTINGS.VALIDATE && (length(cov) ~= dim || ~Utility.isValidCovarianceMatrix(diag(cov)))
+                        if RunConfig.getInstance().inputValidation && (length(cov) ~= dim || ~Utility.isValidCovarianceMatrix(diag(cov)))
                             error(['##### ERROR IN THE CLASS ' mfilename ': Parameter is either not a valid covariance matrix or' ...
                                 ' dimensionality doesn''t match.']);
                         end
                         compCov = diag(cov); % Diagonal
 
                     elseif Utility.isMatrix(cov)
-                        if GaussianContainer.SETTINGS.VALIDATE && (~isequal(size(cov), [dim, dim]) || ~Utility.isValidCovarianceMatrix(cov))
+                        if RunConfig.getInstance().inputValidation && (~isequal(size(cov), [dim, dim]) || ~Utility.isValidCovarianceMatrix(cov))
                             error(['##### ERROR IN THE CLASS ' mfilename ': Parameter is either not a valid covariance matrix or' ...
                                 'dimensionality doesn''t match.']);
                         end
@@ -217,13 +214,13 @@ classdef GaussianContainer < handle
 
                     if nargin > 6 % priorPrec
                         if Utility.isSingleNumber(priorPrec)
-                            if GaussianContainer.SETTINGS.VALIDATE && (priorPrec <= 0 || obj.type ~= "DS")
+                            if RunConfig.getInstance().inputValidation && (priorPrec <= 0 || obj.type ~= "DS")
                                 error(['##### ERROR IN THE CLASS ' mfilename ': Invalid precision parameter.']);
                             end
                             obj.priorPrec = priorPrec; % Spherical shared covariance
                             
                         elseif Utility.isArray(priorPrec)
-                            if GaussianContainer.SETTINGS.VALIDATE && (length(priorPrec) ~= size_ || any(priorPrec < 0) || obj.type ~= "DD")
+                            if RunConfig.getInstance().inputValidation && (length(priorPrec) ~= size_ || any(priorPrec < 0) || obj.type ~= "DD")
                                 error(['##### ERROR IN THE CLASS ' mfilename ': Parameter is either not a valid precision or' ...
                                     ' dimensionality doesn''t match.']);
                             end
@@ -246,7 +243,7 @@ classdef GaussianContainer < handle
 
         %% Setters
         function obj = setExpInit(obj, value)
-            if GaussianContainer.SETTINGS.VALIDATE
+            if RunConfig.getInstance().inputValidation
                 if ~(obj.cols && isequal(size(value), [obj.dim, obj.Size]) || ...
                         ~obj.cols && isequal(size(value), [obj.Size, obj.dim]))
                     error(['##### ERROR IN THE CLASS ' class(obj) ': Number of elements in the expectation must be equal to the number of ' ...
@@ -302,7 +299,7 @@ classdef GaussianContainer < handle
         % TODO (medium): Validate inputs!
         % Independent of the type (currently implemented)
         function obj = updateDistributionsMu(obj, mu)
-            if GaussianContainer.SETTINGS.VALIDATE && nargin < 2
+            if RunConfig.getInstance().inputValidation && nargin < 2
                 error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
             end
 
@@ -314,7 +311,7 @@ classdef GaussianContainer < handle
 
         % For "DD" type 'cov' parameter must be a multidimensional array
         function obj = updateDistributionsCovariance(obj, cov)
-            if GaussianContainer.SETTINGS.VALIDATE && nargin < 2
+            if RunConfig.getInstance().inputValidation && nargin < 2
                 error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
             end
            
@@ -325,7 +322,7 @@ classdef GaussianContainer < handle
         end
 
         function obj = updateDistributionsParameters(obj, mu, cov)
-            if GaussianContainer.SETTINGS.VALIDATE && nargin < 3
+            if RunConfig.getInstance().inputValidation && nargin < 3
                 error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
             end
             
@@ -341,7 +338,7 @@ classdef GaussianContainer < handle
                 return; % No change
             end
 
-            if GaussianContainer.SETTINGS.VALIDATE && ~obj.validateDimIndices(indices)
+            if RunConfig.getInstance().inputValidation && ~obj.validateDimIndices(indices)
                 error(['##### ERROR IN THE CLASS ' class(obj) ': Index out of range.']); 
             end
 

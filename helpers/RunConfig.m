@@ -10,7 +10,7 @@ classdef RunConfig < handle
     properties (Access = public)
         % [Validation / Logs]
         inputValidation       % If true, performs input validation (e.g. checks dimensions, symmetry, and positive semi-definiteness of covariance matrices)
-        enableLogging         % If true, enables logging (e.g. prints ELBO progress during training)
+        enableLogging         % If true, enables logging to the command window (e.g. prints ELBO progress during training)
         
         % [Experiment Setup]
         elboRecalcInterval     % Frequency (in iterations) at which the ELBO is recomputed during training

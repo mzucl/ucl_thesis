@@ -12,11 +12,6 @@ classdef ViewHandler < handle
 
 
 
-    properties(Access = private, Constant)
-        SETTINGS = ModelSettings.getInstance();
-    end
-
-
     
     methods(Access = private)
         % Helper method that throws an error if index (of the observation) is not valid
@@ -66,7 +61,7 @@ classdef ViewHandler < handle
 
         %% Retreive methods
         function observation = getObservation(obj, idx, tr)
-            if ViewHandler.SETTINGS.VALIDATE && nargin < 2
+            if RunConfig.getInstance().inputValidation && nargin < 2
                 error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
             end
 
@@ -84,7 +79,7 @@ classdef ViewHandler < handle
         % Returns the row at index idx; if 'tr' is true then the row is
         % returned as a column vector
         function observation = getRow(obj, idx, tr)
-            if ViewHandler.SETTINGS.VALIDATE && nargin < 2
+            if RunConfig.getInstance().inputValidation && nargin < 2
                 error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
             end
 
@@ -107,7 +102,7 @@ classdef ViewHandler < handle
         function el = getObservationEntry(obj, idx, d)
             % 'd' is the dimension we are interested in
             observation = obj.getObservation(idx);
-            if ViewHandler.SETTINGS.VALIDATE
+            if RunConfig.getInstance().inputValidation
                 if d < 1 || d > length(observation)
                     error(['##### ERROR IN THE CLASS ' class(obj) ': Index out of bounds.']);
                 end

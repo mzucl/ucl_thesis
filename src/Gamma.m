@@ -17,10 +17,7 @@ classdef Gamma < handle
         prior
     end
 
-    properties(Access = private, Constant)
-        SETTINGS = ModelSettings.getInstance();
-    end
-    
+
     properties (Access = private)
         expInit % Explicit expectation initialization
         cache = struct(...
@@ -154,7 +151,7 @@ classdef Gamma < handle
                     obj.updateParameters(a, b);
 
                     if nargin == 3 % prior
-                        if Gamma.SETTINGS.VALIDATE && ~Utility.isNaNOrInstanceOf(prior, 'Gamma')
+                        if RunConfig.getInstance().inputValidation && ~Utility.isNaNOrInstanceOf(prior, 'Gamma')
                             error(['##### ERROR IN THE CLASS ' class(obj) ': Invalid prior parameter.']);
                         end
                         obj.prior = prior.copy();
@@ -169,7 +166,7 @@ classdef Gamma < handle
 
         %% Update methods
         function obj = updateParameters(obj, a, b)
-            if Gamma.SETTINGS.VALIDATE
+            if RunConfig.getInstance().inputValidation
                 if nargin < 3
                     error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
                 end
@@ -189,7 +186,7 @@ classdef Gamma < handle
         end
         
         function obj = updateA(obj, a)
-            if Gamma.SETTINGS.VALIDATE
+            if RunConfig.getInstance().inputValidation
                 if nargin < 2
                     error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
                 end
@@ -208,7 +205,7 @@ classdef Gamma < handle
         end
 
         function obj = updateB(obj, b)
-            if Gamma.SETTINGS.VALIDATE
+            if RunConfig.getInstance().inputValidation
                 if nargin < 2
                     error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
                 end
@@ -230,7 +227,7 @@ classdef Gamma < handle
         
         %% Setters
         function obj = setExpInit(obj, value)
-            if Gamma.SETTINGS.VALIDATE && value <= 0
+            if RunConfig.getInstance().inputValidation && value <= 0
                 error(['##### ERROR IN THE CLASS ' class(obj) ': Expectation is a strictly positive number.']);
             end
             obj.expInit = value;

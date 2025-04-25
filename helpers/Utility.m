@@ -12,12 +12,6 @@
 %   isnan([]) -> returns elements wise isnan check!
 %%
 classdef Utility
-    properties (Constant)
-        SETTINGS = ModelSettings.getInstance();
-    end
-
-
-
     methods (Static, Access = private)
         function [constants, descriptions] = loadConstants(filename)
             CustomError.validateNumberOfParameters(nargin, 1, 1);
@@ -258,7 +252,7 @@ classdef Utility
         % themselves rather than at the point of invocation. This is done for 
         % convenience, especially since these methods are often called within loops.
         function invMatrix = choleskyInverse(matrix)
-            if Utility.SETTINGS.VALIDATE 
+            if RunConfig.getInstance().inputValidation
                 if Utility.isSingular(matrix)
                     error(['##### ERROR IN THE CLASS ' mfilename('class') ': Matrix must be non-singular for choleskyInverse.']);
                 elseif ~Utility.isSymmetricMatrix(matrix)
@@ -288,7 +282,7 @@ classdef Utility
         % 3. Not Necessarily Symmetric or Positive Definite (unlike
         % Cholesky decomposition)
         function invMatrix = matrixInverse(matrix)
-            if Utility.SETTINGS.VALIDATE && Utility.isSingular(matrix)
+            if RunConfig.getInstance().inputValidation && Utility.isSingular(matrix)
                     error(['##### ERROR IN THE CLASS ' mfilename('class') ': Matrix must be non-singular for matrixInverse.']);
             end
 
@@ -451,20 +445,6 @@ classdef Utility
             end
         
             desc = descriptions.(section).(key);
-        end
-    
-        function val = getParams(filename)
-            if nargin < 1
-                filename = 'params.txt';
-            end
-
-            persistent params
-        
-            if isempty(params)
-                [params, ~] = Utility.loadConstants(filename);
-            end
-        
-            val = params; % returned by value!
         end
     end
 end

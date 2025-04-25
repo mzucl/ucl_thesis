@@ -4,63 +4,57 @@ classdef Experiment
         K
         views
 
-        elboIterStep
-        stabilityRun
-        modelSelectionIter
-
-        validateInputs
-        debugMode
         logFileName
+        numModelSelectionRuns
+        numStabilityRuns
+        elboRecalcInterval
         
         result
     end
 
     methods
-        % Constructor
         function obj = Experiment(modelName, K, views, ...
-                logFileName, elboIterStep, stabilityRun, modelSelectionIter, validateInputs, debugMode)
-
+                logFileName, numModelSelectionRuns, numStabilityRuns, elboRecalcInterval, enableLogging, inputValidation)
             CustomError.validateNumberOfParameters(nargin, 3, 9);
 
             obj.modelName = modelName;
             obj.K = K;
             obj.views = views;
 
-            params = Utility.getParams();
-
             % Default values for optional parameters
+            rc = RunConfig.getInstance();
+            obj.numModelSelectionRuns = rc.numModelSelectionRuns;
+            obj.numStabilityRuns = rc.numStabilityRuns;
+            obj.elboRecalcInterval = rc.elboRecalcInterval;
+
             obj.logFileName = '';
-            obj.elboIterStep = params.Experiment.ELBO_ITER_STEP;
-            obj.stabilityRun = params.Experiment.STABILITY_RUN;
-            obj.modelSelectionIter = params.Experiment.MODEL_SELECTION_ITER;
-            obj.validateInputs = params.Training.VALIDATE;
-            obj.debugMode = params.Training.DEBUG;
 
             % Override default values with provided arguments if available
             if nargin >= 4 && ~isempty(logFileName)
                 obj.logFileName = logFileName;
             end
-            if nargin >= 5 && ~isempty(elboIterStep)
-                obj.elboIterStep = elboIterStep;
+            if nargin >= 5 && ~isempty(numModelSelectionRuns)
+                obj.numModelSelectionRuns = numModelSelectionRuns;
             end
-            if nargin >= 6 && ~isempty(stabilityRun)
-                obj.stabilityRun = stabilityRun;
+            if nargin >= 6 && ~isempty(numStabilityRuns)
+                obj.numStabilityRuns = numStabilityRuns;
             end
-            if nargin >= 7 && ~isempty(modelSelectionIter)
-                obj.modelSelectionIter = modelSelectionIter;
+            if nargin >= 7 && ~isempty(elboRecalcInterval)
+                obj.elboRecalcInterval = elboRecalcInterval;
             end
-            if nargin >= 8 && ~isempty(validateInputs)
-                obj.validateInputs = validateInputs;
+            if nargin >= 8 && ~isempty(enableLogging)
+                % Set `rc.enableLogging`
+                rc.enableLogging = enableLogging;
             end
-            if nargin >= 9 && ~isempty(debugMode)
-                obj.debugMode = debugMode;
+            if nargin >= 9 && ~isempty(inputValidation)
+                % Set `rc.inputValidation`
+                rc.inputValidation = inputValidation;
             end
         end
         
 
-        % Run the experiment
+
         function bestOverallModel = run(obj)
-            % Logging
             if ~isempty(obj.logFileName)
                 if ~exist('logs', 'dir')
                     mkdir('logs');
@@ -68,28 +62,22 @@ classdef Experiment
                 diary(['logs/', obj.logFileName, '.txt']); % Start logging
             end
             
-            % TODO: THIS!!!
-            % % Model settings
-            % settings = ModelSettings.getInstance();
-            % % settings.VALIDATE = false;
-            % settings.DEBUG = false;
-
             % Average convergence iteration of the best models selected during the 
-            % `modelSelectionIter` loop runs.
+            % `numModelSelectionRuns` loop.
             convItAvg = 0;
             
             tic;
-            % The best model out `stabilityRun` best models
+            % The best model out `numStabilityRuns` best models
             maxOverallElbo = -Inf;
             bestOverallModel = NaN;
             bestOverallConvIt = NaN;
             
-            for s = 1:obj.stabilityRun 
+            for s = 1:obj.numStabilityRuns 
                 maxElbo = -Inf;
                 bestModel = NaN;
                 bestConvIt = NaN;
             
-                for i = 1:obj.modelSelectionIter
+                for i = 1:obj.numModelSelectionRuns
                     switch lower(obj.modelName)
                         case 'sgfa'
                             model = SGFA(obj.views, obj.K);
@@ -100,7 +88,7 @@ classdef Experiment
                     end
                     
                         
-                    [elboVals, convIt] = model.fit(obj.elboIterStep);
+                    [elboVals, convIt] = model.fit(obj.elboRecalcInterval);
                 
                     if elboVals(end) > maxElbo
                         maxElbo = elboVals(end);
@@ -116,16 +104,16 @@ classdef Experiment
                 end
             
                 convItAvg = convItAvg + bestConvIt;
-                fprintf('The best model of run %d/%d converged in %d iterations.\n', s, obj.stabilityRun, bestConvIt);
+                fprintf('The best model of run %d/%d converged in %d iterations.\n', s, obj.numStabilityRuns, bestConvIt);
             end
             
             elapsedTime = toc;
             fprintf('\n\n=== Experiment Summary ===\n');
             fprintf('Elapsed time: %.4f seconds\n', elapsedTime);
-            fprintf('Average number of convergence iterations: %d\n', round(convItAvg / obj.stabilityRun));
+            fprintf('Average number of convergence iterations: %d\n', round(convItAvg / obj.numStabilityRuns));
             fprintf('Best overall model converged in %d iterations\n', bestOverallConvIt);
             
-            diary off;           
+            diary off; % End logging          
         end
     end
 end
