@@ -1,19 +1,5 @@
 classdef SGFAGroup < BaseView
-    properties         
-        W               % [D x K] GaussianContainer      
-                        %       --- [size: D; for each row in W matrix]
-
-                        % Prior over W is defined per columns (each column
-                        % has its own precision parameter, but update
-                        % equations are defined by rows, so we are
-                        % representing W as a size D container in a row
-                        % format.
-
-        alpha           % [K x 1] GammaContainer         
-                        %       --- [size: K]
-
-        mu              % [D x 1] Gaussian
-
+    properties
         tau             % [scalar] Gamma         
     end
 
@@ -22,39 +8,24 @@ classdef SGFAGroup < BaseView
     methods
         %% Constructors
         function obj = SGFAGroup(data, Z, K, featuresInCols)
-            obj@BaseView(data, Z, K, false);
-            % disp('SGFAGroup');
-            if nargin < 3
-                error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
-            elseif nargin < 4
-                featuresInCols = true;
-            end
+            CustomError.validateNumberOfParameters(nargin, 3, 4);
+
+            % Set default values
+            if nargin < 4, featuresInCols = true; end
+
+            obj@BaseView(data, Z, K, featuresInCols);
 
             %% Model setup and initialization
-            %  type, size_, a, b, prior
-            obj.alpha = GammaContainer( ...
-                "SD", ...
-                obj.K.Val, ...
-                Utility.getConfigValue('Distribution', 'DEFAULT_GAMMA_A'), ...
-                Utility.getConfigValue('Distribution', 'DEFAULT_GAMMA_B'));
-            
-            %                  dim, mu,    cov,  priorPrec
-            obj.mu = Gaussian(obj.D, 0, eye(obj.D), 10^3);
-            
-            %
             tauPrior = Gamma( ...
                 Utility.getConfigValue('Distribution', 'DEFAULT_GAMMA_A'), ...
                 Utility.getConfigValue('Distribution', 'DEFAULT_GAMMA_B'));
 
             obj.tau = Gamma(tauPrior);
 
-            %                         type, size_, cols,   dim,        mu, cov, priorPrec
-            obj.W = GaussianContainer("DS", obj.D, false, obj.K.Val, randn(obj.K.Val, obj.D));
-
             % Model initialization – second stage
             % The first update is for W, so we initialize all components required for
             % the W and alpha update equations here. These include:
-            %   obj.T.expInit
+            %   obj.tau.expInit
             %   obj.alpha.expInit
             % ----------------------------------------------------------------
             obj.tau.setExpInit(1000);        
@@ -108,7 +79,7 @@ classdef SGFAGroup < BaseView
         end
     
 
-        function value = getExpectationLnW(obj)
+        function value = getExpectationLnPW(obj)
             value = obj.W.E_SNC' * obj.alpha.E;
             value = -1/2 * value + obj.D/2 * (obj.alpha.E_LnX - obj.K.Val * log(2*pi));
         end

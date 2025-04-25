@@ -1,7 +1,21 @@
 classdef (Abstract) BaseView < handle & matlab.mixin.Heterogeneous
     properties
-        Z
         K
+
+        Z
+
+        W               % [D x K] GaussianContainer
+                        %       --- [size: D; each element corresponds to a row of the W matrix]
+                        
+                        % The prior over W is defined per column (each column
+                        % has its own precision parameter), but the update
+                        % equations operate on rows. Therefore, W is represented
+                        % as a container of size D in a row-wise format.
+
+        alpha           % [K x 1] GammaContainer         
+                        %       --- [size: K]
+
+        mu              % [D x 1] Gaussian
     end
 
     properties (Dependent, SetAccess = private)
@@ -33,6 +47,21 @@ classdef (Abstract) BaseView < handle & matlab.mixin.Heterogeneous
             obj.Z = Z;
             obj.K = K;
 
+            %                         type, size_, cols,   dim,        mu, cov, priorPrec
+            obj.W = GaussianContainer("DS", obj.D, false, obj.K.Val, randn(obj.K.Val, obj.D));
+
+            %  type, size_, a, b, prior
+            obj.alpha = GammaContainer( ...
+                "SD", ...
+                obj.K.Val, ...
+                Utility.getConfigValue('Distribution', 'DEFAULT_GAMMA_A'), ...
+                Utility.getConfigValue('Distribution', 'DEFAULT_GAMMA_B'));
+            
+            %                  dim, mu,    cov,  priorPrec
+            obj.mu = Gaussian(obj.D, 0, eye(obj.D), 10^3);
+
+
+            
 
             % if nargin < 4
             %     featuresInCols = true;

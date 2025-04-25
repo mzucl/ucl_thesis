@@ -1,7 +1,5 @@
 classdef SGFA < BaseModel
     methods
-        % data = varargin{1}
-        % K = varargin{2}
         function obj = SGFA(data, K, maxIter, tol, doRotation)
             CustomError.validateNumberOfParameters(nargin, 2, 5);
             
@@ -13,7 +11,7 @@ classdef SGFA < BaseModel
             obj = obj@BaseModel(data, K, maxIter, tol, doRotation);
 
             %                         type, size_, cols, dim,     mu, cov, priorPrec
-            obj.Z = GaussianContainer("DS", obj.N, true, obj.K.Val, zeros(obj.K.Val, 1)); % STEP1
+            obj.Z = GaussianContainer("DS", obj.N, true, obj.K.Val, zeros(obj.K.Val, 1));
 
 
             for m = 1:obj.M
@@ -46,7 +44,7 @@ classdef SGFA < BaseModel
             for m = 1:obj.M
                 % p
                 view = obj.views(m);
-                elbo = elbo + view.getExpectationLnPX() + view.getExpectationLnW() ... % p(.)
+                elbo = elbo + view.getExpectationLnPX() + view.getExpectationLnPW() ... % p(.)
                     + view.alpha.E_LnP + view.mu.E_LnP + view.tau.E_LnP ... % p(.)
                     + view.W.H + view.alpha.H + view.mu.H + view.tau.H; % q(.)
             end

@@ -78,7 +78,7 @@ classdef BGFA < BaseModel
             for m = 1:obj.M
                 % p
                 view = obj.views(m);
-                elbo = elbo + view.getExpectationLnPX() + view.getExpectationLnW() ... % p(.)
+                elbo = elbo + view.getExpectationLnPX() + view.getExpectationLnPW() ... % p(.)
                     + view.alpha.E_LnP + view.mu.E_LnP + ... % p(.)
                     + view.W.H + view.alpha.H + view.mu.H; % q(.)
             end

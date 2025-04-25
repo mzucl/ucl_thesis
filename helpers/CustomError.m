@@ -2,9 +2,6 @@ classdef CustomError < MException
     properties (Constant)
         % Global flag to enable/disable logging
         ENABLE_LOGGING           = true;
-
-        % FileIO
-        % Validation
         ERR_NOT_ENOUGH_INPUT_ARG = "Not enough input arguments provided.";
         ERR_TOO_MANY_INPUT_ARG   = "Too many input arguments provided.";
 
