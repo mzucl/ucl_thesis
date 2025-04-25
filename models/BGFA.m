@@ -8,41 +8,23 @@ classdef BGFA < BaseModel
 
     methods
         function obj = BGFA(data, Mc, K, bound, maxIter, tol, doRotation)
-            obj = obj@BaseModel(data, K);
-            % TODO: Validate Mc somehow?
-            % bound = 'J' or 'B'
-            % Mc -> number of continous views
+            CustomError.validateNumberOfParameters(nargin, 3, 7);
 
-            % Optional parameters: maxIter, tol, doRotation
-            if nargin < 4
-                error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
+            % Set default values
+            if nargin < 7, doRotation = false; end
+            if nargin < 6, tol = Utility.getConfigValue('Optimization', 'DEFAULT_TOL'); end
+            if nargin < 5, maxIter = Utility.getConfigValue('Optimization', 'DEFAULT_MAX_ITER'); end
+            if nargin < 4, bound = 'B'; end
+            
+            obj = obj@BaseModel(data, K, maxIter, tol, doRotation);
+
+            % Validate `Mc`
+            if Mc > obj.M
+                CustomError.raiseError('Validation', 'The number of continuous views cannot exceed the total number of views.');
             end
 
-            % TODO (very high!): Implementent method below as soon as the
-            % toy example with 2 views starts working
-            % [obj.M, obj.N] = obj.validateSources(...)
             obj.Mc = Mc;
-            % obj.M = length(data);
-            % obj.N = size(data{1}, 2); % Data passed in is DxN
-            % 
-            % obj.K = DoubleWrapper(K);
-
             obj.bound = bound;
-
-            % Default values of optional parameters
-            % obj.maxIter = Utility.getConfigValue('Optimization', 'DEFAULT_MAX_ITER');
-            % obj.tol = Utility.getConfigValue('Optimization', 'DEFAULT_TOL');
-            % obj.doRotation = false;
-            % 
-            % if nargin > 4
-            %     obj.maxIter = maxIter;
-            %     if nargin > 5
-            %         obj.tol = tol;
-            %         if nargin > 6
-            %             obj.doRotation = doRotation;
-            %         end
-            %     end
-            % end
 
             %% Model setup and initialization
             if bound == 'B'

@@ -1,9 +1,3 @@
-% Enable passing these to the `Experiment`
-% 
-% obj.maxIter = Utility.getConfigValue('Optimization', 'DEFAULT_MAX_ITER');
-% obj.tol = Utility.getConfigValue('Optimization', 'DEFAULT_TOL');
-% obj.doRotation = false;
-
 classdef Experiment
     properties
         modelName
@@ -14,13 +8,20 @@ classdef Experiment
         numModelSelectionRuns
         numStabilityRuns
         elboRecalcInterval
+
+        maxIter
+        tol
+        doRotation
         
         result
     end
 
+
+
     methods
         function obj = Experiment(modelName, K, views, ...
-                logFileName, numModelSelectionRuns, numStabilityRuns, elboRecalcInterval, enableLogging, inputValidation)
+                logFileName, numModelSelectionRuns, numStabilityRuns, elboRecalcInterval, enableLogging, inputValidation, ...
+                maxIter, tol, doRotation)
             CustomError.validateNumberOfParameters(nargin, 3, 9);
 
             obj.modelName = modelName;
@@ -32,6 +33,10 @@ classdef Experiment
             obj.numModelSelectionRuns = rc.numModelSelectionRuns;
             obj.numStabilityRuns = rc.numStabilityRuns;
             obj.elboRecalcInterval = rc.elboRecalcInterval;
+
+            obj.maxIter = Utility.getConfigValue('Optimization', 'DEFAULT_MAX_ITER');
+            obj.tol = Utility.getConfigValue('Optimization', 'DEFAULT_TOL');
+            obj.doRotation = false;
 
             obj.logFileName = '';
 
@@ -55,6 +60,15 @@ classdef Experiment
             if nargin >= 9 && ~isempty(inputValidation)
                 % Set `rc.inputValidation`
                 rc.inputValidation = inputValidation;
+            end
+            if nargin >= 10 && ~isempty(maxIter)
+                obj.maxIter = maxIter;
+            end
+            if nargin >= 11 && ~isempty(tol)
+                obj.tol = tol;
+            end
+            if nargin >= 12 && ~isempty(doRotation)
+                obj.doRotation = doRotation;
             end
         end
         
@@ -86,7 +100,7 @@ classdef Experiment
                 for i = 1:obj.numModelSelectionRuns
                     switch lower(obj.modelName)
                         case 'sgfa'
-                            model = SGFA(obj.views, obj.K);
+                            model = SGFA(obj.views, obj.K, obj.maxIter, obj.tol, obj.doRotation);
                         case 'gfa'
                             model = GFA(obj.views, obj.K);
                         otherwise

@@ -75,13 +75,6 @@ classdef (Abstract) BaseModel < handle
             end
 
             obj.K = DoubleWrapper(K);
-
-            % Set default values
-            if nargin < 5, doRotation = false; end
-            if nargin < 4, tol = Utility.getConfigValue('Optimization', 'DEFAULT_TOL'); end
-            if nargin < 3, maxIter = Utility.getConfigValue('Optimization', 'DEFAULT_MAX_ITER'); end
-
-            % Assign to properties
             obj.maxIter = maxIter;
             obj.tol = tol;
             obj.doRotation = doRotation;

@@ -2,14 +2,20 @@ classdef SGFA < BaseModel
     methods
         % data = varargin{1}
         % K = varargin{2}
-        function obj = SGFA(varargin)
+        function obj = SGFA(data, K, maxIter, tol, doRotation)
             CustomError.validateNumberOfParameters(nargin, 2, 5);
-            obj = obj@BaseModel(varargin{:});
+            
+            % Set default values
+            if nargin < 5, doRotation = false; end
+            if nargin < 4, tol = Utility.getConfigValue('Optimization', 'DEFAULT_TOL'); end
+            if nargin < 3, maxIter = Utility.getConfigValue('Optimization', 'DEFAULT_MAX_ITER'); end
+
+            obj = obj@BaseModel(data, K, maxIter, tol, doRotation);
 
             %                         type, size_, cols, dim,     mu, cov, priorPrec
             obj.Z = GaussianContainer("DS", obj.N, true, obj.K.Val, zeros(obj.K.Val, 1)); % STEP1
 
-            data = varargin{1};
+
             for m = 1:obj.M
                 obj.views(m) = SGFAGroup(data{m}, obj.Z, obj.K, false); % featuresInCols = false;
             end

@@ -108,7 +108,6 @@ classdef SGFAGroup < BaseView
         end
     
 
-
         function value = getExpectationLnW(obj)
             value = obj.W.E_SNC' * obj.alpha.E;
             value = -1/2 * value + obj.D/2 * (obj.alpha.E_LnX - obj.K.Val * log(2*pi));
