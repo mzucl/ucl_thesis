@@ -9,13 +9,13 @@ classdef RunConfig < handle
 
     properties (Access = public)
         % [Validation / Logs]
-        input_validation       % If true, performs input validation (e.g. checks dimensions, symmetry, and positive semi-definiteness of covariance matrices)
-        enable_logging         % If true, enables logging (e.g. prints ELBO progress during training)
+        inputValidation       % If true, performs input validation (e.g. checks dimensions, symmetry, and positive semi-definiteness of covariance matrices)
+        enableLogging         % If true, enables logging (e.g. prints ELBO progress during training)
         
         % [Experiment Setup]
-        elbo_recalc_interval   % Frequency (in iterations) at which the ELBO is recomputed during training
-        num_stability_runs     % Number of times the experiment is repeated to assess the stability of results
-        num_model_selection_runs % Number of times the model is trained; the one with the highest ELBO is selected
+        elboRecalcInterval     % Frequency (in iterations) at which the ELBO is recomputed during training
+        numStabilityRuns       % Number of times the experiment is repeated to assess the stability of results
+        numModelSelectionRuns  % Number of times the model is trained; the one with the highest ELBO is selected
     end
 
     methods (Access = private)
@@ -23,18 +23,17 @@ classdef RunConfig < handle
             % Initialize all properties to their default values
             obj.setDefaults();
         end
-        
+
         % Helper method to set all properties to default values
         function setDefaults(obj)
-            obj.input_validation = RunConfig.INPUT_VALIDATION_DEFAULT;
-            obj.enable_logging = RunConfig.ENABLE_LOGGING_DEFAULT;
+            obj.inputValidation = RunConfig.INPUT_VALIDATION_DEFAULT;
+            obj.enableLogging = RunConfig.ENABLE_LOGGING_DEFAULT;
 
-            obj.elbo_recalc_interval = RunConfig.ELBO_RECALC_INTERVAL_DEFAULT;
-            obj.num_stability_runs = RunConfig.NUM_STABILITY_RUNS_DEFAULT;
-            obj.num_model_selection_runs = RunConfig.NUM_MODEL_SELECTION_RUNS_DEFAULT;
+            obj.elboRecalcInterval = RunConfig.ELBO_RECALC_INTERVAL_DEFAULT;
+            obj.numStabilityRuns = RunConfig.NUM_STABILITY_RUNS_DEFAULT;
+            obj.numModelSelectionRuns = RunConfig.NUM_MODEL_SELECTION_RUNS_DEFAULT;
         end
     end
-
 
     methods (Static)
         function obj = getInstance()

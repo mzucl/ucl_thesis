@@ -22,8 +22,8 @@ FIGURES_FOLDER = 'figures';           # Default directory for saving generated f
 EXPORT_TO_PDF = false;                # Flag to control whether figures are exported to PDF format (in addition to PNG format)
 
 [Visualization]
-BLUE      = '#DAE8FC'
-PURPLE    = '#E1D5E7'
-RED       = '#F8CECC'
+BLUE = '#DAE8FC'
+PURPLE = '#E1D5E7'
+RED = '#F8CECC'
 DARK_BLUE = '#6C8EBF'
-GREEN     = '#D5E8D4'
+GREEN = '#D5E8D4'
