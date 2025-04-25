@@ -37,8 +37,6 @@ classdef SGFAGroup < BaseView
 
 
 
-
-
         %% Update methods
         function obj = qConstantUpdates(obj)
             % alpha.a
@@ -76,12 +74,6 @@ classdef SGFAGroup < BaseView
                 sum(sum(obj.W.E_XtX' .* obj.Z.E_XXt)));
 
             obj.tau.updateB(bNew);
-        end
-    
-
-        function value = getExpectationLnPW(obj)
-            value = obj.W.E_SNC' * obj.alpha.E;
-            value = -1/2 * value + obj.D/2 * (obj.alpha.E_LnX - obj.K.Val * log(2*pi));
         end
 
         % TODO (medium): The value can be reused from the qTauUpdate method

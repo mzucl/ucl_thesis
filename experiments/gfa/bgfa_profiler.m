@@ -34,14 +34,6 @@ model = BGFA({X1_train', X2_train'}, 1, K, 'B');
 
 % profile off;
 % profile viewer;
-
-%%
-Z = model.Z.E;
-W1 = model.views(1).W.E;
-W2 = model.views(2).W.E;
-mu1 = model.views(1).mu.E;
-mu2 = model.views(2).mu.E;
-
 %%
 Z = model.Z.E;
 K = size(Z, 1);

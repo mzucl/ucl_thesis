@@ -1,6 +1,3 @@
-% TODO: View should be a base class and this should inherit from it, 
-% DRY the code!
-
 classdef BinaryView < BaseView
     properties         
         xi              % [D x N] Variational parameters
@@ -10,7 +7,6 @@ classdef BinaryView < BaseView
 
     
     methods
-        %% Constructors
         function obj = BinaryView(data, Z, K, featuresInCols, bound)
             CustomError.validateNumberOfParameters(nargin, 3, 5);
             
@@ -90,7 +86,6 @@ classdef BinaryView < BaseView
             obj.mu.updateParameters(muNew, covNew);
         end
 
-
         function obj = qXiUpdate(obj)
             if isa(obj.bound, 'BohningBound')
                 xiNew = obj.W.E * obj.Z.E + obj.mu.E;
@@ -99,13 +94,6 @@ classdef BinaryView < BaseView
             end
 
             obj.bound.updateXi(xiNew);
-        end
-
-
-        % Same as for continuous view -> move to the base class View
-        function value = getExpectationLnPW(obj)
-            value = obj.W.E_SNC' * obj.alpha.E;
-            value = -1/2 * value + obj.D/2 * (obj.alpha.E_LnX - obj.K.Val * log(2*pi));
         end
 
         function value = getExpectationLnPX(obj)
