@@ -43,7 +43,7 @@ classdef BinaryView < BaseView
 
         function obj = qWUpdate(obj, it)
             alphaExp = Utility.ternary(it == 1, obj.alpha.getExpInit(true), obj.alpha.E_Diag);
-            Rt = (obj.X.X + obj.bound.T + obj.bound.H.* obj.mu.E)';
+            Rt = (obj.X.X + obj.bound.T - obj.bound.H.* obj.mu.E)';
             
             if isa(obj.bound, 'BohningBound')
                 covNew = Utility.matrixInverse(1/4 * obj.Z.E_XXt + alphaExp);

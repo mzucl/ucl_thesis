@@ -23,7 +23,7 @@ folderName = 'mnist38';
 % X2_train = X2_train(1:500, :);
 
 % profile on;
-
+tic;
 K = 10;
 %                   data,   Mc, K, bound, maxIter, tol, doRotation 
 model = BGFA({X1_train', X2_train'}, 1, K, 'B');
@@ -54,3 +54,5 @@ predictedLabels = predictedLabels';
 
 predictedLabels(predictedLabels >= 0.5) = 1;  % Set elements greater than 0 to 1
 predictedLabels(predictedLabels < 0.5) = 0; % Set elements less than 0 to -1
+
+fprintf('Elapsed time: %.4f seconds\n', toc);

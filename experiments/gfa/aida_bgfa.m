@@ -1,23 +1,22 @@
 % Clear the workspace
-close all; clear all; clc;
+close all; clearvars; clc;
 
-% Start timing
-tic;
+rc = RunConfig.getInstance();
+rc.inputValidation = false;
+rc.enableLogging = false;
 
 % Logging
 logFileName = ['logs/', mfilename, '.txt'];
 if ~exist('logs', 'dir')
     mkdir('logs');
 end
-%diary(logFileName);
 
-% Model settings
-settings = ModelSettings.getInstance();
-settings.VALIDATE = false;
-settings.DEBUG = false;
+% diary(logFileName); % start logging
+
+% Start timing
+tic;
 
 % Setup
-figsSubfolder = 'aida';
 numOfFolds = 5;
 stabilityRuns = 10;
 K = 100;

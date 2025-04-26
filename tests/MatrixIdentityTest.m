@@ -1,6 +1,6 @@
 classdef MatrixIdentityTest < matlab.unittest.TestCase
     methods (Test)
-        %% sum(an^T * an) = Tr(A^T * A)
+        %% [A.27] sum(an^T * an) = Tr(A^T * A)
         function testIdentity1(testCase)
             % Test matrices of different shapes and sizes
             mVals = [5, 5, 2, 10];
@@ -17,7 +17,7 @@ classdef MatrixIdentityTest < matlab.unittest.TestCase
         end
 
 
-        %% sum(an^T * v) = vT * A * 1 (vector of 1s)
+        %% [A.29] sum(an^T * v) = vT * A * 1 (vector of 1s)
         function testIdentity2(testCase)
             % Test matrices of different shapes and sizes
             mVals = [2, 5, 5, 2, 10];
@@ -38,7 +38,7 @@ classdef MatrixIdentityTest < matlab.unittest.TestCase
         end
 
 
-        %% sum(an^T * W * bn) = Tr(WBA^T)
+        %% [A.30] sum(an^T * W * bn) = Tr(WBA^T)
         function testIdentity3(testCase)
             % Test matrices of different shapes and sizes
             mVals = [2, 5, 5, 2, 10];
@@ -60,7 +60,7 @@ classdef MatrixIdentityTest < matlab.unittest.TestCase
         end
 
 
-        %% sum(an^T * W * v) = 1^T * A^T * W * v
+        %% [A.29 where v = W * v] sum(an^T * W * v) = 1^T * A^T * W * v
         % This one is a special case of one of the above
         function testIdentity4(testCase)
             % Test matrices of different shapes and sizes
@@ -85,7 +85,7 @@ classdef MatrixIdentityTest < matlab.unittest.TestCase
         end
 
 
-        %% sum(an * an^T) = AA^T
+        %% [A.28 where B = A] sum(an * an^T) = AA^T
         function testIdentity5(testCase)
             % Test matrices of different shapes and sizes
             mVals = [5, 5, 2, 10];
@@ -102,7 +102,7 @@ classdef MatrixIdentityTest < matlab.unittest.TestCase
         end
 
        
-        %% trace(A^T * A) = sum of squared elements of A
+        %% [A.31] trace(A^T * A) = sum of squared elements of A
         function testIdentity6(testCase)
             mVals = [5, 5, 2, 10];
             nVals = [5, 3, 7, 10];
@@ -114,7 +114,7 @@ classdef MatrixIdentityTest < matlab.unittest.TestCase
         end
         
 
-        %% trace(A * B) = dot(A'(:), B(:))
+        %% [A.32] trace(A * B) = dot(A'(:), B(:))
         function testIdentity7(testCase)
             mVals = [5, 5, 2, 10];
             nVals = [5, 3, 7, 10];
@@ -128,9 +128,9 @@ classdef MatrixIdentityTest < matlab.unittest.TestCase
         end
 
 
-        %% trace(A * B * C) = dot(AB'(:), C(:))
-            % this is the same as trace(CAB) and trace(BCA), so we can choose 
-            % which two matrices to multiply
+        %% [A.33] trace(A * B * C) = dot(AB'(:), C(:))
+        % this is the same as trace(CAB) and trace(BCA), so we can choose 
+        % which two matrices to multiply
         function testIdentity8(testCase)
             
             mVals = [5, 5, 2, 10];

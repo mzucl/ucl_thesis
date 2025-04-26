@@ -96,6 +96,7 @@ classdef GFAGroup < handle
             obj.alpha.updateAllDistributionsB(bNew);
         end
 
+        %% HUGE BUG HERE! Can't be separated like this under the expectation!!!
 
         function obj = qTauUpdate(obj)
             bNew = obj.T.prior.b + 1/2 * diag( ...

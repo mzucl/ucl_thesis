@@ -95,6 +95,7 @@ classdef GFA < handle
 
 
 
+        %% HUGE BUG HERE <W^T * T * W> cannot be separated to <W^T> <T> <W>
         %% Update methods
         function obj = qZUpdate(obj)
             covNew = zeros(obj.K.Val);
