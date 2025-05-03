@@ -300,7 +300,7 @@ classdef GaussianContainer < handle
         % Independent of the type (currently implemented)
         function obj = updateDistributionsMu(obj, mu)
             if RunConfig.getInstance().inputValidation && nargin < 2
-                error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
+                CustomError.raiseError('InputCheck', CustomError.ERR_TOO_FEW_ARGUMENTS);
             end
 
             obj.mu = mu;
@@ -311,8 +311,14 @@ classdef GaussianContainer < handle
 
         % For "DD" type 'cov' parameter must be a multidimensional array
         function obj = updateDistributionsCovariance(obj, cov)
-            if RunConfig.getInstance().inputValidation && nargin < 2
-                error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
+            if RunConfig.getInstance().inputValidation
+                if nargin < 2
+                    CustomError.raiseError('InputCheck', CustomError.ERR_TOO_FEW_ARGUMENTS);
+                end
+                if ~Utility.isValidCovarianceMatrix(cov)
+                    CustomError.raiseError('InputCheck', ...
+                    'Invalid update parameter. Ensure the sizes are correct and the covariance matrix is positive definite.');
+                end
             end
            
             obj.cov = cov;
@@ -322,10 +328,17 @@ classdef GaussianContainer < handle
         end
 
         function obj = updateDistributionsParameters(obj, mu, cov)
-            if RunConfig.getInstance().inputValidation && nargin < 3
-                error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
+            if RunConfig.getInstance().inputValidation
+                if nargin < 3
+                    CustomError.raiseError('InputCheck', CustomError.ERR_TOO_FEW_ARGUMENTS);
+                end
+                if ~Utility.isValidCovarianceMatrix(cov)
+                    CustomError.raiseError('InputCheck', ...
+                    'Invalid update parameter. Ensure the sizes are correct and the covariance matrix is positive definite.');
+                end
             end
             
+            % Update params
             obj.mu = mu;
             obj.cov = cov;
 

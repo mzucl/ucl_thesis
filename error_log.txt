@@ -2,3 +2,5 @@
 ##### ERROR [InputCheck] 2025-04-24 12:02:02 in Experiment > run: Unknown model name
 ##### ERROR [InputCheck] 2025-04-25 18:01:40 in CustomError > validateNumberOfParameters: Not enough input arguments provided.
 ##### ERROR [InputCheck] 2025-04-25 18:13:13 in CustomError > validateNumberOfParameters: Not enough input arguments provided.
+##### ERROR [InputCheck] 2025-05-03 16:36:52 in CustomError > validateNumberOfParameters: Not enough input arguments provided.
+##### ERROR [InputCheck] 2025-05-03 17:21:18 in GaussianContainer > updateDistributionsParameters: Invalid update parameter. Ensure the sizes are correct and the covariance matrix is positive definite.

@@ -24,7 +24,7 @@ classdef SGFAGroup < BaseView
 
             % Model initialization – second stage
             % The first update is for W, so we initialize all components required for
-            % the W and alpha update equations here. These include:
+            % the `W` and `alpha` update equations here. These include:
             %   obj.tau.expInit
             %   obj.alpha.expInit
             % ----------------------------------------------------------------

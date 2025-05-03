@@ -188,7 +188,7 @@ classdef Utility
             
             % Orthogonality check: R' * R should be close to the identity matrix
             shouldBeIdentity = matrix' * matrix;
-            identityMatrix = eye(rows);
+            identityMatrix = eye(size(matrix, 1));
 
             orthoCheck = norm(shouldBeIdentity - identityMatrix, 'fro') < Constants.TOL;
             

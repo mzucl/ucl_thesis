@@ -7,7 +7,7 @@ RunConfig.resetToDefaults();
 data = Datasets.generateSyntheticGFAData(2);
 
 K = 10;
-bestOverallModel = Experiment('sgfa', K, data.X_train, mfilename, '', '', '', false, false).run();
+bestOverallModel = Experiment('sgfa', K, data.X_train, mfilename, '', '', '', true, true).run();
 
 %% [NOTE] The visualization functionality is deliberately kept outside of 
 % the `Experiment` class to allow for greater flexibility and control over 

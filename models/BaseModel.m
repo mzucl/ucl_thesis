@@ -87,26 +87,26 @@ classdef (Abstract) BaseModel < handle
 
         %% Update methods
         function obj = qWUpdate(obj, it)
-            for i = 1:obj.M
-                obj.views(i).qWUpdate(it);
+            for m = 1:obj.M
+                obj.views(m).qWUpdate(it);
             end
         end
 
         function obj = qAlphaUpdate(obj)
-            for i = 1:obj.M
-                obj.views(i).qAlphaUpdate();
+            for m = 1:obj.M
+                obj.views(m).qAlphaUpdate();
             end
         end
 
         function obj = qMuUpdate(obj)
-            for i = 1:obj.M
-                obj.views(i).qMuUpdate();
+            for m = 1:obj.M
+                obj.views(m).qMuUpdate();
             end
         end
 
         function obj = qTauUpdate(obj)
-            for i = 1:obj.M
-                obj.views(i).qTauUpdate();
+            for m = 1:obj.M
+                obj.views(m).qTauUpdate();
             end
         end
 
@@ -152,6 +152,7 @@ classdef (Abstract) BaseModel < handle
         function stepUpdate(obj, it)
             obj.qZUpdate();
             obj.qWUpdate(it);
+            % obj.qZUpdate();
             obj.qMuUpdate();
             % if it > 0
             %     obj.updateRotation();

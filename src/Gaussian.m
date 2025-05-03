@@ -259,6 +259,7 @@ classdef Gaussian < handle
                     error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
                 end
     
+                % Divide this into two checks
                 if ~obj.validateCovariance(cov)
                     error(['##### ERROR IN THE THE CLASS ' class(obj) ': Invalid update parameter. ' ...
                         'Ensure the sizes are correct and the covariance matrix is positive definite.']);

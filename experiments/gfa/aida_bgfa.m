@@ -35,7 +35,7 @@ viewFileNames = {'eeg_avg_sad_neutral_quest.csv', ...
 % Labels
 y = readmatrix('datasets/aida/gender.csv', 'FileType', 'text');
 
-for i = 6:6 %length(eegViewFileNames)
+for i = 2:2 %length(eegViewFileNames)
     X = readmatrix(['datasets/aida/', viewFileNames{i}], 'FileType', 'text');
 
     cv = cvpartition(y, 'KFold', numOfFolds);
