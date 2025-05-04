@@ -193,7 +193,7 @@ classdef GammaContainer < handle
                     error(['##### ERROR IN THE CLASS ' class(obj) ': Dimensions do not match.']);
                 end
                 if ~all(b > 0)
-                    fprintf('b: %f\n', b);  % Use %d for integers, %f for floats
+                    fprintf('b: %f\n', b);
                     error(['##### ERROR IN THE CLASS ' class(obj) ': Parameter b is a strictly positive number.']);
                     
                 end

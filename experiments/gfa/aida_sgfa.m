@@ -19,7 +19,7 @@ tic;
 
 % Setup
 numOfFolds = 5;
-stabilityRuns = 10;
+numModelSelectionRuns = 10;
 K = 100;
 
 res = Results(numOfFolds); % obj
@@ -58,7 +58,7 @@ for i = 1:1 %length(viewFileNames)
         bestElbo = -inf;
         bestIter = 0;
 
-        for s = 1:stabilityRuns
+        for s = 1:numModelSelectionRuns
             model = SGFA({X_tr', y_tr'}, K, 10000, 1e-4); % Views are expected in DxN
             [elboVals, iter] = model.fit(10);
 

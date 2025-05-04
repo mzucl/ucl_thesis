@@ -28,7 +28,7 @@ classdef SGFAGroup < BaseView
             %   obj.tau.expInit
             %   obj.alpha.expInit
             % ----------------------------------------------------------------
-            obj.tau.setExpInit(1000);        
+            obj.tau.setExpInit(1e-5);        
             obj.alpha.setExpInit(repmat(1e-1, obj.K.Val, 1));
 
             % Performed only once
@@ -56,6 +56,8 @@ classdef SGFAGroup < BaseView
         end
 
         function obj = qAlphaUpdate(obj)
+            % obj.alpha.updateAllDistributionsA(obj.alpha.prior.a + obj.D/2);
+
             bNew = obj.alpha.prior.b + 1/2 * obj.W.E_SNC;
             obj.alpha.updateAllDistributionsB(bNew);
         end
@@ -68,6 +70,8 @@ classdef SGFAGroup < BaseView
         end
 
         function obj = qTauUpdate(obj)
+            % obj.tau.updateA(obj.tau.prior.a + (obj.N * obj.D)/2);
+
             bNew = obj.tau.prior.b + 1/2 * ( ...
                 obj.X.Tr_XtX - 2 * obj.mu.E_Xt * sum(obj.X.X, 2) + ...
                 obj.N * obj.mu.E_XtX - 2 * sum(sum((obj.W.E * obj.Z.E) .* (obj.X.X - obj.mu.E))) + ...

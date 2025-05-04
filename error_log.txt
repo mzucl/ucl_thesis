@@ -4,3 +4,66 @@
 ##### ERROR [InputCheck] 2025-04-25 18:13:13 in CustomError > validateNumberOfParameters: Not enough input arguments provided.
 ##### ERROR [InputCheck] 2025-05-03 16:36:52 in CustomError > validateNumberOfParameters: Not enough input arguments provided.
 ##### ERROR [InputCheck] 2025-05-03 17:21:18 in GaussianContainer > updateDistributionsParameters: Invalid update parameter. Ensure the sizes are correct and the covariance matrix is positive definite.
+##### ERROR [InputCheck] 2025-05-03 17:53:22 in GaussianContainer > updateDistributionsParameters: Invalid update parameter. Ensure the sizes are correct and the covariance matrix is positive definite.
+##### ERROR [InputCheck] 2025-05-03 17:55:16 in GaussianContainer > updateDistributionsParameters: Invalid update parameter. Ensure the sizes are correct and the covariance matrix is positive definite.
+##### ERROR [InputCheck] 2025-05-03 17:55:26 in GaussianContainer > updateDistributionsParameters: Invalid update parameter. Ensure the sizes are correct and the covariance matrix is positive definite.
+##### ERROR [InputCheck] 2025-05-03 17:55:31 in GaussianContainer > updateDistributionsParameters: Invalid update parameter. Ensure the sizes are correct and the covariance matrix is positive definite.
+##### ERROR [InputCheck] 2025-05-03 17:55:39 in GaussianContainer > updateDistributionsParameters: Invalid update parameter. Ensure the sizes are correct and the covariance matrix is positive definite.
+##### ERROR [InputCheck] 2025-05-03 17:56:33 in GaussianContainer > updateDistributionsParameters: Invalid update parameter. Ensure the sizes are correct and the covariance matrix is positive definite.
+##### ERROR [InputCheck] 2025-05-03 17:58:36 in GaussianContainer > updateDistributionsParameters: Invalid update parameter. Ensure the sizes are correct and the covariance matrix is positive definite.
+##### ERROR [InputCheck] 2025-05-03 17:59:37 in GaussianContainer > updateDistributionsParameters: Invalid update parameter. Ensure the sizes are correct and the covariance matrix is positive definite.
+##### ERROR [InputCheck] 2025-05-03 19:31:48 in GaussianContainer > updateDistributionsParameters: Invalid update parameter. Ensure the sizes are correct and the covariance matrix is positive definite.
+##### ERROR [InputCheck] 2025-05-03 19:32:22 in GaussianContainer > updateDistributionsParameters: Invalid update parameter. Ensure the sizes are correct and the covariance matrix is positive definite.
+##### ERROR [InputCheck] 2025-05-03 19:33:36 in GaussianContainer > updateDistributionsParameters: Invalid update parameter. Ensure the sizes are correct and the covariance matrix is positive definite.
+##### ERROR [InputCheck] 2025-05-03 19:33:51 in GaussianContainer > updateDistributionsParameters: Invalid update parameter. Ensure the sizes are correct and the covariance matrix is positive definite.
+##### ERROR [InputCheck] 2025-05-03 19:49:16 in GaussianContainer > updateDistributionsParameters: Invalid update parameter. Ensure the sizes are correct and the covariance matrix is positive definite.
+##### ERROR [InputCheck] 2025-05-03 19:50:12 in GaussianContainer > updateDistributionsParameters: Invalid update parameter. Ensure the sizes are correct and the covariance matrix is positive definite.
+##### ERROR [InputCheck] 2025-05-03 20:00:24 in CustomError > validateNumberOfParameters: Not enough input arguments provided.
+##### ERROR [InputCheck] 2025-05-03 20:05:33 in GaussianContainer > updateDistributionsParameters: Invalid update parameter. Ensure the sizes are correct and the covariance matrix is positive definite.
+##### ERROR [InputCheck] 2025-05-03 20:39:47 in GaussianContainer > updateDistributionsParameters: Invalid update parameter. Ensure the sizes are correct and the covariance matrix is positive definite.
+##### ERROR [InputCheck] 2025-05-03 20:40:25 in GaussianContainer > updateDistributionsParameters: Invalid update parameter. Ensure the sizes are correct and the covariance matrix is positive definite.
+##### ERROR [InputCheck] 2025-05-03 20:40:39 in GaussianContainer > updateDistributionsParameters: Invalid update parameter. Ensure the sizes are correct and the covariance matrix is positive definite.
+##### ERROR [InputCheck] 2025-05-03 20:41:15 in GaussianContainer > updateDistributionsParameters: Invalid update parameter. Ensure the sizes are correct and the covariance matrix is positive definite.
+##### ERROR [InputCheck] 2025-05-03 20:54:36 in GaussianContainer > updateDistributionsParameters: Invalid update parameter. Ensure the sizes are correct and the covariance matrix is positive definite.
+##### ERROR [InputCheck] 2025-05-03 21:04:00 in CustomError > validateNumberOfParameters: Not enough input arguments provided.
+##### ERROR [InputCheck] 2025-05-03 21:04:36 in CustomError > validateNumberOfParameters: Not enough input arguments provided.
+##### ERROR [InputCheck] 2025-05-03 21:19:07 in GaussianContainer > updateDistributionsParameters: Invalid update parameter. Ensure the sizes are correct and the covariance matrix is positive definite.
+##### ERROR [InputCheck] 2025-05-03 22:08:30 in CustomError > validateNumberOfParameters: Not enough input arguments provided.
+##### ERROR [InputCheck] 2025-05-03 22:21:32 in GaussianContainer > updateDistributionsParameters: Invalid update parameter. Ensure the sizes are correct and the covariance matrix is positive definite.
+##### ERROR [InputCheck] 2025-05-03 22:21:33 in GaussianContainer > updateDistributionsParameters: Invalid update parameter. Ensure the sizes are correct and the covariance matrix is positive definite.
+##### ERROR [InputCheck] 2025-05-03 22:21:34 in GaussianContainer > updateDistributionsParameters: Invalid update parameter. Ensure the sizes are correct and the covariance matrix is positive definite.
+##### ERROR [InputCheck] 2025-05-03 22:21:34 in GaussianContainer > updateDistributionsParameters: Invalid update parameter. Ensure the sizes are correct and the covariance matrix is positive definite.
+##### ERROR [InputCheck] 2025-05-03 22:21:34 in GaussianContainer > updateDistributionsParameters: Invalid update parameter. Ensure the sizes are correct and the covariance matrix is positive definite.
+##### ERROR [InputCheck] 2025-05-03 22:21:34 in GaussianContainer > updateDistributionsParameters: Invalid update parameter. Ensure the sizes are correct and the covariance matrix is positive definite.
+##### ERROR [InputCheck] 2025-05-03 22:21:34 in GaussianContainer > updateDistributionsParameters: Invalid update parameter. Ensure the sizes are correct and the covariance matrix is positive definite.
+##### ERROR [InputCheck] 2025-05-03 22:21:34 in GaussianContainer > updateDistributionsParameters: Invalid update parameter. Ensure the sizes are correct and the covariance matrix is positive definite.
+##### ERROR [InputCheck] 2025-05-03 22:21:34 in GaussianContainer > updateDistributionsParameters: Invalid update parameter. Ensure the sizes are correct and the covariance matrix is positive definite.
+##### ERROR [InputCheck] 2025-05-03 22:21:35 in GaussianContainer > updateDistributionsParameters: Invalid update parameter. Ensure the sizes are correct and the covariance matrix is positive definite.
+##### ERROR [InputCheck] 2025-05-03 22:21:35 in GaussianContainer > updateDistributionsParameters: Invalid update parameter. Ensure the sizes are correct and the covariance matrix is positive definite.
+##### ERROR [InputCheck] 2025-05-03 22:28:58 in CustomError > validateNumberOfParameters: Not enough input arguments provided.
+##### ERROR [InputCheck] 2025-05-03 22:28:59 in CustomError > validateNumberOfParameters: Not enough input arguments provided.
+##### ERROR [InputCheck] 2025-05-03 22:29:00 in CustomError > validateNumberOfParameters: Not enough input arguments provided.
+##### ERROR [InputCheck] 2025-05-03 22:29:00 in CustomError > validateNumberOfParameters: Not enough input arguments provided.
+##### ERROR [InputCheck] 2025-05-03 22:29:00 in CustomError > validateNumberOfParameters: Not enough input arguments provided.
+##### ERROR [InputCheck] 2025-05-03 22:29:00 in CustomError > validateNumberOfParameters: Not enough input arguments provided.
+##### ERROR [InputCheck] 2025-05-03 22:29:00 in CustomError > validateNumberOfParameters: Not enough input arguments provided.
+##### ERROR [InputCheck] 2025-05-03 22:29:00 in CustomError > validateNumberOfParameters: Not enough input arguments provided.
+##### ERROR [InputCheck] 2025-05-03 22:29:01 in CustomError > validateNumberOfParameters: Not enough input arguments provided.
+##### ERROR [InputCheck] 2025-05-03 22:29:01 in CustomError > validateNumberOfParameters: Not enough input arguments provided.
+##### ERROR [InputCheck] 2025-05-03 22:29:01 in CustomError > validateNumberOfParameters: Not enough input arguments provided.
+##### ERROR [InputCheck] 2025-05-03 22:29:01 in CustomError > validateNumberOfParameters: Not enough input arguments provided.
+##### ERROR [InputCheck] 2025-05-03 22:29:01 in CustomError > validateNumberOfParameters: Not enough input arguments provided.
+##### ERROR [InputCheck] 2025-05-03 22:29:02 in CustomError > validateNumberOfParameters: Not enough input arguments provided.
+##### ERROR [InputCheck] 2025-05-03 22:29:03 in CustomError > validateNumberOfParameters: Not enough input arguments provided.
+##### ERROR [InputCheck] 2025-05-03 22:29:04 in CustomError > validateNumberOfParameters: Not enough input arguments provided.
+##### ERROR [InputCheck] 2025-05-03 22:29:04 in CustomError > validateNumberOfParameters: Not enough input arguments provided.
+##### ERROR [InputCheck] 2025-05-03 22:47:42 in GaussianContainer > updateDistributionsParameters: Invalid update parameter. Ensure the sizes are correct and the covariance matrix is positive definite.
+##### ERROR [InputCheck] 2025-05-03 22:55:32 in GaussianContainer > updateDistributionsParameters: Invalid update parameter. Ensure the sizes are correct and the covariance matrix is positive definite.
+##### ERROR [InputCheck] 2025-05-03 22:59:56 in GaussianContainer > updateDistributionsParameters: Invalid update parameter. Ensure the sizes are correct and the covariance matrix is positive definite.
+##### ERROR [InputCheck] 2025-05-03 23:26:35 in CustomError > validateNumberOfParameters: Not enough input arguments provided.
+##### ERROR [InputCheck] 2025-05-03 23:42:33 in GaussianContainer > updateDistributionsParameters: Invalid update parameter. Ensure the sizes are correct and the covariance matrix is positive definite.
+##### ERROR [InputCheck] 2025-05-04 00:21:14 in CustomError > validateNumberOfParameters: Not enough input arguments provided.
+##### ERROR [InputCheck] 2025-05-04 00:55:19 in CustomError > validateNumberOfParameters: Not enough input arguments provided.
+##### ERROR [InputCheck] 2025-05-04 00:55:27 in CustomError > validateNumberOfParameters: Not enough input arguments provided.
+##### ERROR [InputCheck] 2025-05-04 00:56:05 in GaussianContainer > updateDistributionsParameters: Invalid update parameter. Ensure the sizes are correct and the covariance matrix is positive definite.
+##### ERROR [InputCheck] 2025-05-04 01:08:19 in GaussianContainer > updateDistributionsParameters: Invalid update parameter. Ensure the sizes are correct and the covariance matrix is positive definite.

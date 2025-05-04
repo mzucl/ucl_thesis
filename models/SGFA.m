@@ -11,7 +11,9 @@ classdef SGFA < BaseModel
             obj = obj@BaseModel(data, K, maxIter, tol, doRotation);
 
             %                         type, size_, cols, dim,     mu, cov, priorPrec
-            obj.Z = GaussianContainer("DS", obj.N, true, obj.K.Val, zeros(obj.K.Val, 1));
+            initZMu = randn(obj.K.Val, 1);
+
+            obj.Z = GaussianContainer("DS", obj.N, true, obj.K.Val, initZMu); % zeros(obj.K.Val, 1)
 
 
             for m = 1:obj.M
@@ -22,33 +24,14 @@ classdef SGFA < BaseModel
 
 
         %% Abstract methods
-        function obj = qZUpdate(obj)
-            covNew = zeros(obj.K.Val);
-            muNew = zeros(obj.K.Val, obj.N);
-
-            for m = 1:obj.M
-                view = obj.views(m);
-                covNew = covNew + view.tau.E * view.W.E_XtX;
-                muNew = muNew + view.tau.E * view.W.E_Xt * (view.X.X - view.mu.E);
-            end
-
-            covNew = Utility.matrixInverse(eye(obj.K.Val) + covNew);
-            muNew = covNew * muNew;
-
-            obj.Z.updateDistributionsParameters(muNew, covNew);
-        end
-
-        % function obj = qZUpdate(obj, it)
+        % function obj = qZUpdate(obj)
         %     covNew = zeros(obj.K.Val);
         %     muNew = zeros(obj.K.Val, obj.N);
         % 
         %     for m = 1:obj.M
         %         view = obj.views(m);
-        % 
-        %         tauExp = Utility.ternary(it == 1, view.tau.getExpInit(), view.tau.E);
-        % 
-        %         covNew = covNew + tauExp * view.W.E_XtX;
-        %         muNew = muNew + tauExp * view.W.E_Xt * (view.X.X - view.mu.E);
+        %         covNew = covNew + view.tau.E * view.W.E_XtX;
+        %         muNew = muNew + view.tau.E * view.W.E_Xt * (view.X.X - view.mu.E);
         %     end
         % 
         %     covNew = Utility.matrixInverse(eye(obj.K.Val) + covNew);
@@ -56,6 +39,25 @@ classdef SGFA < BaseModel
         % 
         %     obj.Z.updateDistributionsParameters(muNew, covNew);
         % end
+
+        function obj = qZUpdate(obj, it)
+            covNew = zeros(obj.K.Val);
+            muNew = zeros(obj.K.Val, obj.N);
+
+            for m = 1:obj.M
+                view = obj.views(m);
+
+                tauExp = Utility.ternary(it == 1, view.tau.getExpInit(), view.tau.E);
+
+                covNew = covNew + tauExp * view.W.E_XtX;
+                muNew = muNew + tauExp * view.W.E_Xt * (view.X.X - view.mu.E);
+            end
+
+            covNew = Utility.matrixInverse(eye(obj.K.Val) + covNew);
+            muNew = covNew * muNew;
+
+            obj.Z.updateDistributionsParameters(muNew, covNew);
+        end
 
 
         function elbo = computeELBO(obj)

@@ -28,8 +28,9 @@ classdef BGFA < BaseModel
 
             %% Model setup and initialization
             if bound == 'B'
+                initZMu = randn(obj.K.Val, 1);
                 %                         type, size_, cols, dim,     mu, cov, priorPrec
-                obj.Z = GaussianContainer("DS", obj.N, true, obj.K.Val, zeros(obj.K.Val, 1)); % STEP1
+                obj.Z = GaussianContainer("DS", obj.N, true, obj.K.Val, initZMu); % STEP1 % zeros(obj.K.Val, 1)
             elseif bound == 'J'
                 %                         type, size_, cols,   dim,              mu,            -- cov, priorPrec
                 obj.Z = GaussianContainer("DD", obj.N, true, obj.K.Val, randn(obj.K.Val, obj.N)); % STEP1
@@ -109,8 +110,8 @@ classdef BGFA < BaseModel
         end
 
         function stepUpdate(obj, it)
-            obj.qZUpdate();
             obj.qWUpdate(it);
+            obj.qZUpdate();
             obj.qMuUpdate();
             obj.qXiUpdate();
             % if it > 0

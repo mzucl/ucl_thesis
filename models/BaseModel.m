@@ -35,7 +35,7 @@ classdef (Abstract) BaseModel < handle
 
 
     methods (Abstract)
-        qZUpdate(obj) 
+        qZUpdate(obj, it) 
         computeELBO(obj)
     end
 
@@ -150,9 +150,9 @@ classdef (Abstract) BaseModel < handle
 
         % [NOTE] Added because in BGFA there is also `qXiUpdate`
         function stepUpdate(obj, it)
-            obj.qZUpdate();
             obj.qWUpdate(it);
-            % obj.qZUpdate();
+            obj.qZUpdate(it);
+            % obj.qZUpdate(5);
             obj.qMuUpdate();
             % if it > 0
             %     obj.updateRotation();
@@ -249,40 +249,45 @@ classdef (Abstract) BaseModel < handle
             end
         end
 
+        % [NOTE] Variables ending with '_' denote expectations
+        function [K_eff, predictionsTest] = makePredictions(obj, views, trainIdx, testIdx)
+            outputView = views{end};
+            inputViews = views(1:end-1);
 
+            N_total = size(outputView, 2);  % Total number of observations (train + test) 
+                                % [NOTE] obj.N refers only to the number of training samples
+            K_eff = size(obj.Z.E, 1);
+            sigma_Z = eye(K_eff);
+            mu_Z = zeros(K_eff, N_total); 
 
-        % Variables ending with '_' denote expectations.
-        % `X_train` and `y_train` are used solely for threshold selection.
-        function [K_eff, predictions_test] = makePredictions(obj, X_train, y_train, X_test)
-            Z_ = obj.Z.E;
-            K_eff = size(Z_, 1);
+            for m = 1:numel(inputViews)
+                view = obj.views(m);
 
-            W1_ = obj.views(1).W.E;
-            W2_ = obj.views(2).W.E;
-            mu1_ = obj.views(1).mu.E;
-            mu2_ = obj.views(2).mu.E;
-            T1_ = obj.views(1).tau.E * eye(obj.D(1));
+                W_ = view.W.E;
+                mu_ = view.mu.E;
+                tau_ = view.tau.E;
 
-            sigma_Z = Utility.matrixInverse(eye(K_eff) + W1_' * T1_ * W1_);
+                sigma_Z = sigma_Z + W_' * tau_ * W_;
+                mu_Z = mu_Z + W_' * tau_ * (inputViews{m} - mu_);
+            end
 
-            % Find the best threshold on the train data
-            MU_Z = sigma_Z * (W1_' * T1_ * (X_train' - mu1_));
+            sigma_Z = Utility.matrixInverse(sigma_Z);
+            mu_Z = sigma_Z * mu_Z;
 
             % [NOTE] Although this is a sigmoid function, the output is not 
             % a probability; it's used purely to clip values to the [0, 1] range.
-            predictions_tr = Bound.sigma(W2_ * MU_Z + mu2_);
-            [fpr, tpr, thresholds, ~] = perfcurve(y_train', predictions_tr, 1);
+            predictions = Bound.sigma(obj.views(end).W.E * mu_Z + obj.views(end).mu.E);
+
+            % Find the best threshold on the train data
+            [fpr, tpr, thresholds, ~] = perfcurve(outputView(trainIdx), predictions(trainIdx), 1);
 
             % Calculate G-means
             gMeans = sqrt(tpr .* (1 - fpr));
             [~, idx] = max(gMeans);
-            train_best_threshold = thresholds(idx);
+            bestThreshold = thresholds(idx);
 
             % Predictions on the test data
-            MU_Z = sigma_Z * (W1_' * T1_ * (X_test' - mu1_));
-            predictions_test = Bound.sigma(W2_ * MU_Z + mu2_); 
-            predictions_test = predictions_test >= train_best_threshold;
-            predictions_test = double(predictions_test');
+            predictionsTest = double(predictions(testIdx) >= bestThreshold);
         end
     end   
 end

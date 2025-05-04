@@ -15,7 +15,7 @@ DEFAULT_TOL = 1e-6                    % Tolerance for convergence in iterative a
 
 [General]
 DIAG_REGULARIZER = 1e-2               % Small positive value added to diagonals for numerical stability
-TOL = 1e-9                            % Tolerance used when comparing floating-point values: replaces exact comparison `a == b` with approximate check `abs(a - b) < TOL`  
+TOL = 1e-3                            % Tolerance used when comparing floating-point values: replaces exact comparison `a == b` with approximate check `abs(a - b) < TOL`  
 
 [Export]
 FIGURES_FOLDER = figures              % Default directory for saving generated figures

@@ -173,12 +173,21 @@ classdef Utility
         end
 
         function res = isSymmetricMatrix(matrix)
-            res = Utility.isSquareMatrix(matrix) && isequal(matrix, matrix.'); % TODO (high): consider using norm(..., 'fro') for this check
+            res = Utility.isSquareMatrix(matrix) && norm(matrix - matrix', 'fro') < Utility.getConfigValue('General', 'TOL');
         end
 
         function res = isSingular(matrix)
-            res = ~Utility.isSquareMatrix(matrix) || Utility.ternary(det(matrix) == 0, true, false);
+            if ~Utility.isSquareMatrix(matrix)
+                res = true;
+                return;
+            end
+        
+            % TODO: Add this to the config!
+            condNumber = cond(matrix);
+        
+            res = condNumber > 1e12;
         end
+
  
         function res = isRotationMatrix(matrix)
             if ~Utility.isSquareMatrix(matrix)
@@ -190,10 +199,10 @@ classdef Utility
             shouldBeIdentity = matrix' * matrix;
             identityMatrix = eye(size(matrix, 1));
 
-            orthoCheck = norm(shouldBeIdentity - identityMatrix, 'fro') < Constants.TOL;
+            orthoCheck = norm(shouldBeIdentity - identityMatrix, 'fro') < Utility.getConfigValue('General', 'TOL');
             
             % Determinant check: det(R) should be close to 1
-            detCheck = abs(det(matrix) - 1) < Constants.TOL;
+            detCheck = abs(det(matrix) - 1) < Utility.getConfigValue('General', 'TOL');
 
             res = orthoCheck && detCheck;
         end
@@ -227,7 +236,8 @@ classdef Utility
             end
         end
 
-        function res = isPositiveSemiDefinite(matrix)
+        % Positive semi-definite
+        function res = isValidCovarianceMatrix(matrix)
             if ~Utility.isSymmetricMatrix(matrix)
                 res = false;
                 return;
@@ -237,10 +247,6 @@ classdef Utility
             
             % Check if all eigenvalues are non-negative
             res = all(eigenvalues > 0);
-        end
-
-        function res = isValidCovarianceMatrix(matrix)
-            res = Utility.isPositiveSemiDefinite(matrix);
         end
 
 
@@ -332,16 +338,35 @@ classdef Utility
 
 
         %% Misc
-        function logDetA = logDetUsingCholesky(A)
-            % Perform Cholesky decomposition
-            try
-                L = chol(A, 'lower');
-            catch
-                error(['##### ERROR IN THE CLASS ' mfilename('class') ': Matrix is not positive definite.']);
-            end
+        % function logDetA = logDetUsingCholesky(A)
+        %     % Perform Cholesky decomposition
+        %     try
+        %         L = chol(A, 'lower');
+        %     catch
+        %         error(['##### ERROR IN THE CLASS ' mfilename('class') ': Matrix is not positive definite.']);
+        %     end
+        % 
+        %     logDetA = 2 * sum(log(diag(L)));
+        % end
 
-            logDetA = 2 * sum(log(diag(L)));
+        function logDetA = logDetUsingCholesky(A)
+            try
+                % Try Cholesky decomposition (requires positive definiteness)
+                L = chol(A, 'lower');
+                logDetA = 2 * sum(log(diag(L)));
+            catch
+                % Fallback for positive semi-definite matrices using SVD
+                warning(['Matrix is not positive definite. Falling back to SVD.']);
+                s = svd(A);  % Singular values (equal to abs(eigenvalues) for symmetric A)
+                
+                % Filter out zero (or near-zero) singular values to avoid log(0)
+                tol = 1e-12;
+                s = s(s > tol);
+                
+                logDetA = sum(log(s));
+            end
         end
+
 
         % Check if matrix is diagonal 'isDiagonal' and if is returns the diagonal elements
         % (element in case matrix is a scalar multiple of the identity matrix)

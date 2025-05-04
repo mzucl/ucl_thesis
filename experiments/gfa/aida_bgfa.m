@@ -2,8 +2,8 @@
 close all; clearvars; clc;
 
 rc = RunConfig.getInstance();
-rc.inputValidation = false;
-rc.enableLogging = false;
+rc.inputValidation = true;
+rc.enableLogging = true;
 
 % Logging
 logFileName = ['logs/', mfilename, '.txt'];
@@ -18,63 +18,82 @@ tic;
 
 % Setup
 numOfFolds = 5;
-stabilityRuns = 10;
+numModelSelectionRuns = 10;
 K = 100;
+baseDir = 'datasets/aida/';
 
 res = Results(numOfFolds); % obj
 resTable = table(); % table
 
-% X
-viewFileNames = {'eeg_avg_sad_neutral_quest.csv', ...
-            'eeg_full_sad_neutral_quest', ...
-            'eeg_avg_neutral.csv', ...
-            'eeg_avg_sad.csv', ...
-            'eeg_full_neutral.csv', ...
-            'eeg_full_sad.csv'};
+% [NOTE] For prediction tasks, list input views before output views.
+viewFilenames = {
+    'eeg_avg_neutral.csv', ...
+    'eeg_avg_sad', ...
+    'questionnaires.csv', ...
+    'gender.csv'
+};
+
+% [NOTE] For now this is always set to 1!
+outputViewsCnt = 1;
+
+% Initialize cell array to hold the data and read each file
+views = cell(size(viewFilenames));
+M = numel(views);
+for m = 1:M
+    filePath = fullfile(baseDir, viewFilenames{m});
+    views{m} = readmatrix(filePath, 'FileType', 'text')'; % TODO: set `featuresInCols` property
+end
 
 % Labels
-y = readmatrix('datasets/aida/gender.csv', 'FileType', 'text');
+y = views{end};
+cv = cvpartition(y, 'KFold', numOfFolds);
 
-for i = 2:2 %length(eegViewFileNames)
-    X = readmatrix(['datasets/aida/', viewFileNames{i}], 'FileType', 'text');
+for foldIdx = 1:numOfFolds
+    % Get training and testing indices
+    trainIdx = cv.training(foldIdx);
+    testIdx = cv.test(foldIdx);
 
-    cv = cvpartition(y, 'KFold', numOfFolds);
+    fprintf('Fold %d:\n', foldIdx);
+    fprintf('  Training label distribution:\n');
+    tabulate(y(trainIdx))
 
-    for foldIdx = 1:numOfFolds
-        % [X_tr, y_tr, X_te, y_te] = Datasets.trainTestSplit(X, y, true);
+    fprintf('  Test label distribution:\n');
+    tabulate(y(testIdx))
+    fprintf('\n');
 
-        % Get training and testing indices for fold 'foldIdx'
-        trainIdx = cv.training(foldIdx);
-        testIdx = cv.test(foldIdx);
-
-        % Train
-        X_tr = X(trainIdx, :); y_tr = y(trainIdx); 
-        % Test
-        X_te = X(testIdx, :); y_te = y(testIdx); 
-
-
-        bestModel = NaN;
-        bestElbo = -inf;
-        bestIter = 0;
-
-        for s = 1:stabilityRuns
-            model = BGFA({X_tr', y_tr'}, 1, K, 'B', 10000, 1e-4); % Views are expected in DxN
-            [elboVals, iter] = model.fit(10);
-
-            if elboVals(end) > bestElbo
-                bestModel = model;
-                bestElbo = elboVals(end);
-                bestIter = iter;
-            end
-        end
-
-        [K_eff, predictions_te] = bestModel.makePredictions(X_tr, y_tr, X_te);
-
-        res.computeAndAppendMetrics(foldIdx, y_te, predictions_te, K_eff, bestIter, bestElbo);
+    % Split each view
+    trainViews = cell(size(views));
+    testViews = cell(size(views));
+    
+    for v = 1:numel(views)
+        trainViews{v} = views{v}(:, trainIdx);
+        testViews{v} = views{v}(:, testIdx);
     end
 
-    resTable = [resTable; res.computeMeanAndStd('bGFA', viewFileNames{i})];  
+    bestModel = NaN;
+    bestElbo = -inf;
+    bestIter = 0;
+
+    for s = 1:numModelSelectionRuns
+        % model = BGFA(views_train, M, K, 'B', 10000, 1e-4); % Views are expected in DxN
+        model = SGFA(trainViews, K, 10000, 1e-4); % Views are expected in DxN
+        [elboVals, iter] = model.fit(10);
+
+        if elboVals(end) > bestElbo
+            bestModel = model;
+            bestElbo = elboVals(end);
+            bestIter = iter;
+        end
+    end
+
+    [K_eff, predictionsTest] = bestModel.makePredictions(views, trainIdx, testIdx);
+
+    res.computeAndAppendMetrics(foldIdx, y(testIdx), predictionsTest, K_eff, bestIter, bestElbo);
 end
+
+resTable = [resTable; res.computeMeanAndStd('bGFA', viewFilenames{m})];  
+
+
 writetable(resTable, [mfilename, '.csv']);
 
 elapsedTime = toc;
