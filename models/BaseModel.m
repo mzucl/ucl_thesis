@@ -113,7 +113,7 @@ classdef (Abstract) BaseModel < handle
 
 
         %% Model training
-        function obj = removeFactors(obj, it, threshold)
+        function obj = removeFactors_v1(obj, it, threshold)
             CustomError.validateNumberOfParameters(nargin, 2, 3);
             if nargin < 3
                 threshold = Utility.getConfigValue('Model', 'LATENT_FACTORS_THRESHOLD');
@@ -140,6 +140,49 @@ classdef (Abstract) BaseModel < handle
 
             % Update number of factors
             obj.K.Val = obj.K.Val - length(removeIdx);
+
+            % Remove those rows from Z, corresponding columns from W, and elements from alpha
+            obj.Z.removeDimensions(removeIdx);
+            for m = 1:obj.M
+                obj.views(m).alpha.removeDimensions(removeIdx);
+                obj.views(m).W.removeDimensions(removeIdx);
+            end
+        end
+
+        function removeFactors(obj, it, threshold)
+            CustomError.validateNumberOfParameters(nargin, 2, 3);
+            if nargin < 3
+                threshold = Utility.getConfigValue('Model', 'LATENT_FACTORS_THRESHOLD');
+            end
+
+            % if it < 50
+            %     return;
+            % end
+            
+            W_all = cell(1, obj.M);
+            for m = 1:obj.M
+                W_all{m} = obj.views(m).W.E;
+            end
+
+            % Get column norms for each matrix
+            colNorms = cellfun(@(W) sqrt(sum(W.^2, 1)), W_all, 'UniformOutput', false);
+            colNormsMat = vertcat(colNorms{:});
+            colsAllSmall = all(colNormsMat < threshold, 1);
+            
+            numRemovedFactors = sum(colsAllSmall);
+            if numRemovedFactors == 0
+                return;
+            end
+
+            if (RunConfig.getInstance().enableLogging)
+                factorText = Utility.ternary(numRemovedFactors == 1, 'factor', 'factors');
+                fprintf('Removed %d %s in iteration %d\n', numRemovedFactors, factorText, it);
+            end
+
+            % Update number of factors
+            obj.K.Val = obj.K.Val - numRemovedFactors;
+
+            removeIdx = find(colsAllSmall);
 
             % Remove those rows from Z, corresponding columns from W, and elements from alpha
             obj.Z.removeDimensions(removeIdx);

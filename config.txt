@@ -7,7 +7,7 @@ DEFAULT_GAUSS_PRECISION = 1           % Precision (inverse variance) of the defa
 
 [Model]
 DEFAULT_NOISE_VAL = 1e3               % Initial noise precision for observed data
-LATENT_FACTORS_THRESHOLD = 1e-9       % Threshold to prune inactive latent components
+LATENT_FACTORS_THRESHOLD = 1e-15      % Threshold to prune inactive latent components
 
 [Optimization]
 DEFAULT_MAX_ITER = 5000               % Maximum number of iterations for optimization
