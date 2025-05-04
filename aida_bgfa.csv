@@ -1,2 +1,0 @@
-Model,Dataset,No. of LF,bAcc,Specificity,Precision,Recall,F1 Score,NPV,Iterations,ELBO
-bGFA,gender.csv,15.2000 ± 3.8341,0.6713 ± 0.1021,0.7626 ± 0.0867,0.4390 ± 0.1141,0.5800 ± 0.2197,0.4936 ± 0.1556,0.8549 ± 0.0536,648.0000 ± 98.5901,-61746.6968 ± 895.8041

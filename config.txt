@@ -7,7 +7,7 @@ DEFAULT_GAUSS_PRECISION = 1           % Precision (inverse variance) of the defa
 
 [Model]
 DEFAULT_NOISE_VAL = 1e3               % Initial noise precision for observed data
-LATENT_FACTORS_THRESHOLD = 1e-6       % Threshold to prune inactive latent components
+LATENT_FACTORS_THRESHOLD = 1e-9       % Threshold to prune inactive latent components
 
 [Optimization]
 DEFAULT_MAX_ITER = 5000               % Maximum number of iterations for optimization
@@ -15,11 +15,13 @@ DEFAULT_TOL = 1e-6                    % Tolerance for convergence in iterative a
 
 [General]
 DIAG_REGULARIZER = 1e-2               % Small positive value added to diagonals for numerical stability
-TOL = 1e-3                            % Tolerance used when comparing floating-point values: replaces exact comparison `a == b` with approximate check `abs(a - b) < TOL`  
+TOL = 1e-3                            % Tolerance used when comparing floating-point values: replaces exact comparison `a == b` with approximate check `abs(a - b) < TOL`    
 
 [Export]
 FIGURES_FOLDER = figures              % Default directory for saving generated figures
 EXPORT_TO_PDF = false                 % Flag to control whether figures are exported to PDF format (in addition to PNG format)
+NUMBER_OF_DECIMAL_PLACES = 6          % Default number of decimal places for floating-point values when exporting results
+NUMBER_OF_DECIMAL_PLACES_MEAN_STD = 4 % Number of decimal places used when exporting mean ± standard deviation
 
 [Colors]
 BLUE = #DAE8FC

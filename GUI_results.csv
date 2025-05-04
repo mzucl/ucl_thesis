@@ -1,2 +1,0 @@
-Model,Dataset,No. of LF,bAcc,Specificity,Precision,Recall,F1 Score,NPV,Iterations,ELBO
-bGFA,eeg_avg_sad_neutral_quest,22.5000 ± 0.7071,0.5095 ± 0.0505,0.4118 ± 0.0000,0.6276 ± 0.0390,0.6071 ± 0.1010,0.6164 ± 0.0712,0.3937 ± 0.0619,510.0000 ± 14.1421,-42939.8929 ± 233.2099

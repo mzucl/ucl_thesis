@@ -122,6 +122,10 @@ classdef (Abstract) BaseModel < handle
             % Calculate the average of the square of elements for each row of Z
             avgSquare = mean(obj.Z.E.^2, 2);
 
+            if it < 100
+                return;
+            end
+
             removeIdx = find(avgSquare < threshold);
             if isempty(removeIdx)
                 return;
