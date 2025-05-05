@@ -17,8 +17,8 @@ end
 tic;
 
 % Setup
-numOfFolds = 10;
-numModelSelectionRuns = 10;
+numOfFolds = 1;
+numModelSelectionRuns = 2;
 K = 100;
 baseDir = 'datasets/hermes/';
 
@@ -27,7 +27,6 @@ numRuns = numOfFolds * numModelSelectionRuns;
 h = waitbar(0, 'Progress...');
 
 res = Results(numOfFolds); % obj
-summaryTable = table(); % table
 
 % [NOTE] For prediction tasks, list input views before output views.
 viewFilenames = {
@@ -60,6 +59,11 @@ y = views{end};
 
 % train_idx = readmatrix(fullfile(baseDir, ''), 'FileType', 'text');
 % test_idx = readmatrix(filePath, 'FileType', 'text');
+
+totalVars = nan(1, numOfFolds);
+factorsVars = nan(1, numOfFolds);
+varsWithin = cell(1, numOfFolds);
+relVarsWithin = cell(1, numOfFolds);
 
 for foldIdx = 1:numOfFolds
     % Get training and testing indices
@@ -120,6 +124,12 @@ for foldIdx = 1:numOfFolds
 
     [K_eff, predictionsTest] = bestModel.makePredictions(views, trainIdx, testIdx);
 
+    % Compute variances
+    totalVars(foldIdx) = bestModel.totalVar;
+    factorsVars(foldIdx) = bestModel.factorsVar;
+    varsWithin{foldIdx} = bestModel.varWithin;
+    relVarsWithin{foldIdx} = bestModel.relVarWithin;
+
     res.computeAndAppendMetrics(foldIdx, y(testIdx), predictionsTest, K_eff, bestIter, bestElbo);
 end
 
@@ -133,3 +143,43 @@ writetable(resTable, [mfilename, '.csv']);
 close(h);
 elapsedTime = toc;
 fprintf('The experiment took: %.4f seconds\n', elapsedTime);
+
+%% Sort factors
+factors = {};
+
+for i = 1:nFolds
+    W = Ws{i};
+    varWithinFactors = sum(varsWithin{i}, 1);
+    [~, sortedOrder] = sort(varWithinFactors, 'descend');
+    
+    W = W(:, sortedOrder);
+    Ws{i} = W;
+    varsWithin{i} = varsWithin{i}(:, sortedOrder);
+    relVarsWithin{i} = relVarsWithin{i}(:, sortedOrder);
+    
+    % Split W into single-column matrices and append to the factors cell array
+    for j = 1:size(W, 2)
+        factors{end+1} = W(:, j);
+    end
+end
+
+%% Cluster factors
+function clusteringLabels = clusterFactors(factors, cosineSimilarityThreshold)
+    factorsMatrix = cat(2, factors{:})';
+
+    % Compute cosine distance matrix (1 - abs cosine similarity)
+    cosSim = abs(factorsMatrix * factorsMatrix');  % Cosine similarity via dot product
+    norms = sqrt(sum(factorsMatrix.^2, 2));
+    cosSim = cosSim ./ (norms * norms');
+    cosDist = 1 - cosSim;
+
+    % Make sure diagonal is zero
+    cosDist(1:size(cosDist,1)+1:end) = 0;
+    
+    % Run DBSCAN
+    epsilon = 1 - cosineSimilarityThreshold;
+    minPts = 1;
+    clusteringLabels = dbscan(squareform(cosDist), epsilon, minPts, 'Distance', 'precomputed');
+end
+
+clusteringLabels = clusterFactors(factors, 0.99);

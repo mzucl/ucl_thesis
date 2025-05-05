@@ -12,6 +12,12 @@ classdef (Abstract) BaseModel < handle
         doRotation
     end
 
+    properties (Access = private)
+        % [NOTE] Not a dependent property because it needs to be sorted at
+        % some point
+        W               % The `big W` matrix, containing the `W` matrices of all views
+    end
+
     % The next two sections of variables support `dependent properties` that 
     % are initialized in the constructor and should remain immutable afterward
     properties (Dependent, SetAccess = private)
@@ -28,8 +34,13 @@ classdef (Abstract) BaseModel < handle
     end
 
     properties (Access = public, Dependent)
-        W               % The `big W` matrix, containing the `W` matrices of all views
         alpha           % The `big alpha` matrix, containing the `alpha` vectors of all views
+        totalVar
+        factorsVar
+        varWithin
+        nonRelVarWithin
+        relVarWithin
+        factors
     end
 
 
@@ -251,6 +262,7 @@ classdef (Abstract) BaseModel < handle
                 if elboIdx ~= 1 && abs(currElbo - prevElbo) / abs(currElbo) < obj.tol
                     fprintf('### Convergence at iteration: %d\n', it);
                     elboVals = elboVals(1:elboIdx); % cut the -Inf values at the end
+                    obj.initW();
                     break;
                 end
 
@@ -277,16 +289,8 @@ classdef (Abstract) BaseModel < handle
             value = obj.D_;
         end
 
-        function value = get.W(obj)
-            totalD = sum(obj.D);
-            value = zeros(totalD, obj.K.Val);
-
-            d = 0;
-            for m = 1:obj.M
-                Dm = obj.views(m).D;
-                value(d + 1 : d + Dm, :) = obj.views(m).W.E;
-                d = d + Dm;
-            end
+        function value = getW(obj)
+            value = obj.W;
         end
 
         function value = get.alpha(obj)
@@ -294,6 +298,54 @@ classdef (Abstract) BaseModel < handle
             for m = 1:obj.M
                 value(:, m) = obj.views(m).alpha.E;
             end
+        end
+
+        function val = get.totalVar(obj)
+            val = 0;
+            for m = 1:obj.M
+                view = obj.views(m);
+                W_ = view.W.E;
+                tau_ = view.tau.E;
+                val = val + trace(W_ * W_' + (1 / tau_) * eye(size(W_, 1)));
+            end
+        end
+    
+        function val = get.factorsVar(obj)
+            val = 0;
+            for m = 1:obj.M
+                view = obj.views(m);
+                W_ = view.W.E;
+                val = val + trace(W_ * W_');
+            end
+        end
+
+        function val = get.nonRelVarWithin(obj)
+            val = zeros(obj.M, obj.K.Val);
+            for m = 1:obj.M
+                W_ = obj.views(m).W.E;
+                for k = 1:obj.K.Val
+                    val(m, k) = sum(W_(:, k).^2);
+                end
+            end
+        end
+    
+        function val = get.varWithin(obj)
+            val = obj.nonRelVarWithin / obj.totalVar * 100;
+        end
+    
+        function val = get.relVarWithin(obj)
+            val = zeros(obj.M, obj.K.Val);
+            vw = obj.varWithin;
+            for m = 1:obj.M
+                rowSum = sum(vw(m, :));
+                if rowSum > 0
+                    val(m, :) = vw(m, :) / rowSum * 100;
+                end
+            end
+        end
+
+        function val = getFactors(obj)
+            
         end
 
         % [NOTE] Variables ending with '_' denote expectations
@@ -336,5 +388,26 @@ classdef (Abstract) BaseModel < handle
             % Predictions on the test data
             predictionsTest = double(predictions(testIdx) >= bestThreshold);
         end
-    end   
+    end
+
+    methods (Access = private)
+        function obj = setW(obj, newW)
+            if size(newW) ~= size(obj.W)
+                CustomError.raiseError('InputCheck', 'Dims!');
+            end
+            obj.W = newW;
+        end
+
+        function obj = initW(obj)
+            totalD = sum(obj.D);
+            obj.W = zeros(totalD, obj.K.Val);
+        
+            d = 0;
+            for m = 1:obj.M
+                Dm = obj.views(m).D;
+                obj.W(d + 1 : d + Dm, :) = obj.views(m).W.E;
+                d = d + Dm;
+            end
+        end
+    end
 end
