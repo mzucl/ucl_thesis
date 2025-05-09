@@ -12,18 +12,16 @@ classdef (Abstract) BaseModel < handle
         doRotation
     end
 
-    properties (Access = private)
-        % [NOTE] Not a dependent property because it needs to be sorted at
+    % TODO: Update the comment below, public dependent are mutable!!! and
+    % for them we need backing vars becasue -> they need to be sorted (changed) at
         % some point
-        W               % The `big W` matrix, containing the `W` matrices of all views
-    end
-
     % The next two sections of variables support `dependent properties` that 
     % are initialized in the constructor and should remain immutable afterward
     properties (Dependent, SetAccess = private)
         M               % Number of views/groups
         N               % Number of observations
         D               % Array containing dimensions for each view
+        W               % The `big W` matrix, containing the `W` matrices of all views
     end
 
     % Backing variables
@@ -31,6 +29,12 @@ classdef (Abstract) BaseModel < handle
         M_
         N_
         D_
+        W_       
+        totalVar_
+        factorsVar_
+        varWithin_
+        nonRelVarWithin_
+        relVarWithin_
     end
 
     properties (Access = public, Dependent)
@@ -40,7 +44,6 @@ classdef (Abstract) BaseModel < handle
         varWithin
         nonRelVarWithin
         relVarWithin
-        factors
     end
 
 
@@ -262,7 +265,6 @@ classdef (Abstract) BaseModel < handle
                 if elboIdx ~= 1 && abs(currElbo - prevElbo) / abs(currElbo) < obj.tol
                     fprintf('### Convergence at iteration: %d\n', it);
                     elboVals = elboVals(1:elboIdx); % cut the -Inf values at the end
-                    obj.initW();
                     break;
                 end
 
@@ -289,10 +291,7 @@ classdef (Abstract) BaseModel < handle
             value = obj.D_;
         end
 
-        function value = getW(obj)
-            value = obj.W;
-        end
-
+        % TODO: Add caching here?
         function value = get.alpha(obj)
             value = zeros(obj.K.Val, obj.M);
             for m = 1:obj.M
@@ -300,55 +299,164 @@ classdef (Abstract) BaseModel < handle
             end
         end
 
-        function val = get.totalVar(obj)
-            val = 0;
+        % TODO: make private
+        function value = computeW(obj)
+            totalD = sum(obj.D);
+            value = zeros(totalD, obj.K.Val);
+        
+            d = 0;
             for m = 1:obj.M
-                view = obj.views(m);
-                W_ = view.W.E;
-                tau_ = view.tau.E;
-                val = val + trace(W_ * W_' + (1 / tau_) * eye(size(W_, 1)));
-            end
-        end
-    
-        function val = get.factorsVar(obj)
-            val = 0;
-            for m = 1:obj.M
-                view = obj.views(m);
-                W_ = view.W.E;
-                val = val + trace(W_ * W_');
+                Dm = obj.views(m).D;
+                value(d + 1 : d + Dm, :) = obj.views(m).W.E;
+                d = d + Dm;
             end
         end
 
-        function val = get.nonRelVarWithin(obj)
-            val = zeros(obj.M, obj.K.Val);
+        % TODO: make private + move the comment to the declaration section
+        % Total variance including the noise and ALL views
+        function value = computeTotalVar(obj)
+            value = 0;
             for m = 1:obj.M
-                W_ = obj.views(m).W.E;
+                view = obj.views(m);
+                W_exp = view.W.E;
+                tau_exp = view.tau.E;
+                value = value + trace(W_exp * W_exp' + (1 / tau_exp) * eye(size(W_exp, 1)));
+            end
+        end
+
+        % Total factor variance (not including noise), for all views and all factors
+        function value = computeFactorsVar(obj)
+            value = 0;
+            for m = 1:obj.M
+                view = obj.views(m);
+                W_exp = view.W.E;
+                value = value + trace(W_exp * W_exp');
+            end
+        end
+
+        function value = computeNonRelVarWithin(obj)
+            value = zeros(obj.M, obj.K.Val);
+            for m = 1:obj.M
+                W_exp = obj.views(m).W.E;
                 for k = 1:obj.K.Val
-                    val(m, k) = sum(W_(:, k).^2);
+                    value(m, k) = sum(W_exp(:, k).^2);
                 end
             end
         end
-    
-        function val = get.varWithin(obj)
-            val = obj.nonRelVarWithin / obj.totalVar * 100;
-        end
-    
-        function val = get.relVarWithin(obj)
-            val = zeros(obj.M, obj.K.Val);
+
+        function value = computeRelVarWithin(obj)
+            value = zeros(obj.M, obj.K.Val);
             vw = obj.varWithin;
             for m = 1:obj.M
                 rowSum = sum(vw(m, :));
                 if rowSum > 0
-                    val(m, :) = vw(m, :) / rowSum * 100;
+                    value(m, :) = vw(m, :) / rowSum * 100;
                 end
             end
         end
 
-        function val = getFactors(obj)
-            
+        function value = computeVarWithin(obj)
+            value = obj.nonRelVarWithin / obj.totalVar * 100;
         end
 
-        % [NOTE] Variables ending with '_' denote expectations
+        function value = get.W(obj)
+            if isempty(obj.W_)
+                obj.W_ = obj.computeW();
+            end
+            value = obj.W_;
+        end
+
+        function set.W(obj, W)
+            if size(W) ~= size(obj.W)
+                CustomError.raiseError('InputCheck', 'Dims!'); % TODO!
+            end
+            obj.W_ = W;
+        end
+
+        function value = get.totalVar(obj)
+            if isempty(obj.totalVar_)
+                obj.totalVar_ = obj.computeTotalVar();
+            end
+            value = obj.totalVar_;
+        end
+
+        function set.totalVar(obj, totalVar)
+            % TODO: Validate value
+            obj.totalVar_ = totalVar;
+        end
+
+        function value = get.factorsVar(obj)
+            if isempty(obj.factorsVar_)
+                obj.factorsVar_ = obj.computeFactorsVar();
+            end
+            value = obj.factorsVar_;
+        end
+
+        function set.factorsVar(obj, factorsVar)
+            % TODO: Validate value (dim at least)
+            obj.factorsVar_ = factorsVar;
+        end
+
+        function value = get.nonRelVarWithin(obj)
+            if isempty(obj.nonRelVarWithin_)
+                obj.nonRelVarWithin_ = obj.computeNonRelVarWithin();
+            end
+            value = obj.nonRelVarWithin_;
+        end
+
+        function set.nonRelVarWithin(obj, nonRelVarWithin)
+            % TODO: Validate value (dim at least)
+            obj.nonRelVarWithin_ = nonRelVarWithin;
+        end
+
+        function value = get.relVarWithin(obj)
+            if isempty(obj.relVarWithin_)
+                obj.relVarWithin_ = obj.computeRelVarWithin();
+            end
+            value = obj.relVarWithin_;
+        end
+
+        function set.relVarWithin(obj, relVarWithin)
+            % TODO: Validate value (dim at least)
+            obj.relVarWithin_ = relVarWithin;
+        end
+
+        function value = get.varWithin(obj)
+            if isempty(obj.varWithin_)
+                obj.varWithin_ = obj.computeVarWithin();
+            end
+            value = obj.varWithin_;
+        end
+
+        function set.varWithin(obj, varWithin)
+            % TODO: Validate value (dim at least)
+            obj.varWithin_ = varWithin;
+        end
+
+
+
+    
+      
+    
+
+
+
+
+        function factors = getFactors(obj)
+            factors = cell(1, obj.K.Val);
+            varWithinFactors = sum(obj.varWithin, 1);
+            [~, sortedOrder] = sort(varWithinFactors, 'descend');
+            
+            obj.setW(obj.W(:, sortedOrder));
+
+            % TODO: Think about this
+            % varsWithin{i} = varsWithin{i}(:, sortedOrder);
+            % relVarsWithin{i} = relVarsWithin{i}(:, sortedOrder);
+           for k = 1:size(obj.W, 2)
+                factors{k} = obj.W(:, k);
+            end
+        end
+
         function [K_eff, predictionsTest] = makePredictions(obj, views, trainIdx, testIdx)
             outputView = views{end};
             inputViews = views(1:end-1);
@@ -362,12 +470,12 @@ classdef (Abstract) BaseModel < handle
             for m = 1:numel(inputViews)
                 view = obj.views(m);
 
-                W_ = view.W.E;
-                mu_ = view.mu.E;
-                tau_ = view.tau.E;
+                W_exp = view.W.E;
+                mu_exp = view.mu.E;
+                tau_exp = view.tau.E;
 
-                sigma_Z = sigma_Z + W_' * tau_ * W_;
-                mu_Z = mu_Z + W_' * tau_ * (inputViews{m} - mu_);
+                sigma_Z = sigma_Z + W_exp' * tau_exp * W_exp;
+                mu_Z = mu_Z + W_exp' * tau_exp * (inputViews{m} - mu_exp);
             end
 
             sigma_Z = Utility.matrixInverse(sigma_Z);
@@ -387,27 +495,6 @@ classdef (Abstract) BaseModel < handle
 
             % Predictions on the test data
             predictionsTest = double(predictions(testIdx) >= bestThreshold);
-        end
-    end
-
-    methods (Access = private)
-        function obj = setW(obj, newW)
-            if size(newW) ~= size(obj.W)
-                CustomError.raiseError('InputCheck', 'Dims!');
-            end
-            obj.W = newW;
-        end
-
-        function obj = initW(obj)
-            totalD = sum(obj.D);
-            obj.W = zeros(totalD, obj.K.Val);
-        
-            d = 0;
-            for m = 1:obj.M
-                Dm = obj.views(m).D;
-                obj.W(d + 1 : d + Dm, :) = obj.views(m).W.E;
-                d = d + Dm;
-            end
         end
     end
 end

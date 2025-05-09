@@ -18,4 +18,4 @@ Visualization.plotLatentFactors(bestOverallModel.Z.E, 'Inferred latent factors',
 
 %% Visualize loadings and alpha
 Visualization.plotFactorLoadingsAndAlpha(data.W, data.D, data.alpha, 'bottom', '', 2.5, 'True $\mathbf{W}^\top$ and \boldmath{$\alpha$}$^\top$');
-Visualization.plotFactorLoadingsAndAlpha(bestOverallModel.getW(), bestOverallModel.D, bestOverallModel.alpha, 'bottom', '', 2.5, 'Inferred $\mathbf{W}^\top$ and \boldmath{$\alpha$}$^\top$');
+Visualization.plotFactorLoadingsAndAlpha(bestOverallModel.W(), bestOverallModel.D, bestOverallModel.alpha, 'bottom', '', 2.5, 'Inferred $\mathbf{W}^\top$ and \boldmath{$\alpha$}$^\top$');

@@ -64,6 +64,7 @@ totalVars = nan(1, numOfFolds);
 factorsVars = nan(1, numOfFolds);
 varsWithin = cell(1, numOfFolds);
 relVarsWithin = cell(1, numOfFolds);
+factors = {};
 
 for foldIdx = 1:numOfFolds
     % Get training and testing indices
@@ -129,6 +130,7 @@ for foldIdx = 1:numOfFolds
     factorsVars(foldIdx) = bestModel.factorsVar;
     varsWithin{foldIdx} = bestModel.varWithin;
     relVarsWithin{foldIdx} = bestModel.relVarWithin;
+    factors = [factors, bestModel.getFactors()];
 
     res.computeAndAppendMetrics(foldIdx, y(testIdx), predictionsTest, K_eff, bestIter, bestElbo);
 end
@@ -139,29 +141,11 @@ writetable(summaryTable, [mfilename, 'summary', '.csv']);
 
 resTable = res.storeResult();
 writetable(resTable, [mfilename, '.csv']);
+
 %% Print summary 
 close(h);
 elapsedTime = toc;
 fprintf('The experiment took: %.4f seconds\n', elapsedTime);
-
-%% Sort factors
-factors = {};
-
-for i = 1:nFolds
-    W = Ws{i};
-    varWithinFactors = sum(varsWithin{i}, 1);
-    [~, sortedOrder] = sort(varWithinFactors, 'descend');
-    
-    W = W(:, sortedOrder);
-    Ws{i} = W;
-    varsWithin{i} = varsWithin{i}(:, sortedOrder);
-    relVarsWithin{i} = relVarsWithin{i}(:, sortedOrder);
-    
-    % Split W into single-column matrices and append to the factors cell array
-    for j = 1:size(W, 2)
-        factors{end+1} = W(:, j);
-    end
-end
 
 %% Cluster factors
 function clusteringLabels = clusterFactors(factors, cosineSimilarityThreshold)
