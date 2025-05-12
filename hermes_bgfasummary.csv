@@ -1,2 +1,0 @@
-Model,Dataset,No. of LF,bAcc,Precision,Recall,F1 Score,NPV,Specificity,No. of Iterations,ELBO
-BGFA,HERMES,70.0000 ± 0.0000,0.4107 ± 0.0000,0.4000 ± 0.0000,0.5714 ± 0.0000,0.4706 ± 0.0000,0.4000 ± 0.0000,0.2500 ± 0.0000,370.0000 ± 0.0000,-131716.1699 ± 0.0000

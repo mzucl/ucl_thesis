@@ -94,17 +94,16 @@ classdef GFA < handle
         end
 
 
-
-        %% HUGE BUG HERE <W^T * T * W> cannot be separated to <W^T> <T> <W>
         %% Update methods
         function obj = qZUpdate(obj)
             covNew = zeros(obj.K.Val);
             sum_WtTX = zeros(obj.K.Val, obj.N); % for mu update
 
             for m = 1:obj.M
-                WtT = obj.views(m).W.E_Xt * obj.views(m).T.E_Diag;
-                covNew = covNew + obj.views(m).W.E_Xt * obj.views(m).T.E_Diag * obj.views(m).W.E;
-                sum_WtTX = sum_WtTX + WtT * obj.views(m).X.X;
+                view = obj.views(m);
+                WtT = view.W.E_Xt * view.T.E_Diag;
+                covNew = covNew + view.W.getExpXtDX(view.T.E_Diag, true);
+                sum_WtTX = sum_WtTX + WtT * view.X.X;
             end
 
             covNew = Utility.matrixInverse(eye(obj.K.Val) + covNew);

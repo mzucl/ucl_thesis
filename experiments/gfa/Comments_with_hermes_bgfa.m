@@ -287,31 +287,24 @@ end
 % FVisualization.plotStableFactorsMatrix(factors_Ws, d, featureLabels, true);
 
 
-return;
-%% Execute Python code from MATLAB
-% Caught unexpected exception of unknown type. in line 185 in
-% visualisation.py file
-
-% STEP 1
-pyenv('Version', '/opt/anaconda3/envs/matlab_env/bin/python');
-
-% STEP 2
-visualisation_instance = py.visualisation.Visualisation('python_plots');
-
-% ...
-py.help('visualisation');
-
+%%
+stableFactors(end) = []; % TODO: Delete, check what is wrong with last factor
 factors_Ws = cell(1, numel(stableFactors));
 
 for i = 1:numel(stableFactors)
-    factors_Ws{i} = round(stableFactors{i}.allWs, 5);
+    tmp = stableFactors{i}.allWs;
+    if iscell(tmp)
+        tmp = cell2mat(tmp')';  % Convert to 10x738 matrix
+    end
+    factors_Ws{i} = round(tmp, 5);
 end
 
-% Convert to Python list
+
 py_factors_Ws = py.list();
 for i = 1:numel(factors_Ws)
     py_factors_Ws.append(py.numpy.array(factors_Ws{i}));
 end
+
 
 visualisation_instance.plot_stable_factors_matrix( ...
     py_factors_Ws, ...

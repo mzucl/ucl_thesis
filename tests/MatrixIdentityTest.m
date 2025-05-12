@@ -132,7 +132,6 @@ classdef MatrixIdentityTest < matlab.unittest.TestCase
         % this is the same as trace(CAB) and trace(BCA), so we can choose 
         % which two matrices to multiply
         function testIdentity8(testCase)
-            
             mVals = [5, 5, 2, 10];
             nVals = [5, 3, 7, 10];
             kVals = [5, 5, 12, 15];
@@ -143,6 +142,44 @@ classdef MatrixIdentityTest < matlab.unittest.TestCase
 
                 AB_tr = (A * B)';
                 testCase.verifyEqual(trace(A * B * C), dot(AB_tr(:), C(:)));
+            end 
+        end
+    
+        %% WAW' = sum(sum(a_kl * w_k * w_l'))
+        function testIdentity9(testCase)
+            dVals = [5, 5, 2, 10];
+            kVals = [5, 5, 12, 15];
+            for i = 1:length(dVals)
+                W = Utility.generateRandomIntMatrix(dVals(i), kVals(i));
+                A = Utility.generateRandomIntMatrix(kVals(i), kVals(i));
+
+                res = W * A * W';
+                sum = 0;
+                for k = 1:kVals(i)
+                    for l = 1:kVals(i)
+                        sum = sum + A(k, l) * W(:, k) * W(:, l)';
+                    end
+                end
+                   
+                testCase.verifyEqual(sum, res);
+            end 
+        end
+
+        % %% sum(sum(a_kl * mu(k, :)' * mu(l, :))) = A x (mu * mu') where x is element size
+        %% mu(k, :)' * mu(l, :) are elements of mu * mu'
+        function testIdentity10(testCase)
+            dVals = [5, 5, 2, 10];
+            kVals = [5, 5, 12, 15];
+            for i = 1:length(dVals)
+                MU = Utility.generateRandomIntMatrix(kVals(i), dVals(i));
+                
+                res = MU * MU';
+
+                for k = 1:kVals(i)
+                    for l = 1:kVals(i)
+                        testCase.verifyEqual(MU(k, :)' * MU(l, :), res(k, l));
+                    end
+                end
             end 
         end
     end

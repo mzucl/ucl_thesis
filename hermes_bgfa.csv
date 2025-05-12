@@ -1,2 +1,0 @@
-Model,No. of LF,bAcc,Precision,Recall,F1 Score,NPV,Specificity,No. of Iterations,ELBO
-1,70,0.410714,0.400000,0.571429,0.470588,0.400000,0.250000,370,-131716.169877

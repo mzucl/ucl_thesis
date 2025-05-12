@@ -22,6 +22,7 @@ classdef (Abstract) BaseModel < handle
         N               % Number of observations
         D               % Array containing dimensions for each view
         W               % The `big W` matrix, containing the `W` matrices of all views
+        tau             % The `big tau` matrix, containing the `tau` matrices (TODO I did matrices becuase of Irina's code) of all views
     end
 
     % Backing variables
@@ -29,7 +30,8 @@ classdef (Abstract) BaseModel < handle
         M_
         N_
         D_
-        W_       
+        W_   
+        tau_
         totalVar_
         factorsVar_
         varWithin_
@@ -312,6 +314,16 @@ classdef (Abstract) BaseModel < handle
             end
         end
 
+        function value = computeTau(obj) 
+            tau_values = cell(1, obj.M);
+
+            for m = 1:obj.M
+                tau_values{m} = obj.views(m).tau.E * ones(obj.views(m).D, 1);
+            end
+            
+            value = vertcat(tau_values{:});
+        end
+
         % TODO: make private + move the comment to the declaration section
         % Total variance including the noise and ALL views
         function value = computeTotalVar(obj)
@@ -364,6 +376,13 @@ classdef (Abstract) BaseModel < handle
                 obj.W_ = obj.computeW();
             end
             value = obj.W_;
+        end
+
+        function value = get.tau(obj)
+            if isempty(obj.tau_)
+                obj.tau_ = obj.computeTau();
+            end
+            value = obj.tau_;
         end
 
         function set.W(obj, W)
@@ -433,26 +452,18 @@ classdef (Abstract) BaseModel < handle
             obj.varWithin_ = varWithin;
         end
 
-
-
-    
-      
-    
-
-
-
-
+        % TODO: Add desc. Sorts factors based on variances in descending order, and stores
+        % then within object (factors) for clustering.
         function factors = getFactors(obj)
             factors = cell(1, obj.K.Val);
             varWithinFactors = sum(obj.varWithin, 1);
             [~, sortedOrder] = sort(varWithinFactors, 'descend');
             
-            obj.setW(obj.W(:, sortedOrder));
-
-            % TODO: Think about this
-            % varsWithin{i} = varsWithin{i}(:, sortedOrder);
-            % relVarsWithin{i} = relVarsWithin{i}(:, sortedOrder);
-           for k = 1:size(obj.W, 2)
+            obj.W = obj.W(:, sortedOrder);
+            obj.varWithin = obj.varWithin(:, sortedOrder);
+            obj.relVarWithin = obj.relVarWithin(:, sortedOrder);
+            
+            for k = 1:size(obj.W, 2)
                 factors{k} = obj.W(:, k);
             end
         end
