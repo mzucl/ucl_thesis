@@ -48,15 +48,17 @@ classdef BGFA < BaseModel
 
 
         %% Abstract methods
-        function obj = qZUpdate(obj)
+        function obj = qZUpdate(obj, it)
             if obj.bound == 'B'
                 covNew = zeros(obj.K.Val);
                 muNew = zeros(obj.K.Val, obj.N);
     
                 for m = 1:obj.Mc
                     view = obj.views(m);
-                    covNew = covNew + view.tau.E * view.W.E_XtX;
-                    muNew = muNew + view.tau.E * view.W.E_Xt * (view.X.X - view.mu.E);
+                    tauExp = Utility.ternary(it == 1, view.tau.getExpInit(), view.tau.E);
+
+                    covNew = covNew + tauExp * view.W.E_XtX;
+                    muNew = muNew + tauExp * view.W.E_Xt * (view.X.X - view.mu.E);
                 end
 
                 for m = obj.Mc + 1:obj.M
@@ -111,7 +113,7 @@ classdef BGFA < BaseModel
 
         function stepUpdate(obj, it)
             obj.qWUpdate(it);
-            obj.qZUpdate();
+            obj.qZUpdate(it);
             obj.qMuUpdate();
             obj.qXiUpdate();
             % if it > 0

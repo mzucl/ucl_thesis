@@ -1,17 +1,12 @@
-%% Clear the workspace
+% Clear the workspace
 close all; clearvars; clc;
 
-
+rc = RunConfig.getInstance();
+rc.inputValidation = false;
+rc.enableLogging = false;
 
 %% Generate dataset
-[X, D] = Datasets.generateBPCA();
-
-
-
-%% Train model
-settings = ModelSettings.getInstance();
-settings.VALIDATE = false;
-settings.DEBUG = false;
+[X, D] = Datasets.generateSyntheticBPCAData();
 
 % PPCA
 [W_PPCA, sigmaSq] = PPCA(X, D - 1); % PPCA expects X in [N x D] format

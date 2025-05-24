@@ -1,3 +1,7 @@
+% Author: Mediha Zukic
+% Contact: mediha.zukic.23@alumni.ucl.ac.uk
+% Date: 2025-05-13
+
 % NaN == NaN -> 0
 % NaN ~= NaN -> 1
 

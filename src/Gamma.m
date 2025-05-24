@@ -1,3 +1,7 @@
+% Author: Mediha Zukic
+% Contact: mediha.zukic.23@alumni.ucl.ac.uk
+% Date: 2025-05-13
+
 % The Gamma distribution is the distribution of the sum of 
 % independent exponential random variables. It is characterized by:
 % 

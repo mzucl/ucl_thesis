@@ -1,7 +1,7 @@
 classdef (Abstract) BaseModel < handle
     properties
         % Model parameters
-        K               % Number of latent dimensions/principal components
+        K               % Number of latent dimensions/principal components for BPCA
         Z               % [K x N] GaussianContainer [size: N; for each latent variable zn]
         views           % An array of views
 
@@ -170,10 +170,6 @@ classdef (Abstract) BaseModel < handle
             if nargin < 3
                 threshold = Utility.getConfigValue('Model', 'LATENT_FACTORS_THRESHOLD');
             end
-
-            % if it < 50
-            %     return;
-            % end
             
             W_all = cell(1, obj.M);
             for m = 1:obj.M
@@ -215,7 +211,6 @@ classdef (Abstract) BaseModel < handle
         function stepUpdate(obj, it)
             obj.qWUpdate(it);
             obj.qZUpdate(it);
-            % obj.qZUpdate(5);
             obj.qMuUpdate();
             % if it > 0
             %     obj.updateRotation();

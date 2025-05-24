@@ -28,17 +28,10 @@ classdef BPCA < handle
         D   % Dimensionality
     end
 
-    properties(Access = private, Constant)
-        SETTINGS = ModelSettings.getInstance();
-    end
-    
     methods
         function obj = BPCA(X, W_init, maxIter, tol)
-            % Optional parameters: W_init, maxIter, tol
-            if nargin < 1
-                error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
-            end
-            
+            CustomError.validateNumberOfParameters(nargin, 1, 4);
+
             obj.view = ViewHandler(X, false);
             obj.N = obj.view.N;
             obj.D = obj.view.D;
@@ -47,20 +40,17 @@ classdef BPCA < handle
             % passed in as a parameter
             obj.K = obj.D - 1;
 
-            % Set default values
-            obj.maxIter = BPCA.SETTINGS.DEFAULT_MAX_ITER;
-            obj.tol = BPCA.SETTINGS.DEFAULT_TOL;
-            muWInit = randn(obj.K, obj.D);
 
-            if nargin > 1
-                muWInit = W_init'; % mean of W is stored in columns even thought cols = false for obj.W
-                if nargin > 2
-                    obj.maxIter = maxIter;
-                    if nargin > 3
-                        obj.tol = tol;
-                    end
-                end
-            end
+            % Set default values
+            if nargin < 4, tol = Utility.getConfigValue('Optimization', 'DEFAULT_TOL'); end
+            if nargin < 3, maxIter = Utility.getConfigValue('Optimization', 'DEFAULT_MAX_ITER'); end
+            if nargin < 2, W_init = randn(obj.K, obj.D)'; end
+
+            % TODO: Why transpose above: mean of W is stored in columns even thought cols = false for obj.W
+            
+            obj.maxIter = maxIter;
+            obj.tol = tol;
+           
 
             %% Model setup and initialization
             %                         type, size_, cols, dim,     mu, cov, priorPrec
@@ -73,10 +63,13 @@ classdef BPCA < handle
             obj.alpha = GammaContainer("SD", obj.K);
             
             %                         type, size_, cols,   dim,   mu, cov, priorPrec
-            obj.W = GaussianContainer("DS", obj.D, false, obj.K, muWInit);
+            obj.W = GaussianContainer("DS", obj.D, false, obj.K, W_init');
             
             %
-            tauPrior = Gamma(BPCA.SETTINGS.DEFAULT_GAMMA_A, BPCA.SETTINGS.DEFAULT_GAMMA_B);
+            tauPrior = Gamma( ...
+                Utility.getConfigValue('Distribution', 'DEFAULT_GAMMA_A'), ...
+                Utility.getConfigValue('Distribution', 'DEFAULT_GAMMA_B'));
+
             obj.tau = Gamma(tauPrior);
 
             % Init model
@@ -179,7 +172,7 @@ classdef BPCA < handle
                 currElbo = obj.computeELBO();
                 elboVals(elboIdx) = currElbo;
                 
-                if BPCA.SETTINGS.DEBUG
+                if RunConfig.getInstance().enableLogging
                     if elboIdx ~= 1
                         disp(['======= ELBO increased by: ', num2str(currElbo - elboVals(elboIdx - 1))]);
                     end

@@ -1,3 +1,7 @@
+% Author: Mediha Zukic
+% Contact: mediha.zukic.23@alumni.ucl.ac.uk
+% Date: 2025-05-13
+
 %% Clear the workspace
 % Use clearvars when you just want to reset variables without wiping the whole environment. 
 % Use clear all when you want a completely clean slate.

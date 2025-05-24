@@ -1,3 +1,7 @@
+% Author: Mediha Zukic
+% Contact: mediha.zukic.23@alumni.ucl.ac.uk
+% Date: 2025-05-13
+
 folderNames = ["mnist18", "mnist38"];
 
 for i = 1:length(folderNames) 

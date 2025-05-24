@@ -159,6 +159,11 @@ classdef Datasets
             Z(3, :) = 2 * ((n)/N-0.5); 
             Z(4, :) = normrnd(0, 1, [N, 1]);
 
+            scaler = StandardScaler();
+
+            scaler = scaler.fit(Z);
+            Z = scaler.transform(Z);
+
             % W matrix for each view
             Ws = cell(M, 1);
         

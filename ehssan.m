@@ -1,3 +1,7 @@
+% Author: Mediha Zukic
+% Contact: mediha.zukic.23@alumni.ucl.ac.uk
+% Date: 2025-05-13
+
 % Folder path where .mat files are stored
 folderPath = 'datasets/ehssan/demographic';
 

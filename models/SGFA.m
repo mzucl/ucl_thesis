@@ -24,22 +24,6 @@ classdef SGFA < BaseModel
 
 
         %% Abstract methods
-        % function obj = qZUpdate(obj)
-        %     covNew = zeros(obj.K.Val);
-        %     muNew = zeros(obj.K.Val, obj.N);
-        % 
-        %     for m = 1:obj.M
-        %         view = obj.views(m);
-        %         covNew = covNew + view.tau.E * view.W.E_XtX;
-        %         muNew = muNew + view.tau.E * view.W.E_Xt * (view.X.X - view.mu.E);
-        %     end
-        % 
-        %     covNew = Utility.matrixInverse(eye(obj.K.Val) + covNew);
-        %     muNew = covNew * muNew;
-        % 
-        %     obj.Z.updateDistributionsParameters(muNew, covNew);
-        % end
-
         function obj = qZUpdate(obj, it)
             covNew = zeros(obj.K.Val);
             muNew = zeros(obj.K.Val, obj.N);
