@@ -1,6 +1,7 @@
 classdef Datasets
     methods (Static)
         % X is [N x D]
+        % TODO: Change this!!!
         function [X, D] = generateSyntheticBPCAData(N, D, stdDevs)
             if nargin == 0
                 N = 300;
