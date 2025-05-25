@@ -172,20 +172,24 @@ classdef BPCA < handle
                 currElbo = obj.computeELBO();
                 elboVals(elboIdx) = currElbo;
                 
-                if RunConfig.getInstance().enableLogging
-                    if elboIdx ~= 1
-                        disp(['======= ELBO increased by: ', num2str(currElbo - elboVals(elboIdx - 1))]);
+                prevElbo = Utility.ternaryOpt(elboIdx == 1, @()nan, @()elboVals(elboIdx - 1));
+                
+                % The ELBO must increase with each iteration. This is a critical error,
+                % so it is logged regardless of the `RunConfig.getInstance().enableLogging` setting.
+                if ~isnan(prevElbo)
+                    if currElbo < prevElbo
+                        fprintf(2, '[ERROR] ELBO decreased in iteration %d by %f!\n', it, abs(currElbo - prevElbo));
+                    else
+                        if RunConfig.getInstance().enableLogging
+                            fprintf('------ ELBO increased by: %.4f\n', currElbo - prevElbo);
+                        end
                     end
                 end
 
-                % ELBO has to increase from iteration to iteration
-                if elboIdx ~= 1 && currElbo < elboVals(elboIdx - 1)
-                    fprintf(2, 'ELBO decreased in iteration %d by %f\n!!!', it, abs(currElbo - elboVals(elboIdx - 1)));
-                end 
-
+                
                 % Check for convergence
-                if elboIdx ~= 1 && abs(currElbo - elboVals(elboIdx - 1)) / abs(currElbo) < obj.tol
-                    disp(['Convergence at iteration: ', num2str(it)]);
+                if elboIdx ~= 1 && abs(currElbo - prevElbo) / abs(currElbo) < obj.tol
+                    fprintf('### Convergence at iteration: %d\n', it);
                     elboVals = elboVals(1:elboIdx); % cut the -Inf values at the end
                     break;
                 end

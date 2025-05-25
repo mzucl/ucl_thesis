@@ -243,20 +243,19 @@ classdef (Abstract) BaseModel < handle
                 currElbo = obj.computeELBO();
                 elboVals(elboIdx) = currElbo;
 
-                if elboIdx ~= 1
-                    prevElbo = elboVals(elboIdx - 1);
+                prevElbo = Utility.ternaryOpt(elboIdx == 1, @()nan, @()elboVals(elboIdx - 1));
+                
+                % The ELBO must increase with each iteration. This is a critical error,
+                % so it is logged regardless of the `RunConfig.getInstance().enableLogging` setting.
+                if ~isnan(prevElbo) && currElbo < prevElbo
+                    fprintf(2, '[ERROR] ELBO decreased in iteration %d by %f!\n', it, abs(currElbo - prevElbo));
                 end
+
                 if RunConfig.getInstance().enableLogging
-                    if elboIdx ~= 1
+                    if ~isnan(prevElbo)
                         fprintf('------ ELBO increased by: %.4f\n', currElbo - prevElbo);
                     end
                 end
-
-                % The ELBO must increase with each iteration. This is a critical error,
-                % so it is logged regardless of the `RunConfig.getInstance().enableLogging` setting.
-                if elboIdx ~= 1 && currElbo < elboVals(elboIdx - 1)
-                    fprintf(2, '[ERROR] ELBO decreased in iteration %d by %f!\n', it, abs(currElbo - prevElbo));
-                end 
 
                 % Check for convergence
                 if elboIdx ~= 1 && abs(currElbo - prevElbo) / abs(currElbo) < obj.tol

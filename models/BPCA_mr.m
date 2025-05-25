@@ -1,10 +1,11 @@
 classdef BPCA_mr < handle
     properties 
-        view            % ViewHandler
+        % view            % ViewHandler
+        ds                  % Datastore
         K               % Number of latent dimensions/principal components
 
         % Model parameters
-        Z               % [K x N] GaussianContainer      [size: N; for each latent variable zn]
+        % Z               % [K x N] GaussianContainer      [size: N; for each latent variable zn]
         
         mu              % [D x 1] Gaussian               [D x 1; all observations have the same 'mu' parameter]
         
@@ -26,15 +27,24 @@ classdef BPCA_mr < handle
         %   They are not declared as dependent because they never change upon the initialization
         N   % Number of observations/latent variables
         D   % Dimensionality
+
+        stats
     end
 
     methods
-        function obj = BPCA_mr(X, W_init, maxIter, tol)
+        function obj = BPCA_mr(dataPath, W_init, maxIter, tol)
             CustomError.validateNumberOfParameters(nargin, 1, 4);
 
-            obj.view = ViewHandler(X, false);
-            obj.N = obj.view.N;
-            obj.D = obj.view.D;
+            dataPath = 'dataChunks/*.csv'; % TODO: hardcoded for now
+
+            obj.ds = tabularTextDatastore(dataPath);
+            obj.ds.ReadSize = 'file';  % Now each file is treated as a chunk
+
+            obj.D = numel(obj.ds.SelectedVariableNames);
+
+            % obj.view = ViewHandler(X, false);
+            % obj.N = obj.view.N; -> ?? this is distrubuted now
+            % obj.D = obj.view.D;
 
             % BPCA can infer the right number of components, thus K is not
             % passed in as a parameter
@@ -44,9 +54,10 @@ classdef BPCA_mr < handle
             % Set default values
             if nargin < 4, tol = Utility.getConfigValue('Optimization', 'DEFAULT_TOL'); end
             if nargin < 3, maxIter = Utility.getConfigValue('Optimization', 'DEFAULT_MAX_ITER'); end
-            if nargin < 2, W_init = randn(obj.K, obj.D)'; end
+            if nargin < 2, W_init = randn(obj.D, obj.K); end
 
             % TODO: Why transpose above: mean of W is stored in columns even thought cols = false for obj.W
+            % Check how we init W from the PPCA model
             
             obj.maxIter = maxIter;
             obj.tol = tol;
@@ -64,6 +75,7 @@ classdef BPCA_mr < handle
             
             %                         type, size_, cols,   dim,   mu, cov, priorPrec
             obj.W = GaussianContainer("DS", obj.D, false, obj.K, W_init');
+            % TODO: Check if mean sixe is validated in the constructor
             
             %
             tauPrior = Gamma( ...
@@ -78,7 +90,10 @@ classdef BPCA_mr < handle
             obj.mu.setExpInit(randn(obj.D, 1));
 
             % Performed only once
-            obj.qConstantUpdates();
+            % TODO: don't have obj.N! so this can't be the first update
+            % equations that are run
+            % obj.qConstantUpdates();
+            % obj.alpha.updateAllDistributionsA(obj.alpha.prior.a + obj.D/2);
         end
 
 
@@ -92,130 +107,72 @@ classdef BPCA_mr < handle
         end
 
 
-        % function obj = qZUpdate(obj, it)
-        %     tauExp = Utility.ternary(it == 1, obj.tau.getExpInit(), obj.tau.E);
-        %     muExp = Utility.ternary(it == 1, obj.mu.getExpInit(), obj.mu.E);
-        % 
-        %     covNew = Utility.matrixInverse(eye(obj.K) + tauExp * obj.W.E_XtX);
-        %     muNew = tauExp * covNew * obj.W.E_Xt * (obj.view.X - muExp);
-        % 
-        %     obj.Z.updateDistributionsParameters(muNew, covNew);
-        % end
-
         
         function obj = qWUpdate(obj, it)
             alphaExp = Utility.ternary(it == 1, obj.alpha.getExpInit(), obj.alpha.E);
             tauExp = Utility.ternary(it == 1, obj.tau.getExpInit(), obj.tau.E);
-            muExp = Utility.ternary(it == 1, obj.mu.getExpInit(), obj.mu.E);
+            % muExp = Utility.ternary(it == 1, obj.mu.getExpInit(), obj.mu.E);
 
-            covNew = Utility.matrixInverse(diag(alphaExp) + tauExp * obj.Z.E_XXt);
-            muNew = tauExp * covNew * obj.Z.E * (obj.view.X' - muExp');
+            covNew = Utility.matrixInverse(diag(alphaExp) + tauExp * obj.stats.E_ZcZct);
+            muNew = tauExp * covNew * obj.stats.E_Z_times_centered_data_t;
             
             obj.W.updateDistributionsParameters(muNew, covNew);
         end
 
-
+        % FINE!
         function obj = qAlphaUpdate(obj)
             obj.alpha.updateAllDistributionsB(obj.alpha.prior.b + 1/2 * obj.W.E_SNC);
         end
 
 
+        % FINE
         function obj = qMuUpdate(obj)
             covNew = (1/(obj.mu.priorPrec + obj.N * obj.tau.E)) * eye(obj.D);
-            muNew = obj.tau.E * covNew * (obj.view.X - obj.W.E * obj.Z.E) * ones(obj.N, 1);
+            muNew = obj.tau.E * covNew * (obj.stats.Xc_col_sum - obj.stats.E_WZc_col_sum);
             
             obj.mu.updateParameters(muNew, covNew);
         end
 
 
+
+        % TODO: qTauUpdate and elbo (getExpectationLpPX) have a lot in
+        % common
+        % FINE!
         function obj = qTauUpdate(obj)
             expWtW_tr = obj.W.E_XtX';
-            expZZt = obj.Z.E_XXt;
-            expWZ = obj.W.E * obj.Z.E;
-            
-            bNew = obj.tau.prior.b + 1/2 * obj.view.Tr_XtX + obj.N/2 * obj.mu.E_XtX + ...
-                1/2 * sum(expWtW_tr(:) .* expZZt(:)) - sum(obj.view.X(:) .* expWZ(:)) + ...
-                obj.mu.E' * (expWZ - obj.view.X) * ones(obj.N, 1);
+            expZZt = obj.stats.E_ZcZct;
+           
+
+            bNew = obj.tau.prior.b + 1/2 * obj.stats.Tr_XctXc + obj.N/2 * obj.mu.E_XtX + ...
+                1/2 * sum(expWtW_tr(:) .* expZZt(:)) - obj.stats.Tr_E_WZ_time_Xt + ...
+                obj.mu.E' * (obj.stats.E_WZc_col_sum - obj.stats.Xc_col_sum);
         
             obj.tau.updateB(bNew);
         end
-        
         
 
         %% fit() and ELBO
         % elboIterStep - specifies the interval at which the ELBO should 
         % be computed; e.g. if elboIterStep = 2 elbo will be computed every
         % second iteration.
-        function [elboVals, it] = fit(obj, elboIterStep)
-            if nargin < 2
-                elboIterStep = 1;
-            end
-
-            elboVals = -Inf(1, obj.maxIter);
-            % When elboIterStep ~= 1, indexing into elbo array is not done
-            % using 'iter'; iter / elboIterStep + 1, but having independent
-            % counter is cleaner; '+ 1' because we compute elbo in the
-            % first iteration.
-            elboIdx = 1;
-            
-            for it = 1:obj.maxIter
-                obj.qZUpdate(it);
-                obj.qWUpdate(it);
-                obj.qMuUpdate();
-                obj.qAlphaUpdate();
-                obj.qTauUpdate();
-
-                if it ~= 1 && mod(it, elboIterStep) ~= 0
-                    continue;
-                end
-
-                currElbo = obj.computeELBO();
-                elboVals(elboIdx) = currElbo;
-                
-                if RunConfig.getInstance().enableLogging
-                    if elboIdx ~= 1
-                        disp(['======= ELBO increased by: ', num2str(currElbo - elboVals(elboIdx - 1))]);
-                    end
-                end
-
-                % ELBO has to increase from iteration to iteration
-                if elboIdx ~= 1 && currElbo < elboVals(elboIdx - 1)
-                    fprintf(2, 'ELBO decreased in iteration %d by %f\n!!!', it, abs(currElbo - elboVals(elboIdx - 1)));
-                end 
-
-                % Check for convergence
-                if elboIdx ~= 1 && abs(currElbo - elboVals(elboIdx - 1)) / abs(currElbo) < obj.tol
-                    disp(['Convergence at iteration: ', num2str(it)]);
-                    elboVals = elboVals(1:elboIdx); % cut the -Inf values at the end
-                    break;
-                end
-                elboIdx = elboIdx + 1;
-                if it == obj.maxIter
-                    fprintf(2, 'Model did not converge in %d\n!!!', obj.maxIter);
-                end
-            end
-        end
         
 
         function elbo = computeELBO(obj)
-            elbo = obj.getExpectationLnPX() + obj.Z.E_LnP + obj.getExpectationLnPW() + ... % p(.)
+            elbo = obj.getExpectationLnPX() + obj.stats.E_LnP + obj.getExpectationLnPW() + ... % p(.)
                 obj.alpha.E_LnP + obj.mu.E_LnP + obj.tau.E_LnP + ... % p(.)
-                obj.Z.H + obj.W.H + obj.alpha.H + obj.mu.H + obj.tau.H; % q(.)
+                obj.stats.H + obj.W.H + obj.alpha.H + obj.mu.H + obj.tau.H; % q(.)
         end
 
 
         function value = getExpectationLnPX(obj)
             % Setup
             expWtW_tr = obj.W.E_XtX';
-            expZZt = obj.Z.E_XXt;
-            expW_tr = obj.W.E';
-            expZXt = obj.Z.E * obj.view.X';
+            expZZt = obj.stats.E_ZcZct;
 
-            value = obj.N * obj.D/2 * (obj.tau.E_LnX - log(2 * pi)) - obj.tau.E/2 * ( ...
-                obj.view.Tr_XtX - 2 * sum(expW_tr(:) .* expZXt(:)) ...
-                - 2 * obj.mu.E_Xt * (obj.view.X * ones(obj.N, 1)) ...
-                + 2 * (expW_tr * obj.mu.E)' * (obj.Z.E * ones(obj.N, 1)) ...
-                + sum(expWtW_tr(:) .* expZZt(:)) + obj.N * obj.mu.E_XtX);
+            value = obj.N * obj.D/2 * (obj.tau.E_LnX - log(2 * pi)) - obj.tau.E * ( ...
+                1/2 * obj.stats.Tr_XctXc + obj.N/2 * obj.mu.E_XtX + ...
+                1/2 * sum(expWtW_tr(:) .* expZZt(:)) - obj.stats.Tr_E_WZ_time_Xt + ...
+                obj.mu.E' * (obj.stats.E_WZc_col_sum - obj.stats.Xc_col_sum));
         end
 
 
@@ -225,71 +182,8 @@ classdef BPCA_mr < handle
         end
 
 
-
-
-
-
-
-
-        % REDUCER (sum all emitted stats)
-        function modelReducer(~, statsList, outKV)
-            sumStats = statsList{1};
-            for i = 2:length(statsList)
-                sumStats = sumStats + statsList{i};
-            end
-            add(outKV, 'aggregatedStats', sumStats);
-        end
-
-        % function stats = computeSufficientStats(Xc, Zc, W)
-        %     % Xc: [D x Nc] data chunk
-        %     % Zc: GaussianContainer object, size: Nc, dim: Kc
-        %     % W:  [D x K] global factor loading matrix        
-        % 
-        % end
-
-        % % Each worker handles its own `Zc` instance
-        % function modelMapper(data, ~, intermKVStore, params)
-        %     persistent Zc;
-        %     persistent Xc;
-        % 
-        %     W_ = params.W;
-        %     mu_ = params.mu;
-        %     tau_ = params.tau;
-        %     it_ = params.it;
-        % 
-        %     Kc = size(W_, 2); % Same as obj.K.Val
-        %     Nc = size(data, 1);
-        % 
-        %     if isempty(Zc)
-        %         initZMu = randn(Kc, 1);
-        %         %                      type, size_, cols, dim,   mu
-        %         Zc = GaussianContainer("DS",  Nc,   true,  Kc, initZMu);
-        %     end
-        % 
-        %     if isempty(Xc)
-        %         Xc = ViewHandler(data, false);
-        %     end
-        % 
-        % 
-        %     % STEP 1: qZUpdate
-        %     % TODO: Covariance is shared, don't recompute it! HOW???
-        %     tauExp = Utility.ternary(it_ == 1, tau_.getExpInit(), tau_.E);
-        %     muExp = Utility.ternary(it_ == 1, mu_.getExpInit(), mu_.E);
-        % 
-        %     covNew = Utility.matrixInverse(eye(Kc) + tauExp * W_.E_XtX);
-        %     muNew = tauExp * covNew * W_.E_Xt * (Xc.X - muExp);
-        % 
-        %     Zc.updateDistributionsParameters(muNew, covNew);
-        % 
-        %     % STEP 2: Compute sufficient stats for reducer
-        %     stats = computeSufficientStats(Xc, Zc, params);
-        %     add(intermKVStore, 'stats', stats);
-        % end
-
-
-
         % Updated FIT method using mapreduce and local GaussianContainer for Z
-        function [elboVals, it] = fit2(obj, elboIterStep)
+        function [elboVals, it] = fit(obj, elboIterStep)
             if nargin < 2
                 elboIterStep = 1;
             end
@@ -297,38 +191,53 @@ classdef BPCA_mr < handle
             elboVals = -Inf(1, obj.maxIter);
             elboIdx = 1;
         
+            obj.maxIter = 1200;
             for it = 1:obj.maxIter
                 % Save global params to shared storage (if needed)
                 params.mu = obj.mu;
                 params.W = obj.W;
                 params.tau = obj.tau;
                 params.alpha = obj.alpha;
-                params.iter = it;
+                params.it = it;
+                params.K = obj.K;
         
+
+                % This is basically qZ update! In this setup as it is now
+                % it needs to be run first!
+
 
                 %% Run mapreduce
                 % data = tabularTextDatastore('Xdata.csv');
                 % data.ReadSize = 100;  % Read 1000 rows at a time
 
 
-                data = tabularTextDatastore('dataChunks/*.csv');
-                data.ReadSize = 'file';  % Now each file is treated as a chunk
+                % data = tabularTextDatastore('dataChunks/*.csv');
+                % data.ReadSize = 'file';  % Now each file is treated as a chunk
 
                 % Here we will use an anonymous function as our mapper. This function
                 % definition includes the value of model params (`W`, `mu`, `tau`) computed in the previous iteration.
+                % mapr = mapreducer(0);  % Use in-memory map reducer
                 mapper = @(data, info, intermKVStore) modelMapper(data, info, intermKVStore, params);
-                result = mapreduce(data, mapper, @modelReducer); % 'Display', 'off'
-        
-        
- 
-
-          
-
+                result = mapreduce(obj.ds, mapper, @modelReducer, ...
+                    'OutputFolder', 'mr', ...
+                    'Display', 'off');
 
                 % Extract and aggregate results from reducer output
                 tbl = readall(result);
-                stats = tbl.Value{1};
-                obj.aggregateStats(tbl);
+                obj.stats = tbl.Value{1};
+
+
+
+                obj.N = obj.stats.N;
+
+                % Do const updates prev done in the constructor
+                if it == 1
+                    obj.qConstantUpdates();
+                end
+
+
+
+
         
                 % Update global variables
                 obj.qWUpdate(it);
@@ -336,33 +245,41 @@ classdef BPCA_mr < handle
                 obj.qAlphaUpdate();
                 obj.qTauUpdate();
         
+
                 % Compute ELBO if needed
                 if it ~= 1 && mod(it, elboIterStep) ~= 0
                     continue;
                 end
-        
+
                 currElbo = obj.computeELBO();
                 elboVals(elboIdx) = currElbo;
-        
-                if RunConfig.getInstance().enableLogging
-                    if elboIdx ~= 1
-                        disp(['======= ELBO increased by: ', num2str(currElbo - elboVals(elboIdx - 1))]);
+
+                prevElbo = Utility.ternaryOpt(elboIdx == 1, @()nan, @()elboVals(elboIdx - 1));
+                
+                % The ELBO must increase with each iteration. This is a critical error,
+                % so it is logged regardless of the `RunConfig.getInstance().enableLogging` setting.
+                if ~isnan(prevElbo)
+                    if currElbo < prevElbo
+                        fprintf(2, '[ERROR] ELBO decreased in iteration %d by %f!\n', it, abs(currElbo - prevElbo));
+                    else
+                        if RunConfig.getInstance().enableLogging
+                            fprintf('------ ELBO increased by: %.4f\n', currElbo - prevElbo);
+                        end
                     end
                 end
-        
-                if elboIdx ~= 1 && currElbo < elboVals(elboIdx - 1)
-                    fprintf(2, 'ELBO decreased in iteration %d by %f\n!!!', it, abs(currElbo - elboVals(elboIdx - 1)));
-                end
-        
-                if elboIdx ~= 1 && abs(currElbo - elboVals(elboIdx - 1)) / abs(currElbo) < obj.tol
-                    disp(['Convergence at iteration: ', num2str(it)]);
-                    elboVals = elboVals(1:elboIdx);
+
+                
+                % Check for convergence
+                if elboIdx ~= 1 && abs(currElbo - prevElbo) / abs(currElbo) < obj.tol
+                    fprintf('### Convergence at iteration: %d\n', it);
+                    elboVals = elboVals(1:elboIdx); % cut the -Inf values at the end
                     break;
                 end
+
                 elboIdx = elboIdx + 1;
-        
+
                 if it == obj.maxIter
-                    fprintf(2, 'Model did not converge in %d\n!!!', obj.maxIter);
+                    fprintf(2, '[ERROR] Model did not converge in %d iterations!\n', obj.maxIter);
                 end
             end
         end
