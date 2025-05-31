@@ -114,7 +114,7 @@ classdef BPCA_mr < handle
             % muExp = Utility.ternary(it == 1, obj.mu.getExpInit(), obj.mu.E);
 
             covNew = Utility.matrixInverse(diag(alphaExp) + tauExp * obj.stats.E_ZcZct);
-            muNew = tauExp * covNew * obj.stats.E_Z_times_centered_data_t;
+            muNew = tauExp * covNew * obj.stats.E_Zc_times_centered_data_t;
             
             obj.W.updateDistributionsParameters(muNew, covNew);
         end
@@ -126,9 +126,12 @@ classdef BPCA_mr < handle
 
 
         % FINE
-        function obj = qMuUpdate(obj)
-            covNew = (1/(obj.mu.priorPrec + obj.N * obj.tau.E)) * eye(obj.D);
-            muNew = obj.tau.E * covNew * (obj.stats.Xc_col_sum - obj.stats.E_WZc_col_sum);
+        function obj = qMuUpdate(obj, it)
+            tauExp = Utility.ternary(it == 1, obj.tau.getExpInit(), obj.tau.E);
+
+            covNew = (1/(obj.mu.priorPrec + obj.N * tauExp)) * eye(obj.D);
+
+            muNew = tauExp * covNew * (obj.stats.Xc_col_sum - obj.stats.E_WZc_col_sum);
             
             obj.mu.updateParameters(muNew, covNew);
         end
@@ -144,7 +147,7 @@ classdef BPCA_mr < handle
            
 
             bNew = obj.tau.prior.b + 1/2 * obj.stats.Tr_XctXc + obj.N/2 * obj.mu.E_XtX + ...
-                1/2 * sum(expWtW_tr(:) .* expZZt(:)) - obj.stats.Tr_E_WZ_time_Xt + ...
+                1/2 * sum(expWtW_tr(:) .* expZZt(:)) - obj.stats.Tr_E_WZ_times_Xt + ...
                 obj.mu.E' * (obj.stats.E_WZc_col_sum - obj.stats.Xc_col_sum);
         
             obj.tau.updateB(bNew);
@@ -171,7 +174,7 @@ classdef BPCA_mr < handle
 
             value = obj.N * obj.D/2 * (obj.tau.E_LnX - log(2 * pi)) - obj.tau.E * ( ...
                 1/2 * obj.stats.Tr_XctXc + obj.N/2 * obj.mu.E_XtX + ...
-                1/2 * sum(expWtW_tr(:) .* expZZt(:)) - obj.stats.Tr_E_WZ_time_Xt + ...
+                1/2 * sum(expWtW_tr(:) .* expZZt(:)) - obj.stats.Tr_E_WZ_times_Xt + ...
                 obj.mu.E' * (obj.stats.E_WZc_col_sum - obj.stats.Xc_col_sum));
         end
 
@@ -200,11 +203,23 @@ classdef BPCA_mr < handle
                 params.alpha = obj.alpha;
                 params.it = it;
                 params.K = obj.K;
-        
-
+                
+                % Covariance is shared, don't recompute it!
+                tauExp = Utility.ternary(it == 1, obj.tau.getExpInit(), obj.tau.E);
+                params.covZ = Utility.matrixInverse(eye(obj.K) + tauExp * obj.W.E_XtX);
+                
+                
                 % This is basically qZ update! In this setup as it is now
                 % it needs to be run first!
 
+
+                % Clean storage
+                % TODO: Add the name as a const!!!
+                if isfolder("ZcStorage")
+                    delete("ZcStorage/Zc_*.mat");
+                else
+                    mkdir("ZcStorage");
+                end
 
                 %% Run mapreduce
                 % data = tabularTextDatastore('Xdata.csv');
@@ -219,8 +234,8 @@ classdef BPCA_mr < handle
                 % mapr = mapreducer(0);  % Use in-memory map reducer
                 mapper = @(data, info, intermKVStore) modelMapper(data, info, intermKVStore, params);
                 result = mapreduce(obj.ds, mapper, @modelReducer, ...
-                    'OutputFolder', 'mr', ...
-                    'Display', 'off');
+                    'OutputFolder', 'mr'); %, ...
+                    % 'Display', 'off');
 
                 % Extract and aggregate results from reducer output
                 tbl = readall(result);
@@ -241,7 +256,7 @@ classdef BPCA_mr < handle
         
                 % Update global variables
                 obj.qWUpdate(it);
-                obj.qMuUpdate();
+                obj.qMuUpdate(it);
                 obj.qAlphaUpdate();
                 obj.qTauUpdate();
         
