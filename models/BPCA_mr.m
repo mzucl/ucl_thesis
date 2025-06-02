@@ -68,6 +68,8 @@ classdef BPCA_mr < handle
             %                         type, size_, cols, dim,     mu, cov, priorPrec
             % obj.Z = GaussianContainer("DS", obj.N, true, obj.K, zeros(obj.K, 1));
 
+            del_this = GaussianContainer("DS", 300, true, obj.K, zeros(obj.K, 1));
+
             %                  dim, mu,    cov,  priorPrec
             obj.mu = Gaussian(obj.D, 0, eye(obj.D), 10^3);
 
@@ -112,11 +114,17 @@ classdef BPCA_mr < handle
         function obj = qWUpdate(obj, it)
             alphaExp = Utility.ternary(it == 1, obj.alpha.getExpInit(), obj.alpha.E);
             tauExp = Utility.ternary(it == 1, obj.tau.getExpInit(), obj.tau.E);
-            % muExp = Utility.ternary(it == 1, obj.mu.getExpInit(), obj.mu.E);
+            muExp = Utility.ternary(it == 1, obj.mu.getExpInit(), obj.mu.E);
 
-            covNew = Utility.matrixInverse(diag(alphaExp) + tauExp * obj.stats.E_ZcZct);
-            muNew = tauExp * covNew * obj.stats.E_Zc_times_centered_data_t;
+            covNew = Utility.matrixInverse(diag(alphaExp) + tauExp * obj.stats.E_ZZt);
+            muNew = tauExp * covNew * (obj.stats.E_Z_times_Xt - sum(obj.stats.E_Z, 2) * obj.mu.E');
             
+            % TODO: <Z> * <mu>' where <mu>' is replicated accross rows if we use repmat(<mu>, N, 1) that
+            % would create a NXD matrix which is what we want to avoid;
+            % that is the same as sum(zn * <mu>') rank-1 updates, zn are cols of Z and this
+            % is sum(Z, 2) * <mu>'
+        
+
             obj.W.updateDistributionsParameters(muNew, covNew);
         end
 
@@ -132,7 +140,7 @@ classdef BPCA_mr < handle
 
             covNew = (1/(obj.mu.priorPrec + obj.N * tauExp)) * eye(obj.D);
 
-            muNew = tauExp * covNew * (obj.stats.Xc_col_sum - obj.stats.E_WZc_col_sum);
+            muNew = tauExp * covNew * (obj.stats.X_col_sum - sum(obj.W.E * obj.stats.E_Z, 2));
             
             obj.mu.updateParameters(muNew, covNew);
         end
@@ -143,15 +151,18 @@ classdef BPCA_mr < handle
         % common
         % FINE!
         function obj = qTauUpdate(obj)
-            expWtW_tr = obj.W.E_XtX';
-            expZZt = obj.stats.E_ZcZct;
-           
-
-            bNew = obj.tau.prior.b + 1/2 * obj.stats.Tr_XctXc + obj.N/2 * obj.mu.E_XtX + ...
-                1/2 * sum(expWtW_tr(:) .* expZZt(:)) - obj.stats.Tr_E_WZ_times_Xt + ...
-                obj.mu.E' * (obj.stats.E_WZc_col_sum - obj.stats.Xc_col_sum);
+            bNew = obj.tau.prior.b + obj.getCommonCalc();
         
             obj.tau.updateB(bNew);
+        end
+
+        function val = getCommonCalc(obj) 
+            expWtW_tr = obj.W.E_XtX';
+            expZZt = obj.stats.E_ZZt;
+
+            val = 1/2 * obj.stats.Tr_XtX + obj.N/2 * obj.mu.E_XtX + ...
+                1/2 * sum(expWtW_tr(:) .* expZZt(:)) - sum(obj.stats.X_times_E_Zt(:) .* obj.W.E(:)) + ...
+                obj.mu.E' * (sum(obj.W.E * obj.stats.E_Z, 2) - obj.stats.X_col_sum);
         end
         
 
@@ -162,21 +173,33 @@ classdef BPCA_mr < handle
         
 
         function elbo = computeELBO(obj)
-            elbo = obj.getExpectationLnPX() + obj.stats.E_LnP + obj.getExpectationLnPW() + ... % p(.)
+            % Evaluate each term and store in a struct
+            elboTerms1 = struct();
+            
+            % Likelihood terms
+            elboTerms1.E_lnPX   = obj.getExpectationLnPX();
+            elboTerms1.E_lnPZ   = obj.stats.E_LnP_Z;
+            elboTerms1.E_lnPW   = obj.getExpectationLnPW();
+            elboTerms1.E_lnPalpha = obj.alpha.E_LnP;
+            elboTerms1.E_lnPmu    = obj.mu.E_LnP;
+            elboTerms1.E_lnPtau   = obj.tau.E_LnP;
+            
+            % Entropy terms (negative KL)
+            elboTerms1.H_Z     = obj.stats.H_Z;
+            elboTerms1.H_W     = obj.W.H;
+            elboTerms1.H_alpha = obj.alpha.H;
+            elboTerms1.H_mu    = obj.mu.H;
+            elboTerms1.H_tau   = obj.tau.H;
+    
+
+            elbo = obj.getExpectationLnPX() + obj.stats.E_LnP_Z + obj.getExpectationLnPW() + ... % p(.)
                 obj.alpha.E_LnP + obj.mu.E_LnP + obj.tau.E_LnP + ... % p(.)
-                obj.stats.H + obj.W.H + obj.alpha.H + obj.mu.H + obj.tau.H; % q(.)
+                obj.stats.H_Z + obj.W.H + obj.alpha.H + obj.mu.H + obj.tau.H; % q(.)
         end
 
 
         function value = getExpectationLnPX(obj)
-            % Setup
-            expWtW_tr = obj.W.E_XtX';
-            expZZt = obj.stats.E_ZcZct;
-
-            value = obj.N * obj.D/2 * (obj.tau.E_LnX - log(2 * pi)) - obj.tau.E * ( ...
-                1/2 * obj.stats.Tr_XctXc + obj.N/2 * obj.mu.E_XtX + ...
-                1/2 * sum(expWtW_tr(:) .* expZZt(:)) - obj.stats.Tr_E_WZ_times_Xt + ...
-                obj.mu.E' * (obj.stats.E_WZc_col_sum - obj.stats.Xc_col_sum));
+            value = obj.N * obj.D/2 * (obj.tau.E_LnX - log(2 * pi)) - obj.tau.E * obj.getCommonCalc();
         end
 
 

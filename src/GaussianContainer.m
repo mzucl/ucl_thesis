@@ -115,19 +115,7 @@ classdef GaussianContainer < handle
 
         function obj = loadobj(s)
             % Reconstruct the object from struct
-            obj = GaussianContainer();
-            obj.type = s.type;
-            obj.cols = s.cols;
-            obj.dim = s.dim;
-            obj.mu = s.mu;
-            obj.cov = s.cov;
-            obj.priorPrec = s.priorPrec;
-            obj.Size = s.Size;
-    
-            % Restore private properties (if saved)
-            if isfield(s, 'expInit'), obj.expInit = s.expInit; end
-            if isfield(s, 'cache'), obj.cache = s.cache; end
-            if isfield(s, 'cacheFlags'), obj.cacheFlags = s.cacheFlags; end
+            obj = GaussianContainer(s.type, s.Size, s.cols, s.dim, s.mu, s.cov, s.priorPrec);
         end
     end
 
@@ -144,10 +132,16 @@ classdef GaussianContainer < handle
             s.priorPrec = obj.priorPrec;
             s.Size = obj.Size;
     
-            % Save private properties (optional, or skip if they can be recomputed)
-            s.expInit = obj.expInit;
-            s.cache = obj.cache;
-            s.cacheFlags = obj.cacheFlags;
+            % s.E = obj.E;
+            % s.H = obj.H;
+            % s.E_Xt = obj.E_Xt;
+            % s.E_XXt = obj.E_XXt;
+            % s.E_XtX = obj.E_XtX;
+            % s.E_TrXtX = obj.E_TrXtX;
+            % s.E_LnP = obj.E_LnP;
+            % s.E_SNC = obj.E_SNC;
+            % s.Cov_Tr = obj.Cov_Tr;
+
         end
         %% Options for the constructor GaussianContainer
         % 4 PARAMETERS

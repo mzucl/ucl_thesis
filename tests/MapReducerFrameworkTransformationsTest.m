@@ -1,3 +1,4 @@
+% TODO: Rename all sum!!
 classdef MapReducerFrameworkTransformationsTest < matlab.unittest.TestCase
     methods (Test)
         %% Z * Z^T = ?
@@ -208,6 +209,37 @@ classdef MapReducerFrameworkTransformationsTest < matlab.unittest.TestCase
             end
             
             testCase.verifyEqual(trace(W * Z * X'), sum);
+        end
+
+        %% Tr(W * Z * X^T) = ?
+        function testIdentity5b(testCase)
+            % Setup
+            K = 10;
+            D = 20;
+            N = 50;
+            chunkSize = 10;
+
+            X = Utility.generateRandomIntMatrix(D, N);
+            Z = Utility.generateRandomIntMatrix(K, N);
+            W = Utility.generateRandomIntMatrix(D, K);
+
+            numChunks = ceil(N / chunkSize);
+            Xchunks = cell(1, numChunks);
+            Zchunks = cell(1, numChunks);
+            
+            for i = 1:numChunks
+                startIdx = (i-1) * chunkSize + 1;
+                endIdx = min(i * chunkSize, N);
+                Xchunks{i} = X(:, startIdx:endIdx);
+                Zchunks{i} = Z(:, startIdx:endIdx);
+            end
+
+            sol1 = 0;
+            for i = 1:numChunks
+                sol1 = sol1 + Xchunks{i} * Zchunks{i}';
+            end
+            
+            testCase.verifyEqual(trace(W * Z * X'), sum(sol1(:) .* W(:)));
         end
     end
 end

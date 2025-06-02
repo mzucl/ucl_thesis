@@ -66,19 +66,24 @@ function modelMapper(data, info, intermKVStore, params)
 
     % === STEP 2: emit sufficient statistics ===
     stats.N = Nc;
-    stats.E_ZcZct = Zc.E_XXt;
-    stats.E_Zc_times_centered_data_t = Zc.E * (Xc.X' - mu_.E_Xt);
+    stats.E_ZZt = Zc.E_XXt;
 
-    stats.Xc_col_sum = sum(Xc.X, 2);
-    stats.E_WZc_col_sum = sum(W_.E * Zc.E, 2);
 
-    stats.Tr_XctXc = Xc.Tr_XtX;
-   
-    expWZ = W_.E * Zc.E;
-    stats.Tr_E_WZ_times_Xt = sum(Xc.X(:) .* expWZ(:));
 
-    stats.H = Zc.H;
-    stats.E_LnP = Zc.E_LnP; 
+
+    stats.X_times_E_Zt = Xc.X * Zc.E';
+
+    
+
+
+
+    % FINE!!!
+    stats.E_Z_times_Xt = Zc.E * Xc.X';
+    stats.E_Z = Zc.E;
+    stats.H_Z = Zc.H;
+    stats.E_LnP_Z = Zc.E_LnP; 
+    stats.X_col_sum = sum(Xc.X, 2);
+    stats.Tr_XtX = Xc.Tr_XtX;
         
     add(intermKVStore, 'stats', stats);
 end

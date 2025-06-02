@@ -33,6 +33,25 @@ classdef Gaussian < handle
 
 
 
+    methods
+       function s = saveobj(obj)
+            % Custom save logic: convert handle object to struct
+            s.dim = obj.dim;
+            s.mu = obj.mu;
+            s.cov = obj.cov;
+            s.priorPrec = obj.priorPrec;
+        end
+    end
+
+
+    methods (Static)
+
+        function obj = loadobj(s)
+            % Reconstruct the object from struct
+            obj = Gaussian(s.dim, s.mu, s.cov, s.priorPrec);
+        end
+    end
+
 
 
     %% Private methods

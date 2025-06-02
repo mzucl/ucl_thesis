@@ -44,7 +44,7 @@ classdef BPCA < handle
             % Set default values
             if nargin < 4, tol = Utility.getConfigValue('Optimization', 'DEFAULT_TOL'); end
             if nargin < 3, maxIter = Utility.getConfigValue('Optimization', 'DEFAULT_MAX_ITER'); end
-            if nargin < 2, W_init = randn(obj.K, obj.D)'; end
+            if nargin < 2, W_init = randn(obj.D, obj.K); end
 
             % TODO: Why transpose above: mean of W is stored in columns even thought cols = false for obj.W
             
@@ -96,12 +96,18 @@ classdef BPCA < handle
             tauExp = Utility.ternary(it == 1, obj.tau.getExpInit(), obj.tau.E);
             muExp = Utility.ternary(it == 1, obj.mu.getExpInit(), obj.mu.E);
 
+            % TODO: Remove (used to test if reinit of Z makes any
+            % difference)
             % obj.Z = GaussianContainer("DS", obj.N, true, obj.K, zeros(obj.K, 1));
 
             covNew = Utility.matrixInverse(eye(obj.K) + tauExp * obj.W.E_XtX);
             muNew = tauExp * covNew * obj.W.E_Xt * (obj.view.X - muExp);
 
             obj.Z.updateDistributionsParameters(muNew, covNew);
+            
+            
+            BPCA_Z = obj.Z;
+            save('BPCA_Z.mat',"BPCA_Z");
         end
 
         
@@ -114,19 +120,30 @@ classdef BPCA < handle
             muNew = tauExp * covNew * obj.Z.E * (obj.view.X' - muExp');
             
             obj.W.updateDistributionsParameters(muNew, covNew);
+
+            BPCA_W = obj.W;
+            save('BPCA_W.mat',"BPCA_W");
         end
 
 
         function obj = qAlphaUpdate(obj)
             obj.alpha.updateAllDistributionsB(obj.alpha.prior.b + 1/2 * obj.W.E_SNC);
+        
+            BPCA_alpha = obj.alpha;
+            save('BPCA_alpha.mat',"BPCA_alpha");
         end
 
 
-        function obj = qMuUpdate(obj)
-            covNew = (1/(obj.mu.priorPrec + obj.N * obj.tau.E)) * eye(obj.D);
-            muNew = obj.tau.E * covNew * (obj.view.X - obj.W.E * obj.Z.E) * ones(obj.N, 1);
+        function obj = qMuUpdate(obj, it)
+            tauExp = Utility.ternary(it == 1, obj.tau.getExpInit(), obj.tau.E);
+
+            covNew = (1/(obj.mu.priorPrec + obj.N * tauExp)) * eye(obj.D);
+            muNew = tauExp * covNew * (obj.view.X - obj.W.E * obj.Z.E) * ones(obj.N, 1);
             
             obj.mu.updateParameters(muNew, covNew);
+
+            BPCA_mu = obj.mu;
+            save('BPCA_mu.mat',"BPCA_mu");
         end
 
 
@@ -134,6 +151,10 @@ classdef BPCA < handle
             bNew = obj.tau.prior.b + obj.getCommonCalc();
         
             obj.tau.updateB(bNew);
+
+
+            BPCA_tau = obj.tau;
+            save('BPCA_tau.mat',"BPCA_tau");
         end
         
         % Helper function for the code that is shared between `qTauUpdate` and
@@ -170,7 +191,7 @@ classdef BPCA < handle
             for it = 1:obj.maxIter
                 obj.qZUpdate(it);
                 obj.qWUpdate(it);
-                obj.qMuUpdate();
+                obj.qMuUpdate(it);
                 obj.qAlphaUpdate();
                 obj.qTauUpdate();
 
@@ -211,6 +232,34 @@ classdef BPCA < handle
         
 
         function elbo = computeELBO(obj)
+            
+            % Evaluate each term and store in a struct
+            elboTerms = struct();
+            
+            % Likelihood terms
+            elboTerms.E_lnPX   = obj.getExpectationLnPX();
+            elboTerms.E_lnPZ   = obj.Z.E_LnP;
+            elboTerms.E_lnPW   = obj.getExpectationLnPW();
+            elboTerms.E_lnPalpha = obj.alpha.E_LnP;
+            elboTerms.E_lnPmu    = obj.mu.E_LnP;
+            elboTerms.E_lnPtau   = obj.tau.E_LnP;
+            
+            % Entropy terms (negative KL)
+            elboTerms.H_Z     = obj.Z.H;
+            elboTerms.H_W     = obj.W.H;
+            elboTerms.H_alpha = obj.alpha.H;
+            elboTerms.H_mu    = obj.mu.H;
+            elboTerms.H_tau   = obj.tau.H;
+            
+            % Optional: Store total ELBO if desired
+            elboTerms.total = elboTerms.E_lnPX + elboTerms.E_lnPZ + elboTerms.E_lnPW + ...
+                              elboTerms.E_lnPalpha + elboTerms.E_lnPmu + elboTerms.E_lnPtau + ...
+                              elboTerms.H_Z + elboTerms.H_W + elboTerms.H_alpha + elboTerms.H_mu + elboTerms.H_tau;
+            
+            % Save to .mat file
+            save('elbo_terms.mat', 'elboTerms');
+
+
             elbo = obj.getExpectationLnPX() + obj.Z.E_LnP + obj.getExpectationLnPW() + ... % p(.)
                 obj.alpha.E_LnP + obj.mu.E_LnP + obj.tau.E_LnP + ... % p(.)
                 obj.Z.H + obj.W.H + obj.alpha.H + obj.mu.H + obj.tau.H; % q(.)

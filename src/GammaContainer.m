@@ -81,7 +81,33 @@ classdef GammaContainer < handle
         end
     end
 
+    methods (Static)
+
+        function obj = loadobj(s)
+            % Reconstruct the object from struct
+            obj = GammaContainer(s.type, s.Size, s.a, s.b);
+
+            if isfield(s, 'priorClass') && strcmp(s.priorClass, 'Gamma')
+                obj.prior = Gamma.loadobj(s.prior);  % recursively load
+            end
+        end
+    end
+
     methods
+
+        function s = saveobj(obj)
+            % Custom save logic: convert handle object to struct
+            s.type = obj.type;
+            s.a = obj.a;
+            s.b = obj.b;
+            s.Size = obj.Size;
+
+            if isa(obj.prior, 'Gamma')
+                s.prior = saveobj(obj.prior);  % recursively save prior
+                s.priorClass = 'Gamma';
+            end
+        end
+
         %% Options for the constructor GammaContainer
         % ZERO PARAMETERS
         % -> error!

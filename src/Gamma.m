@@ -53,9 +53,32 @@ classdef Gamma < handle
         end
     end
 
+    methods (Static)
+        function obj = loadobj(s)
+            obj = Gamma(s.a, s.b);
+            
+            if isfield(s, 'priorClass') && strcmp(s.priorClass, 'Gamma')
+                obj.prior = Gamma.loadobj(s.prior);  % recursively load
+            end
+        end
+    end
+
 
 
     methods
+        % TODO: Write tests for this and the loadObj
+        function s = saveobj(obj)
+            s.a = obj.a;
+            s.b = obj.b;
+
+            if isa(obj.prior, 'Gamma')
+                s.prior = saveobj(obj.prior);  % recursively save prior
+                s.priorClass = 'Gamma';
+            end
+            
+        end
+
+
         %% Deep copy and operators overloading
         function newObj = copy(obj)
             newObj = Gamma();
