@@ -2,8 +2,8 @@
 close all; clearvars; clc;
 
 rc = RunConfig.getInstance();
-rc.inputValidation = false;
-rc.enableLogging = false;
+rc.inputValidation = true;
+rc.enableLogging = true;
 
 % Logging
 logFileName = 'logs/pca_no_init.txt';

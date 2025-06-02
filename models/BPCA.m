@@ -32,6 +32,7 @@ classdef BPCA < handle
         function obj = BPCA(X, W_init, maxIter, tol)
             CustomError.validateNumberOfParameters(nargin, 1, 4);
 
+            rng(42);
             obj.view = ViewHandler(X, false);
             obj.N = obj.view.N;
             obj.D = obj.view.D;
@@ -91,26 +92,31 @@ classdef BPCA < handle
             obj.tau.updateA(obj.tau.prior.a + (obj.N * obj.D)/2);
         end
 
+        % [NOTE] This method computes (1/2) * E[sum(|xn - (W * zn + mu)|^2)], 
+        % where the sum is over all observations `xn`. This corresponds to the 
+        % expected squared reconstruction error term (scaled!). It appears in both the 
+        % `qTauUpdate` and `getExpectationLnPX` methods, so it is factored out 
+        % into a separate method for clarity and reuse.
+        function val = expectedReconstructionLoss(obj)
+            expWtW_tr = obj.W.E_XtX';
+            expZZt = obj.Z.E_XXt;
+            expWZ = obj.W.E * obj.Z.E;
+
+            val = 1/2 * obj.view.Tr_XtX + obj.N/2 * obj.mu.E_XtX + ...
+                1/2 * sum(expWtW_tr(:) .* expZZt(:)) - sum(obj.view.X(:) .* expWZ(:)) + ...
+                obj.mu.E' * (expWZ - obj.view.X) * ones(obj.N, 1);
+        end
 
         function obj = qZUpdate(obj, it)
             tauExp = Utility.ternary(it == 1, obj.tau.getExpInit(), obj.tau.E);
             muExp = Utility.ternary(it == 1, obj.mu.getExpInit(), obj.mu.E);
 
-            % TODO: Remove (used to test if reinit of Z makes any
-            % difference)
-            % obj.Z = GaussianContainer("DS", obj.N, true, obj.K, zeros(obj.K, 1));
-
             covNew = Utility.matrixInverse(eye(obj.K) + tauExp * obj.W.E_XtX);
             muNew = tauExp * covNew * obj.W.E_Xt * (obj.view.X - muExp);
 
             obj.Z.updateDistributionsParameters(muNew, covNew);
-            
-            
-            BPCA_Z = obj.Z;
-            save('BPCA_Z.mat',"BPCA_Z");
         end
 
-        
         function obj = qWUpdate(obj, it)
             alphaExp = Utility.ternary(it == 1, obj.alpha.getExpInit(), obj.alpha.E);
             tauExp = Utility.ternary(it == 1, obj.tau.getExpInit(), obj.tau.E);
@@ -120,17 +126,10 @@ classdef BPCA < handle
             muNew = tauExp * covNew * obj.Z.E * (obj.view.X' - muExp');
             
             obj.W.updateDistributionsParameters(muNew, covNew);
-
-            BPCA_W = obj.W;
-            save('BPCA_W.mat',"BPCA_W");
         end
-
 
         function obj = qAlphaUpdate(obj)
             obj.alpha.updateAllDistributionsB(obj.alpha.prior.b + 1/2 * obj.W.E_SNC);
-        
-            BPCA_alpha = obj.alpha;
-            save('BPCA_alpha.mat',"BPCA_alpha");
         end
 
 
@@ -141,53 +140,30 @@ classdef BPCA < handle
             muNew = tauExp * covNew * (obj.view.X - obj.W.E * obj.Z.E) * ones(obj.N, 1);
             
             obj.mu.updateParameters(muNew, covNew);
-
-            BPCA_mu = obj.mu;
-            save('BPCA_mu.mat',"BPCA_mu");
         end
 
 
         function obj = qTauUpdate(obj)
-            bNew = obj.tau.prior.b + obj.getCommonCalc();
-        
-            obj.tau.updateB(bNew);
-
-
-            BPCA_tau = obj.tau;
-            save('BPCA_tau.mat',"BPCA_tau");
+            obj.tau.updateB(obj.tau.prior.b + obj.expectedReconstructionLoss());
         end
-        
-        % Helper function for the code that is shared between `qTauUpdate` and
-        % `getExpectationLnPX`.
-        % TODO: Find more meaningful name for this, check what that code
-        % computes, from where it originates.
-        function val = getCommonCalc(obj)
-            expWtW_tr = obj.W.E_XtX';
-            expZZt = obj.Z.E_XXt;
-            expWZ = obj.W.E * obj.Z.E;
-
-            val = 1/2 * obj.view.Tr_XtX + obj.N/2 * obj.mu.E_XtX + ...
-                1/2 * sum(expWtW_tr(:) .* expZZt(:)) - sum(obj.view.X(:) .* expWZ(:)) + ...
-                obj.mu.E' * (expWZ - obj.view.X) * ones(obj.N, 1);
-        end
-        
 
         %% fit() and ELBO
-        % elboIterStep - specifies the interval at which the ELBO should 
-        % be computed; e.g. if elboIterStep = 2 elbo will be computed every
-        % second iteration.
-        function [elboVals, it] = fit(obj, elboIterStep)
+        % elboRecalcInterval - specifies the interval at which the ELBO should 
+        % be computed; e.g. if elboRecalcInterval = 5 elbo will be computed every
+        % in iterations {1, 5, 10, ...}
+        function [elboVals, it] = fit(obj, elboRecalcInterval)
+            CustomError.validateNumberOfParameters(nargin, 1, 2);
             if nargin < 2
-                elboIterStep = 1;
+                elboRecalcInterval = RunConfig.getInstance().elboRecalcInterval;
             end
 
             elboVals = -Inf(1, obj.maxIter);
-            % When elboIterStep ~= 1, indexing into elbo array is not done
-            % using 'iter'; iter / elboIterStep + 1, but having independent
-            % counter is cleaner; '+ 1' because we compute elbo in the
-            % first iteration.
-            elboIdx = 1;
             
+            % [NOTE] When `elboRecalcInterval` ≠ 1, ELBO is not computed at every iteration.
+            % In that case, `elboVals` should be indexed using `iter / elboRecalcInterval`,
+            % with an additional `+1` to account for the initial ELBO computed at iteration 1.
+            % A separate counter `elboIdx` is used here instead, for clarity.
+            elboIdx = 1;
             for it = 1:obj.maxIter
                 obj.qZUpdate(it);
                 obj.qWUpdate(it);
@@ -195,7 +171,7 @@ classdef BPCA < handle
                 obj.qAlphaUpdate();
                 obj.qTauUpdate();
 
-                if it ~= 1 && mod(it, elboIterStep) ~= 0
+                if it ~= 1 && mod(it, elboRecalcInterval) ~= 0
                     continue;
                 end
 
@@ -204,7 +180,7 @@ classdef BPCA < handle
                 
                 prevElbo = Utility.ternaryOpt(elboIdx == 1, @()nan, @()elboVals(elboIdx - 1));
                 
-                % The ELBO must increase with each iteration. This is a critical error,
+                % [NOTE] The ELBO must increase with each iteration. This is a critical error,
                 % so it is logged regardless of the `RunConfig.getInstance().enableLogging` setting.
                 if ~isnan(prevElbo)
                     if currElbo < prevElbo
@@ -216,50 +192,23 @@ classdef BPCA < handle
                     end
                 end
 
-                
                 % Check for convergence
-                if elboIdx ~= 1 && abs(currElbo - prevElbo) / abs(currElbo) < obj.tol
+                if ~isnan(prevElbo) && abs(currElbo - prevElbo) / abs(currElbo) < obj.tol
                     fprintf('### Convergence at iteration: %d\n', it);
-                    elboVals = elboVals(1:elboIdx); % cut the -Inf values at the end
+                    elboVals = elboVals(1:elboIdx); % cut the -Inf values at the end;
                     break;
                 end
+
                 elboIdx = elboIdx + 1;
+
                 if it == obj.maxIter
-                    fprintf(2, 'Model did not converge in %d\n!!!', obj.maxIter);
+                    fprintf(2, '[ERROR] Model did not converge in %d iterations!\n', obj.maxIter);
                 end
             end
         end
         
 
         function elbo = computeELBO(obj)
-            
-            % Evaluate each term and store in a struct
-            elboTerms = struct();
-            
-            % Likelihood terms
-            elboTerms.E_lnPX   = obj.getExpectationLnPX();
-            elboTerms.E_lnPZ   = obj.Z.E_LnP;
-            elboTerms.E_lnPW   = obj.getExpectationLnPW();
-            elboTerms.E_lnPalpha = obj.alpha.E_LnP;
-            elboTerms.E_lnPmu    = obj.mu.E_LnP;
-            elboTerms.E_lnPtau   = obj.tau.E_LnP;
-            
-            % Entropy terms (negative KL)
-            elboTerms.H_Z     = obj.Z.H;
-            elboTerms.H_W     = obj.W.H;
-            elboTerms.H_alpha = obj.alpha.H;
-            elboTerms.H_mu    = obj.mu.H;
-            elboTerms.H_tau   = obj.tau.H;
-            
-            % Optional: Store total ELBO if desired
-            elboTerms.total = elboTerms.E_lnPX + elboTerms.E_lnPZ + elboTerms.E_lnPW + ...
-                              elboTerms.E_lnPalpha + elboTerms.E_lnPmu + elboTerms.E_lnPtau + ...
-                              elboTerms.H_Z + elboTerms.H_W + elboTerms.H_alpha + elboTerms.H_mu + elboTerms.H_tau;
-            
-            % Save to .mat file
-            save('elbo_terms.mat', 'elboTerms');
-
-
             elbo = obj.getExpectationLnPX() + obj.Z.E_LnP + obj.getExpectationLnPW() + ... % p(.)
                 obj.alpha.E_LnP + obj.mu.E_LnP + obj.tau.E_LnP + ... % p(.)
                 obj.Z.H + obj.W.H + obj.alpha.H + obj.mu.H + obj.tau.H; % q(.)
@@ -267,7 +216,8 @@ classdef BPCA < handle
 
 
         function value = getExpectationLnPX(obj)
-            value = obj.N * obj.D/2 * (obj.tau.E_LnX - log(2 * pi)) - obj.tau.E * obj.getCommonCalc();
+            value = obj.N * obj.D/2 * (obj.tau.E_LnX - log(2 * pi)) - ...
+                obj.tau.E * obj.expectedReconstructionLoss();
         end
 
 

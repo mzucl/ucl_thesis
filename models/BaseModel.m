@@ -228,10 +228,10 @@ classdef (Abstract) BaseModel < handle
 
             elboVals = -Inf(1, obj.maxIter);
 
-            % [NOTE] When `elboIterStep` is not equal to 1, the `elbo` array is indexed 
-            % differently. Instead of using `iter`, we use `iter / elboIterStep + 1`. 
-            % However, using a separate counter for clarity is preferred. The `+ 1` accounts 
-            % for the fact that the ELBO is computed in the first iteration.
+            % [NOTE] When `elboRecalcInterval` ≠ 1, ELBO is not computed at every iteration.
+            % In that case, `elboVals` should be indexed using `iter / elboRecalcInterval`,
+            % with an additional `+1` to account for the initial ELBO computed at iteration 1.
+            % A separate counter `elboIdx` is used here instead, for clarity.
             elboIdx = 1;
             for it = 1:obj.maxIter
                 obj.stepUpdate(it);
@@ -247,20 +247,20 @@ classdef (Abstract) BaseModel < handle
                 
                 % The ELBO must increase with each iteration. This is a critical error,
                 % so it is logged regardless of the `RunConfig.getInstance().enableLogging` setting.
-                if ~isnan(prevElbo) && currElbo < prevElbo
-                    fprintf(2, '[ERROR] ELBO decreased in iteration %d by %f!\n', it, abs(currElbo - prevElbo));
-                end
-
-                if RunConfig.getInstance().enableLogging
-                    if ~isnan(prevElbo)
-                        fprintf('------ ELBO increased by: %.4f\n', currElbo - prevElbo);
+                if ~isnan(prevElbo)
+                    if currElbo < prevElbo
+                        fprintf(2, '[ERROR] ELBO decreased in iteration %d by %f!\n', it, abs(currElbo - prevElbo));
+                    else
+                        if RunConfig.getInstance().enableLogging
+                            fprintf('------ ELBO increased by: %.4f\n', currElbo - prevElbo);
+                        end
                     end
                 end
 
                 % Check for convergence
-                if elboIdx ~= 1 && abs(currElbo - prevElbo) / abs(currElbo) < obj.tol
+                if ~isnan(prevElbo) && abs(currElbo - prevElbo) / abs(currElbo) < obj.tol
                     fprintf('### Convergence at iteration: %d\n', it);
-                    elboVals = elboVals(1:elboIdx); % cut the -Inf values at the end
+                    elboVals = elboVals(1:elboIdx); % cut the -Inf values at the end;
                     break;
                 end
 

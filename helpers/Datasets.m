@@ -3,6 +3,7 @@ classdef Datasets
         % X is [N x D]
         % TODO: Change this!!!
         function [X, D] = generateSyntheticBPCAData(N, D, stdDevs)
+            rng(42);
             if nargin == 0
                 N = 300;
                 D = 10;

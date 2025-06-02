@@ -52,7 +52,7 @@ for s = 1:stabilityRun
         end
     end
     convItAvg = convItAvg + convIt;
-    disp(['The best model converged in ', num2str(convIt), 'iterations.\n']);
+    disp(['The best model converged in ', num2str(convIt), ' iterations.\n']);
 
     % arrW{s} = bestW;
 
