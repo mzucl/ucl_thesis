@@ -7,13 +7,13 @@ function modelMapper(data, info, intermKVStore, params)
     chunkId = str2double(tokens{1}{1});
     
 
-    ZcPath = fullfile("ZcStorage", sprintf("Zc_%d.mat", chunkId));
+    % ZcPath = fullfile("ZcStorage", sprintf("Zc_%d.mat", chunkId));
 
     W_ = params.W;
     mu_ = params.mu;
 
     Kc = params.K;
-    % Nc = size(data, 1);
+    Nc = size(data, 1);
     % 
     % if isempty(Zc)
     %     initZMu = randn(Kc, 1); % I think  I don;t need this init, becuase it is update below right away
@@ -25,28 +25,44 @@ function modelMapper(data, info, intermKVStore, params)
     %     Xc = ViewHandler(table2array(data), true);
     % end
 
+    Zc = GaussianContainer("DS", Nc, true, Kc, zeros(Kc, 1));
 
     X = table2array(data);
     Nc = size(X, 1);
     Xc = ViewHandler(X, true);
     
-    if isfile(ZcPath)
-        ZcStruct = load(ZcPath);
-        Zc = ZcStruct.Zc;
-    else
-        initZMu = randn(Kc, 1);
-        Zc = GaussianContainer("DS", Nc, true, Kc, initZMu);
-    end
+
+% If you prefer calling save(ZcPath, 'Zc') directly, you could subclass from matlab.mixin.CustomSaveLoad to integrate with MATLAB's serialization system more natively (let me know if you want that).
+% 
+% Saving private properties is optional—do it only if needed for correctness or performance.
+% 
+
+
+
+    % if isfile(ZcPath)
+    %     % ZcStruct = load(ZcPath);
+    %     % Zc = ZcStruct.Zc;
+    % 
+    % 
+    %     load(ZcPath, 'ZcStruct');
+    %     Zc = GaussianContainer.loadobj(ZcStruct);  % reconstruct object
+    % else
+    %     initZMu = randn(Kc, 1);
+    %     Zc = GaussianContainer("DS", Nc, true, Kc, initZMu);
+    % end
 
 
     % === STEP 1: qZ update ===
     qZcUpdate(Zc, Xc, params);
 
     % === Save updated Zc back to file ===
-    if ~isfolder("ZcStorage")
-        mkdir("ZcStorage");
-    end
-    save(ZcPath, 'Zc');
+    % if ~isfolder("ZcStorage")
+    %     mkdir("ZcStorage");
+    % end
+    % save(ZcPath, 'Zc');
+    % 
+    % ZcStruct = Zc.saveobj;       % convert handle object to struct
+    % save(ZcPath, 'ZcStruct');     % save struct to file
 
     % === STEP 2: emit sufficient statistics ===
     stats.N = Nc;

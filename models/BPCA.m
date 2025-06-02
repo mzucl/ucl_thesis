@@ -96,6 +96,8 @@ classdef BPCA < handle
             tauExp = Utility.ternary(it == 1, obj.tau.getExpInit(), obj.tau.E);
             muExp = Utility.ternary(it == 1, obj.mu.getExpInit(), obj.mu.E);
 
+            % obj.Z = GaussianContainer("DS", obj.N, true, obj.K, zeros(obj.K, 1));
+
             covNew = Utility.matrixInverse(eye(obj.K) + tauExp * obj.W.E_XtX);
             muNew = tauExp * covNew * obj.W.E_Xt * (obj.view.X - muExp);
 
@@ -129,17 +131,24 @@ classdef BPCA < handle
 
 
         function obj = qTauUpdate(obj)
-            expWtW_tr = obj.W.E_XtX';
-            expZZt = obj.Z.E_XXt;
-            expWZ = obj.W.E * obj.Z.E;
-            
-            bNew = obj.tau.prior.b + 1/2 * obj.view.Tr_XtX + obj.N/2 * obj.mu.E_XtX + ...
-                1/2 * sum(expWtW_tr(:) .* expZZt(:)) - sum(obj.view.X(:) .* expWZ(:)) + ...
-                obj.mu.E' * (expWZ - obj.view.X) * ones(obj.N, 1);
+            bNew = obj.tau.prior.b + obj.getCommonCalc();
         
             obj.tau.updateB(bNew);
         end
         
+        % Helper function for the code that is shared between `qTauUpdate` and
+        % `getExpectationLnPX`.
+        % TODO: Find more meaningful name for this, check what that code
+        % computes, from where it originates.
+        function val = getCommonCalc(obj)
+            expWtW_tr = obj.W.E_XtX';
+            expZZt = obj.Z.E_XXt;
+            expWZ = obj.W.E * obj.Z.E;
+
+            val = 1/2 * obj.view.Tr_XtX + obj.N/2 * obj.mu.E_XtX + ...
+                1/2 * sum(expWtW_tr(:) .* expZZt(:)) - sum(obj.view.X(:) .* expWZ(:)) + ...
+                obj.mu.E' * (expWZ - obj.view.X) * ones(obj.N, 1);
+        end
         
 
         %% fit() and ELBO
@@ -209,14 +218,7 @@ classdef BPCA < handle
 
 
         function value = getExpectationLnPX(obj)
-            expWtW_tr = obj.W.E_XtX';
-            expZZt = obj.Z.E_XXt;
-            expWZ = obj.W.E * obj.Z.E;
-
-            value = obj.N * obj.D/2 * (obj.tau.E_LnX - log(2 * pi)) - obj.tau.E * ...
-                (1/2 * obj.view.Tr_XtX + obj.N/2 * obj.mu.E_XtX + ...
-                1/2 * sum(expWtW_tr(:) .* expZZt(:)) - sum(obj.view.X(:) .* expWZ(:)) + ...
-                obj.mu.E' * (expWZ - obj.view.X) * ones(obj.N, 1));
+            value = obj.N * obj.D/2 * (obj.tau.E_LnX - log(2 * pi)) - obj.tau.E * obj.getCommonCalc();
         end
 
 

@@ -1,6 +1,10 @@
 % Clear the workspace
 close all; clearvars; clc;
 
+rc = RunConfig.getInstance();
+rc.inputValidation = false;
+rc.enableLogging = false;
+
 % Logging
 logFileName = 'logs/pca_no_init.txt';
 if ~exist('logs', 'dir')
@@ -9,13 +13,9 @@ end
 
 diary(logFileName); % start logging
 
-% Model settings
-settings = ModelSettings.getInstance();
-% settings.VALIDATE = false;
-% settings.DEBUG = false;
 
 % Generate dataset
-[X, D] = Datasets.generateBPCA();
+[X, D] = Datasets.generateSyntheticBPCAData();
 
 % PPCA
 [W_PPCA, sigmaSq] = PPCA(X, D - 1); % PPCA expects X in [N x D] format

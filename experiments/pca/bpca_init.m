@@ -27,7 +27,11 @@
 
 
 % Clear the workspace
-close all; clearvars; clc; clear all;
+close all; clearvars; clc;
+
+rc = RunConfig.getInstance();
+rc.inputValidation = false;
+rc.enableLogging = false;
 
 % Logging
 logFileName = 'logs/pca_init.txt';
@@ -37,11 +41,6 @@ end
 
 diary(logFileName); % start logging
 
-% Model settings
-settings = ModelSettings.getInstance();
-% settings.VALIDATE = false;
-% settings.DEBUG = false;
-
 % Generate dataset
 [X, D] = Datasets.generateSyntheticBPCAData();
 
@@ -50,7 +49,7 @@ settings = ModelSettings.getInstance();
 
 
 %% BPCA - no initialization setup
-stabilityRun = 2;
+stabilityRun = 3;
 modelSelectionIter = 10;
 convItAvg = 0;
 

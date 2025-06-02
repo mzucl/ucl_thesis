@@ -21,7 +21,7 @@ addpath(genpath('models'));
 addpath('plots');
 addpath('src');
 addpath(genpath('tests'))
-addpath(genpath('npy-matlab-master'))
+% addpath(genpath('npy-matlab-master'))
 
 
 %% Run tests

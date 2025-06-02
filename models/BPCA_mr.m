@@ -1,3 +1,4 @@
+% TODO: Remove intermediate files from mr/ or any other
 classdef BPCA_mr < handle
     properties 
         % view            % ViewHandler
@@ -215,11 +216,11 @@ classdef BPCA_mr < handle
 
                 % Clean storage
                 % TODO: Add the name as a const!!!
-                if isfolder("ZcStorage")
-                    delete("ZcStorage/Zc_*.mat");
-                else
-                    mkdir("ZcStorage");
-                end
+                % if isfolder("ZcStorage")
+                %     delete("ZcStorage/Zc_*.mat");
+                % else
+                %     mkdir("ZcStorage");
+                % end
 
                 %% Run mapreduce
                 % data = tabularTextDatastore('Xdata.csv');
@@ -234,8 +235,8 @@ classdef BPCA_mr < handle
                 % mapr = mapreducer(0);  % Use in-memory map reducer
                 mapper = @(data, info, intermKVStore) modelMapper(data, info, intermKVStore, params);
                 result = mapreduce(obj.ds, mapper, @modelReducer, ...
-                    'OutputFolder', 'mr'); %, ...
-                    % 'Display', 'off');
+                    'OutputFolder', 'mr', ...
+                    'Display', 'off');
 
                 % Extract and aggregate results from reducer output
                 tbl = readall(result);

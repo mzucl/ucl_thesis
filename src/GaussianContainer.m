@@ -111,8 +111,44 @@ classdef GaussianContainer < handle
     
 
 
+    methods (Static)
+
+        function obj = loadobj(s)
+            % Reconstruct the object from struct
+            obj = GaussianContainer();
+            obj.type = s.type;
+            obj.cols = s.cols;
+            obj.dim = s.dim;
+            obj.mu = s.mu;
+            obj.cov = s.cov;
+            obj.priorPrec = s.priorPrec;
+            obj.Size = s.Size;
+    
+            % Restore private properties (if saved)
+            if isfield(s, 'expInit'), obj.expInit = s.expInit; end
+            if isfield(s, 'cache'), obj.cache = s.cache; end
+            if isfield(s, 'cacheFlags'), obj.cacheFlags = s.cacheFlags; end
+        end
+    end
+
 
     methods
+        % TODO: Write tests for this and the loadObj
+        function s = saveobj(obj)
+            % Custom save logic: convert handle object to struct
+            s.type = obj.type;
+            s.cols = obj.cols;
+            s.dim = obj.dim;
+            s.mu = obj.mu;
+            s.cov = obj.cov;
+            s.priorPrec = obj.priorPrec;
+            s.Size = obj.Size;
+    
+            % Save private properties (optional, or skip if they can be recomputed)
+            s.expInit = obj.expInit;
+            s.cache = obj.cache;
+            s.cacheFlags = obj.cacheFlags;
+        end
         %% Options for the constructor GaussianContainer
         % 4 PARAMETERS
         % -> obj.mu is set to all zeros; covariance for all dimensions is
