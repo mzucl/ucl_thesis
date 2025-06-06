@@ -13,12 +13,11 @@ end
 
 diary(logFileName); % start logging
 
-
 % Generate dataset
 [X, D] = Datasets.generateSyntheticBPCAData();
 
 % Save X to CSV for use with datastore
-T = array2table(X);
+T = array2table(X');
 writetable(T, 'Xdata.csv');
 
 T = readtable('Xdata.csv');
@@ -38,9 +37,9 @@ for i = 1:numChunks
 end
 
 % PPCA
-[W_PPCA, sigmaSq] = PPCA(X, D - 1); % PPCA expects X in [N x D] format
+[W_PPCA, sigmaSq] = PPCA(X);
 
-% obj = BPCA(X');
+% obj = BPCA(X);
 obj = BPCA_mr('fgg');
         
 [elboVals, it] = obj.fit();

@@ -1,50 +1,27 @@
 classdef Datasets
     methods (Static)
-        % X is [N x D]
-        % TODO: Change this!!!
-        function [X, D] = generateSyntheticBPCAData(N, D, stdDevs)
-            rng(42);
-            if nargin == 0
-                N = 300;
-                D = 10;
-                % Standard deviations along orthogonal directions
-                % stdDevs = [5, 4, 3, 2, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5];
-                stdDevs = [5, 5, 5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5];
-            elseif nargin ~= 3
-                error(['##### ERROR IN THE CLASS ' mfilename('class') ': Pass either none or all three arguments.']);
-            end
+        function [X, D] = generateSyntheticBPCAData(N, D)
+            CustomError.validateNumberOfParameters(nargin, 0, 2);
+            
+            % Set default values
+            if nargin < 2, D = 10; end
+            if nargin < 1, N = 300; end
 
-            if length(stdDevs) ~= D
-                error(['##### ERROR IN THE CLASS ' mfilename('class') ': stdDevs array must have D elements.']);
-            end
+            nHighVar = round(D / 3);
+            nLowVar = D - nHighVar;
+
+            % Standard deviations along orthogonal directions
+            stdDevs = [5 * ones(1, nHighVar), 0.5 * ones(1, nLowVar)];
             
             cov = diag(stdDevs.^2);
             
             % Generate random orthogonal matrix for rotation
             [U, ~] = qr(randn(D));
-            
-            % The true covariance matrix after rotation
-            TrueCovMatrix = U * cov * U';
-            
-            % Mean vector (centered at origin)
-            mu = zeros(1, D);
-            
+
             % Generate dataset from multivariate Gaussian distribution
-            X = mvnrnd(mu, TrueCovMatrix, N);
+            X = mvnrnd(zeros(1, D), U * cov * U', N)'; % [D x N]
         end
-    
-        
-
-        % Standard scaler
-        function X_scaled = standardScaler(X)
-            % X: The input matrix of size [N x D]
-            mean_X = mean(X);
-
-            std_X = std(X);
-            
-            % Standardize the data
-            X_scaled = (X - mean_X) ./ std_X;
-        end
+   
     
 
         % Returns N of one digit and N of other with labels

@@ -1,7 +1,7 @@
 classdef Visualization
     methods (Static, Access=private)
         function formatFigure(hfig)
-            % formatFigure Formats a MATLAB figure for publication-quality appearance.
+            %formatFigure Formats a MATLAB figure for publication-quality appearance.
             %
             % Description:
             % This function applies a consistent set of formatting options to the 
@@ -27,7 +27,7 @@ classdef Visualization
 
 
         function rgb = hexToRGB(hex)
-            % hexToRGB - Converts a hexadecimal color code to an RGB vector.
+            %hexToRGB - Converts a hexadecimal color code to an RGB vector.
             %
             % Description:
             %   This function takes a hexadecimal color code (e.g., '#FF5733') as input 
@@ -48,7 +48,7 @@ classdef Visualization
 
 
         function exportFigure(hfig, figName, subfolderName)
-            % exportFigure - Saves or exports a MATLAB figure to a file.
+            %exportFigure - Saves or exports a MATLAB figure to a file.
             %
             % Description:
             %   This function saves the specified MATLAB figure to a file with the 

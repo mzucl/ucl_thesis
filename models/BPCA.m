@@ -1,41 +1,53 @@
 classdef BPCA < handle
-    properties 
-        view            % ViewHandler
+    properties
+        % View and latent space
+        view            % ViewHandler                     -- wrapper for observations
         K               % Number of latent dimensions/principal components
-
-        % Model parameters
-        Z               % [K x N] GaussianContainer      [size: N; for each latent variable zn]
-        
-        mu              % [D x 1] Gaussian               [D x 1; all observations have the same 'mu' parameter]
-        
-        W               % [D x K] GaussianContainer      [size: D; for each row in W matrix]
-                        % Prior over W is defined per columns (each column
-                        % has its own precision parameter, but update
-                        % equations are defined by rows, so we are
-                        % representing W as a size D container in a row
-                        % format.
-
-        alpha           % [K x 1]   GammaContainer         [size: K]
-        tau             % [scalar]  Gamma                  [scalar]
-
-        % Optimization parameters
-        maxIter
-        tol
-
-        %% Constant dependent properties
-        %   They are not declared as dependent because they never change upon the initialization
-        N   % Number of observations/latent variables
-        D   % Dimensionality
+        Z               % [K x N] GaussianContainer       -- size: N (one per latent variable z_n)
+    
+        % Mean parameter
+        mu              % [D x 1] Gaussian                -- shared mean across all observations
+    
+        % Factor loadings
+        W               % [D x K] GaussianContainer       -- size: D (one per row of W)
+                        % Prior is column-wise (per latent dimension),
+                        % but updates are done row-wise, hence row-based container
+    
+        % Precision parameters
+        alpha           % [K x 1] GammaContainer          -- ARD prior precision for each latent dimension
+        tau             % scalar  Gamma                   -- Noise precision (shared)
+    
+        % Optimization settings
+        maxIter         % Maximum number of iterations
+        tol             % Convergence tolerance
     end
+
+
+
+    % The next two sections of variables support `Dependent properties` that 
+    % are initialized in the constructor and should remain immutable
+    % afterward.
+    properties (Dependent, SetAccess = private)
+        N               % Number of observations/latent variables
+        D               % Dimensionality of the dataset
+    end
+
+    % Backing variables
+    properties (Access = private) 
+        N_
+        D_
+    end
+
+
 
     methods
         function obj = BPCA(X, W_init, maxIter, tol)
             CustomError.validateNumberOfParameters(nargin, 1, 4);
 
-            rng(42);
+            % rng(42);
             obj.view = ViewHandler(X, false);
-            obj.N = obj.view.N;
-            obj.D = obj.view.D;
+            obj.N_ = obj.view.N;
+            obj.D_ = obj.view.D;
 
             % BPCA can infer the right number of components, thus K is not
             % passed in as a parameter
@@ -83,7 +95,18 @@ classdef BPCA < handle
         end
 
 
+
+        %% Getters
+        function value = get.N(obj)
+            value = obj.N_;
+        end
+
+        function value = get.D(obj)
+            value = obj.D_;
+        end
         
+
+
         %% Update methods
         function obj = qConstantUpdates(obj)
             % alpha.a
@@ -92,15 +115,15 @@ classdef BPCA < handle
             obj.tau.updateA(obj.tau.prior.a + (obj.N * obj.D)/2);
         end
 
-        % [NOTE] This method computes (1/2) * E[sum(|xn - (W * zn + mu)|^2)], 
-        % where the sum is over all observations `xn`. This corresponds to the 
+        % [NOTE] This method computes (1/2) * E[sum(|x_n - (W * z_n + mu)|^2)], 
+        % where the sum is over all observations `x_n`. This corresponds to the 
         % expected squared reconstruction error term (scaled!). It appears in both the 
         % `qTauUpdate` and `getExpectationLnPX` methods, so it is factored out 
         % into a separate method for clarity and reuse.
         function val = expectedReconstructionLoss(obj)
             expWtW_tr = obj.W.E_XtX';
-            expZZt = obj.Z.E_XXt;
-            expWZ = obj.W.E * obj.Z.E;
+            expZZt    = obj.Z.E_XXt;
+            expWZ     = obj.W.E * obj.Z.E;
 
             val = 1/2 * obj.view.Tr_XtX + obj.N/2 * obj.mu.E_XtX + ...
                 1/2 * sum(expWtW_tr(:) .* expZZt(:)) - sum(obj.view.X(:) .* expWZ(:)) + ...
@@ -109,18 +132,18 @@ classdef BPCA < handle
 
         function obj = qZUpdate(obj, it)
             tauExp = Utility.ternary(it == 1, obj.tau.getExpInit(), obj.tau.E);
-            muExp = Utility.ternary(it == 1, obj.mu.getExpInit(), obj.mu.E);
+            muExp  = Utility.ternary(it == 1, obj.mu.getExpInit(), obj.mu.E);
 
             covNew = Utility.matrixInverse(eye(obj.K) + tauExp * obj.W.E_XtX);
-            muNew = tauExp * covNew * obj.W.E_Xt * (obj.view.X - muExp);
+            muNew  = tauExp * covNew * obj.W.E_Xt * (obj.view.X - muExp);
 
             obj.Z.updateDistributionsParameters(muNew, covNew);
         end
 
         function obj = qWUpdate(obj, it)
             alphaExp = Utility.ternary(it == 1, obj.alpha.getExpInit(), obj.alpha.E);
-            tauExp = Utility.ternary(it == 1, obj.tau.getExpInit(), obj.tau.E);
-            muExp = Utility.ternary(it == 1, obj.mu.getExpInit(), obj.mu.E);
+            tauExp   = Utility.ternary(it == 1, obj.tau.getExpInit(), obj.tau.E);
+            muExp    = Utility.ternary(it == 1, obj.mu.getExpInit(), obj.mu.E);
 
             covNew = Utility.matrixInverse(diag(alphaExp) + tauExp * obj.Z.E_XXt);
             muNew = tauExp * covNew * obj.Z.E * (obj.view.X' - muExp');
@@ -132,26 +155,33 @@ classdef BPCA < handle
             obj.alpha.updateAllDistributionsB(obj.alpha.prior.b + 1/2 * obj.W.E_SNC);
         end
 
-
         function obj = qMuUpdate(obj, it)
             tauExp = Utility.ternary(it == 1, obj.tau.getExpInit(), obj.tau.E);
 
             covNew = (1/(obj.mu.priorPrec + obj.N * tauExp)) * eye(obj.D);
-            muNew = tauExp * covNew * (obj.view.X - obj.W.E * obj.Z.E) * ones(obj.N, 1);
+            muNew  = tauExp * covNew * (obj.view.X - obj.W.E * obj.Z.E) * ones(obj.N, 1);
             
             obj.mu.updateParameters(muNew, covNew);
         end
-
 
         function obj = qTauUpdate(obj)
             obj.tau.updateB(obj.tau.prior.b + obj.expectedReconstructionLoss());
         end
 
+
+
         %% fit() and ELBO
-        % elboRecalcInterval - specifies the interval at which the ELBO should 
-        % be computed; e.g. if elboRecalcInterval = 5 elbo will be computed every
-        % in iterations {1, 5, 10, ...}
         function [elboVals, it] = fit(obj, elboRecalcInterval)
+            % Fits the model using variational inference and optionally tracks ELBO values.
+            %
+            % Parameters:
+            %   elboRecalcInterval - Specifies how often the ELBO should be computed.
+            %                        For example, if elboRecalcInterval = 5, ELBO will be
+            %                        computed at iterations {1, 5, 10, ...}.
+            %
+            % Returns:
+            %   elboVals - A vector of computed ELBO values at the specified intervals.
+            %   it       - The total number of iterations executed during fitting.
             CustomError.validateNumberOfParameters(nargin, 1, 2);
             if nargin < 2
                 elboRecalcInterval = RunConfig.getInstance().elboRecalcInterval;
@@ -207,19 +237,16 @@ classdef BPCA < handle
             end
         end
         
-
         function elbo = computeELBO(obj)
             elbo = obj.getExpectationLnPX() + obj.Z.E_LnP + obj.getExpectationLnPW() + ... % p(.)
                 obj.alpha.E_LnP + obj.mu.E_LnP + obj.tau.E_LnP + ... % p(.)
                 obj.Z.H + obj.W.H + obj.alpha.H + obj.mu.H + obj.tau.H; % q(.)
         end
 
-
         function value = getExpectationLnPX(obj)
             value = obj.N * obj.D/2 * (obj.tau.E_LnX - log(2 * pi)) - ...
                 obj.tau.E * obj.expectedReconstructionLoss();
         end
-
 
         function value = getExpectationLnPW(obj)
             value = -1/2 * dot(obj.W.E_SNC, obj.alpha.E) + ...
