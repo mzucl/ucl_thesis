@@ -16,3 +16,7 @@ axis off;
 
 % Optionally, turn off the figure background color
 set(gcf, 'Color', [1 1 1]); % White background color for the figure
+
+
+% Use testCase.verifyEqual with Tolerances for Float Types
+% testCase.verifyEqual(result1, result2, 'AbsTol', 1e-10)

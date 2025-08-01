@@ -21,6 +21,91 @@ classdef Datasets
             % Generate dataset from multivariate Gaussian distribution
             X = mvnrnd(zeros(1, D), U * cov * U', N)'; % [D x N]
         end
+
+        function enoughMemory = assertEnoughMemory(requiredBytes, throwError)
+            %assertEnoughMemory - Checks if sufficient system memory is available.
+            %
+            % Description:
+            %   This function verifies whether the system has enough available memory 
+            %   to meet the specified requirement. If not, it either throws an error 
+            %   or returns a warning based on the provided flag. The implementation 
+            %   uses platform-specific commands: `vm_stat` on macOS/Linux and `memory` 
+            %   on Windows.
+            %
+            % Input:
+            %   requiredBytes - A scalar specifying the required memory in bytes.
+            %   throwError    - (Optional) A logical flag indicating whether to throw 
+            %                   an error if insufficient memory is available. Defaults 
+            %                   to true.
+            %
+            % Output:
+            %   (None) - The function throws an error or silently returns, depending 
+            %           on the result and the value of `throwError`.
+            if nargin < 2
+                throwError = true;
+            end
+            
+            available = Datasets.availableRAM();
+
+            enoughMemory = true;
+            if available < requiredBytes
+                enoughMemory = false;
+                msg = sprintf('Not enough memory.\nRequired: %.2f GB\nAvailable: %.2f GB', ...
+                    requiredBytes / 1e9, available / 1e9);
+                if throwError
+                    error(msg);
+                else
+                    warning(msg);
+                end
+            end
+        end
+
+        function available = availableRAM()
+            %availableRAM - Returns the available system memory in bytes.
+            %
+            % Description:
+            %   This function detects the operating system and retrieves the amount of 
+            %   available RAM accordingly.
+            %
+            % Output:
+            %   available - A scalar value representing the available system memory.
+            if ispc
+                % Windows
+                mem = memory;
+                available = mem.MemAvailableAllArrays;
+            else
+                % macOS/Linux
+                [~, out] = system("vm_stat | grep 'Pages free'");
+                pages_free = sscanf(out, 'Pages free: %d.');
+                page_size = 4096; % bytes per page
+                available = pages_free * page_size;
+            end
+        end
+
+% 
+%         function generateLargeSyntheticBPCAData()
+%             D = 1000;
+%             bytesNeeded = D * N * 8; % `double` is 8 Bytes
+% 
+% 
+%             chunkSize = 1e4;
+%             numChunks = N / chunkSize;
+%             outputDir = 'datasets/big_bpca';
+%         end
+% 
+% D = 1000;
+% N = 2e6;
+% chunkSize = 1e5;
+% numChunks = N / chunkSize;
+% outputDir = 'datasets/big_bpca';
+% mkdir(outputDir);
+% 
+% for i = 1:numChunks
+%     X = randn(D, chunkSize);  % simulate Gaussian data
+%     filename = fullfile(outputDir, sprintf('chunk_%03d.mat', i));
+%     save(filename, 'X');
+% end
+
    
     
 

@@ -129,7 +129,7 @@ classdef (Abstract) BaseModel < handle
 
 
         %% Model training
-        function obj = removeFactors_v1(obj, it, threshold)
+        function obj = removeFactors_Z(obj, it, threshold)
             CustomError.validateNumberOfParameters(nargin, 2, 3);
             if nargin < 3
                 threshold = Utility.getConfigValue('Model', 'LATENT_FACTORS_THRESHOLD');

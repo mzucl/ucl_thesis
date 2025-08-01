@@ -1,31 +1,3 @@
-% % Clear the workspace
-% close all; clearvars; clc;
-% 
-% RunConfig.resetToDefaults();
-% 
-% %% Generate data and run the experiment
-% data = Datasets.generateSyntheticGFAData(2);
-% 
-% bestOverallModel = Experiment('sgfa', 10, {data.X_train{1}, data.X_train{2}}, mfilename, '', '', '', false, false).run();
-% 
-% %% [NOTE] The visualization functionality is deliberately kept outside of 
-% % the `Experiment` class to allow for greater flexibility and control over 
-% % aspects such as figure title, name, and other presentation settings.
-% %% Visualize true and inferred latent factors
-% Visualization.plotLatentFactors(data.Z, 'True latent factors', '', mfilename);
-% Visualization.plotLatentFactors(bestOverallModel.Z.E, 'Inferred latent factors', '', mfilename);
-% 
-% %% Visualize loadings and alpha
-% Visualization.plotFactorLoadingsAndAlpha(data.W, data.D, data.alpha, 'bottom', '', 2.5, 'True $\mathbf{W}^\top$ and \boldmath{$\alpha$}$^\top$');
-% Visualization.plotFactorLoadingsAndAlpha(bestOverallModel.W, bestOverallModel.D, bestOverallModel.alpha, 'bottom', '', 2.5, 'Inferred $\mathbf{W}^\top$ and \boldmath{$\alpha$}$^\top$');
-% 
-% 
-
-
-
-
-
-
 % Clear the workspace
 close all; clearvars; clc;
 
@@ -34,7 +6,7 @@ rc.inputValidation = false;
 rc.enableLogging = false;
 
 % Logging
-logFileName = 'logs/pca_init.txt';
+logFileName = ['logs/', mfilename, '.txt'];
 if ~exist('logs', 'dir')
     mkdir('logs');
 end
@@ -45,8 +17,7 @@ diary(logFileName); % start logging
 [X, D] = Datasets.generateSyntheticBPCAData();
 
 % PPCA
-[W_PPCA, sigmaSq] = PPCA(X, D - 1); % PPCA expects X in [N x D] format
-
+[W_PPCA, sigmaSq] = PPCA(X);
 
 %% BPCA - no initialization setup
 stabilityRun = 3;
@@ -63,7 +34,7 @@ for s = 1:stabilityRun
     convIt = NaN;
     for i = 1:modelSelectionIter
         % BPCA constructor expects data in [D x N] format
-        obj = BPCA(X', W_PPCA + randn(size(W_PPCA)));
+        obj = BPCA(X, W_PPCA);
         
         [elboVals, it] = obj.fit();
 
