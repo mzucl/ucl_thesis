@@ -58,7 +58,7 @@ classdef MatrixValidation
         end
 
         %% Check if a matrix is singular
-        function res = isSingular(matrix)
+        function res = isSingularMatrix(matrix)
             arguments
                 matrix
             end

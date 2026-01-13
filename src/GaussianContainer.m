@@ -199,13 +199,13 @@ classdef GaussianContainer < handle
                 if Utility.isSingleNumber(mu)
                     obj.mu = mu * ones(obj.dim, size_);
                  
-                elseif Utility.isArray(mu)
+                elseif MatrixValidation.isNumericVector(mu)
                     if RunConfig.getInstance().validateInput && ~isequal(size(mu), [obj.dim, 1])
                         error(['##### ERROR IN THE CLASS ' mfilename ': Parameter mu dimensionality doesn''t match.']);
                     end
                     obj.mu = repmat(mu, 1, size_);
 
-                elseif Utility.isMatrix(mu)
+                elseif MatrixValidation.isNumeric2DMatrix(mu)
                     if RunConfig.getInstance().validateInput && ~isequal(size(mu), [obj.dim, size_])
                         error(['##### ERROR IN THE CLASS ' mfilename ': Parameter mu dimensionality doesn''t match.']);
                     end
@@ -221,15 +221,15 @@ classdef GaussianContainer < handle
                         end
                         compCov = cov * eye(dim); % Spherical
                         
-                    elseif Utility.isArray(cov)
-                        if RunConfig.getInstance().validateInput && (length(cov) ~= dim || ~Utility.isValidCovarianceMatrix(diag(cov)))
+                    elseif MatrixValidation.isNumericVector(cov)
+                        if RunConfig.getInstance().validateInput && (length(cov) ~= dim || ~MatrixValidation.isCovarianceMatrix(diag(cov)))
                             error(['##### ERROR IN THE CLASS ' mfilename ': Parameter is either not a valid covariance matrix or' ...
                                 ' dimensionality doesn''t match.']);
                         end
                         compCov = diag(cov); % Diagonal
 
-                    elseif Utility.isMatrix(cov)
-                        if RunConfig.getInstance().validateInput && (~isequal(size(cov), [dim, dim]) || ~Utility.isValidCovarianceMatrix(cov))
+                    elseif MatrixValidation.isNumeric2DMatrix(cov)
+                        if RunConfig.getInstance().validateInput && (~isequal(size(cov), [dim, dim]) || ~MatrixValidation.isCovarianceMatrix(cov))
                             error(['##### ERROR IN THE CLASS ' mfilename ': Parameter is either not a valid covariance matrix or' ...
                                 'dimensionality doesn''t match.']);
                         end
@@ -249,7 +249,7 @@ classdef GaussianContainer < handle
                             end
                             obj.priorPrec = priorPrec; % Spherical shared covariance
                             
-                        elseif Utility.isArray(priorPrec)
+                        elseif MatrixValidation.isNumericVector(priorPrec)
                             if RunConfig.getInstance().validateInput && (length(priorPrec) ~= size_ || any(priorPrec < 0) || obj.type ~= "DD")
                                 error(['##### ERROR IN THE CLASS ' mfilename ': Parameter is either not a valid precision or' ...
                                     ' dimensionality doesn''t match.']);
@@ -345,7 +345,7 @@ classdef GaussianContainer < handle
                 if nargin < 2
                     CustomError.raiseError('InputCheck', CustomError.ERR_TOO_FEW_ARGUMENTS);
                 end
-                if ~Utility.isValidCovarianceMatrix(cov)
+                if ~MatrixValidation.isCovarianceMatrix(cov)
                     CustomError.raiseError('InputCheck', ...
                     'Invalid update parameter. Ensure the sizes are correct and the covariance matrix is positive definite.');
                 end
@@ -362,7 +362,7 @@ classdef GaussianContainer < handle
                 if nargin < 3
                     CustomError.raiseError('InputCheck', CustomError.ERR_TOO_FEW_ARGUMENTS);
                 end
-                if ~Utility.isValidCovarianceMatrix(cov)
+                if ~MatrixValidation.isCovarianceMatrix(cov)
                     CustomError.raiseError('InputCheck', ...
                     'Invalid update parameter. Ensure the sizes are correct and the covariance matrix is positive definite.');
                 end

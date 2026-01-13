@@ -646,8 +646,8 @@ classdef GaussianContainerTest < matlab.unittest.TestCase
 
             % Test 1
             testCase.verifyEqual(size(obj.E), [dim, obj.Size]);
-            testCase.verifyTrue(Utility.isSymmetricMatrix(obj.E_XtX));
-            testCase.verifyTrue(Utility.isSymmetricMatrix(obj.E_XXt));
+            testCase.verifyTrue(MatrixValidation.isSymmetricMatrix(obj.E_XtX));
+            testCase.verifyTrue(MatrixValidation.isSymmetricMatrix(obj.E_XXt));
 
             testCase.verifyEqual(obj.E, mu);
             testCase.verifyEqual(obj.E_Xt, mu');
@@ -677,8 +677,8 @@ classdef GaussianContainerTest < matlab.unittest.TestCase
             % -------------------------------------------------------
             % Test 1
             testCase.verifyEqual(size(obj.E), [obj.Size, dim]);
-            testCase.verifyTrue(Utility.isSymmetricMatrix(obj.E_XtX));
-            testCase.verifyTrue(Utility.isSymmetricMatrix(obj.E_XXt));
+            testCase.verifyTrue(MatrixValidation.isSymmetricMatrix(obj.E_XtX));
+            testCase.verifyTrue(MatrixValidation.isSymmetricMatrix(obj.E_XXt));
 
             testCase.verifyEqual(obj.E, mu');
             testCase.verifyEqual(obj.E_Xt, mu);
@@ -713,8 +713,8 @@ classdef GaussianContainerTest < matlab.unittest.TestCase
             
             % Test 1
             testCase.verifyEqual(size(obj.E), [dim, obj.Size]);
-            testCase.verifyTrue(Utility.isSymmetricMatrix(obj.E_XtX));
-            testCase.verifyTrue(Utility.isSymmetricMatrix(obj.E_XXt));
+            testCase.verifyTrue(MatrixValidation.isSymmetricMatrix(obj.E_XtX));
+            testCase.verifyTrue(MatrixValidation.isSymmetricMatrix(obj.E_XXt));
 
             testCase.verifyEqual(obj.E, mu);
             testCase.verifyEqual(obj.E_Xt, mu');
@@ -732,8 +732,8 @@ classdef GaussianContainerTest < matlab.unittest.TestCase
             obj.updateDistributionsCovariance(cov);
 
             testCase.verifyEqual(size(obj.E), [dim, obj.Size]);
-            testCase.verifyTrue(Utility.isSymmetricMatrix(obj.E_XtX));
-            testCase.verifyTrue(Utility.isSymmetricMatrix(obj.E_XXt));
+            testCase.verifyTrue(MatrixValidation.isSymmetricMatrix(obj.E_XtX));
+            testCase.verifyTrue(MatrixValidation.isSymmetricMatrix(obj.E_XXt));
 
             testCase.verifyEqual(obj.E, muNew);
             testCase.verifyEqual(obj.E_Xt, muNew');
@@ -768,8 +768,8 @@ classdef GaussianContainerTest < matlab.unittest.TestCase
 
             % Test 1
             testCase.verifyEqual(size(obj.E), [obj.Size, dim]);
-            testCase.verifyTrue(Utility.isSymmetricMatrix(obj.E_XtX));
-            testCase.verifyTrue(Utility.isSymmetricMatrix(obj.E_XXt));
+            testCase.verifyTrue(MatrixValidation.isSymmetricMatrix(obj.E_XtX));
+            testCase.verifyTrue(MatrixValidation.isSymmetricMatrix(obj.E_XXt));
 
             testCase.verifyEqual(obj.E, mu');
             testCase.verifyEqual(obj.E_Xt, mu);
@@ -787,8 +787,8 @@ classdef GaussianContainerTest < matlab.unittest.TestCase
             obj.updateDistributionsCovariance(cov);
            
             testCase.verifyEqual(size(obj.E), [obj.Size, dim]);
-            testCase.verifyTrue(Utility.isSymmetricMatrix(obj.E_XtX));
-            testCase.verifyTrue(Utility.isSymmetricMatrix(obj.E_XXt));
+            testCase.verifyTrue(MatrixValidation.isSymmetricMatrix(obj.E_XtX));
+            testCase.verifyTrue(MatrixValidation.isSymmetricMatrix(obj.E_XXt));
 
             testCase.verifyEqual(obj.E, muNew');
             testCase.verifyEqual(obj.E_Xt, muNew);

@@ -152,15 +152,15 @@ classdef Gaussian < handle
                             end
                             cov = covParam * eye(dim); % Spherical
                             
-                        elseif Utility.isArray(covParam)
-                            if RunConfig.getInstance().validateInput && (length(covParam) ~= dim || ~Utility.isValidCovarianceMatrix(diag(covParam)))
+                        elseif MatrixValidation.isNumericVector(covParam)
+                            if RunConfig.getInstance().validateInput && (length(covParam) ~= dim || ~MatrixValidation.isCovarianceMatrix(diag(covParam)))
                                 error(['##### ERROR IN THE CLASS ' mfilename ': Parameter is either not a valid covariance matrix or' ...
                                     ' dimensionality doesn''t match.']);
                             end
                             cov = diag(covParam); % Diagonal
 
-                        elseif Utility.isMatrix(covParam)
-                            if RunConfig.getInstance().validateInput && (~isequal(size(covParam), [dim, dim]) || ~Utility.isValidCovarianceMatrix(covParam))
+                        elseif MatrixValidation.isNumeric2DMatrix(covParam)
+                            if RunConfig.getInstance().validateInput && (~isequal(size(covParam), [dim, dim]) || ~MatrixValidation.isCovarianceMatrix(covParam))
                                 error(['##### ERROR IN THE CLASS ' mfilename ': Parameter is either not a valid covariance matrix or' ...
                                     'dimensionality doesn''t match.']);
                             end
@@ -188,7 +188,7 @@ classdef Gaussian < handle
         end
 
         function value = validateCovariance(obj, cov)
-            value = size(cov, 1) == obj.dim && Utility.isValidCovarianceMatrix(cov);
+            value = size(cov, 1) == obj.dim && MatrixValidation.isCovarianceMatrix(cov);
         end
     end
 

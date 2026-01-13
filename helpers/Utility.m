@@ -12,29 +12,6 @@
 %   isnan([]) -> returns elements wise isnan check!
 %%
 
-%
-
-
-
-% DONE:
-% isArray
-% isMonotonicIncreasing
-% isMatrix
-
-
-
-
-% isPositiveDefinite
-% 
-% isSquareMatrix 
-% isSymmetricMatrix 
-% 
-% isSingular
-% isRotationMatrix
-% 
-% isValidCovarianceMatrix
-
-
 
 classdef Utility
     methods (Static, Access = private)
@@ -117,21 +94,7 @@ classdef Utility
 
 
     methods (Static)
-        %% General
-        % Check if the array is monotonically increasing
-        function isIncreasing = isMonotonicIncreasing(arr)
-            isIncreasing = all(diff(arr) > 0);
-        end
-        
-        % ismatrix(3) -> true
-        % -----> isNumericVector
-        function res = isArray(x)
-            res = ~isscalar(x) && ismatrix(x) && numel(size(x)) == 2 && (size(x, 1) == 1 || size(x, 2) == 1);
-        end
 
-        function res = isMatrix(x)
-            res = ~isscalar(x) && ismatrix(x) && ~Utility.isArray(x);
-        end
 
 
 
@@ -191,11 +154,11 @@ classdef Utility
         end
 
         function res = isSymmetricMatrix(matrix)
-            res = Utility.isSquareMatrix(matrix) && norm(matrix - matrix', 'fro') < Utility.getConfigValue('General', 'TOL');
+            res = MatrixValidation.isSquareMatrix(matrix) && norm(matrix - matrix', 'fro') < Utility.getConfigValue('General', 'TOL');
         end
 
         function res = isSingular(matrix)
-            if ~Utility.isSquareMatrix(matrix)
+            if ~MatrixValidation.isSquareMatrix(matrix)
                 res = true;
                 return;
             end
@@ -208,7 +171,7 @@ classdef Utility
 
  
         function res = isRotationMatrix(matrix)
-            if ~Utility.isSquareMatrix(matrix)
+            if ~MatrixValidation.isSquareMatrix(matrix)
                 res = false;
                 return;
             end
@@ -237,7 +200,7 @@ classdef Utility
         %
         % Matrix cannot be positive definite if it is not symmetric!
         function res = isPositiveDefinite(matrix)
-            if ~Utility.isSymmetricMatrix(matrix)
+            if ~MatrixValidation.isSymmetricMatrix(matrix)
                 res = false;
                 return;
             end
@@ -256,7 +219,7 @@ classdef Utility
 
         % Positive semi-definite
         function res = isValidCovarianceMatrix(matrix)
-            if ~Utility.isSymmetricMatrix(matrix)
+            if ~MatrixValidation.isSymmetricMatrix(matrix)
                 res = false;
                 return;
             end
@@ -277,9 +240,9 @@ classdef Utility
         % convenience, especially since these methods are often called within loops.
         function invMatrix = choleskyInverse(matrix)
             if RunConfig.getInstance().validateInput
-                if Utility.isSingular(matrix)
+                if MatrixValidation.isSingularMatrix(matrix)
                     error(['##### ERROR IN THE CLASS ' mfilename('class') ': Matrix must be non-singular for choleskyInverse.']);
-                elseif ~Utility.isSymmetricMatrix(matrix)
+                elseif ~MatrixValidation.isSymmetricMatrix(matrix)
                     error(['##### ERROR IN THE CLASS ' mfilename('class') ': Matrix must be symmetric for choleskyInverse.']);
             
                 end
@@ -306,7 +269,7 @@ classdef Utility
         % 3. Not Necessarily Symmetric or Positive Definite (unlike
         % Cholesky decomposition)
         function invMatrix = matrixInverse(matrix)
-            if RunConfig.getInstance().validateInput && Utility.isSingular(matrix)
+            if RunConfig.getInstance().validateInput && MatrixValidation.isSingularMatrix(matrix)
                     error(['##### ERROR IN THE CLASS ' mfilename('class') ': Matrix must be non-singular for matrixInverse.']);
             end
 

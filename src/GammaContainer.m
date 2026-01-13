@@ -215,7 +215,7 @@ classdef GammaContainer < handle
                 if nargin < 2
                     error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
                 end
-                if ~(Utility.isSingleNumber(b) || Utility.isArray(b) && size(b, 1) == obj.Size) % 'b' must be a column vector
+                if ~(Utility.isSingleNumber(b) || MatrixValidation.isNumericVector(b) && size(b, 1) == obj.Size) % 'b' must be a column vector
                     error(['##### ERROR IN THE CLASS ' class(obj) ': Dimensions do not match.']);
                 end
                 if ~all(b > 0)
