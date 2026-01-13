@@ -46,7 +46,7 @@ classdef ViewHandler < handle
                 featuresInCols = true;
             end
 
-            obj.X = Utility.ternary(featuresInCols, data', data);
+            obj.X = LogicUtils.ternary(featuresInCols, data', data);
 
             % Set dependent properties
             obj.D = size(obj.X, 1);
@@ -73,7 +73,7 @@ classdef ViewHandler < handle
             validateIndex(obj, idx);
 
             observation = obj.X(:, idx);
-            observation = Utility.ternary(tr, observation', observation);
+            observation = LogicUtils.ternary(tr, observation', observation);
         end
 
         % Returns the row at index idx; if 'tr' is true then the row is
@@ -91,7 +91,7 @@ classdef ViewHandler < handle
             validateRowIndex(obj, idx);
 
             observation = obj.X(idx, :);
-            observation = Utility.ternary(tr, observation', observation);
+            observation = LogicUtils.ternary(tr, observation', observation);
         end
 
         function normSq = getObservationNormSq(obj, idx)

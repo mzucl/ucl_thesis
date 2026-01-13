@@ -108,8 +108,8 @@ classdef GFAGroup < handle
     
 
         function obj = qWUpdate(obj, it)
-            alphaExp = Utility.ternary(it == 1, obj.alpha.getExpInit(true), obj.alpha.E_Diag);
-            TExp = Utility.ternary(it == 1, obj.T.getExpInit(), obj.T.E);
+            alphaExp = LogicUtils.ternary(it == 1, obj.alpha.getExpInit(true), obj.alpha.E_Diag);
+            TExp = LogicUtils.ternary(it == 1, obj.T.getExpInit(), obj.T.E);
 
             % Update cov
             T_3D = reshape(TExp, 1, 1, []);

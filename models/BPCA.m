@@ -131,8 +131,8 @@ classdef BPCA < handle
         end
 
         function obj = qZUpdate(obj, it)
-            tauExp = Utility.ternary(it == 1, obj.tau.getExpInit(), obj.tau.E);
-            muExp  = Utility.ternary(it == 1, obj.mu.getExpInit(), obj.mu.E);
+            tauExp = LogicUtils.ternary(it == 1, obj.tau.getExpInit(), obj.tau.E);
+            muExp  = LogicUtils.ternary(it == 1, obj.mu.getExpInit(), obj.mu.E);
 
             covNew = Utility.matrixInverse(eye(obj.K) + tauExp * obj.W.E_XtX);
             muNew  = tauExp * covNew * obj.W.E_Xt * (obj.view.X - muExp);
@@ -141,9 +141,9 @@ classdef BPCA < handle
         end
 
         function obj = qWUpdate(obj, it)
-            alphaExp = Utility.ternary(it == 1, obj.alpha.getExpInit(), obj.alpha.E);
-            tauExp   = Utility.ternary(it == 1, obj.tau.getExpInit(), obj.tau.E);
-            muExp    = Utility.ternary(it == 1, obj.mu.getExpInit(), obj.mu.E);
+            alphaExp = LogicUtils.ternary(it == 1, obj.alpha.getExpInit(), obj.alpha.E);
+            tauExp   = LogicUtils.ternary(it == 1, obj.tau.getExpInit(), obj.tau.E);
+            muExp    = LogicUtils.ternary(it == 1, obj.mu.getExpInit(), obj.mu.E);
 
             covNew = Utility.matrixInverse(diag(alphaExp) + tauExp * obj.Z.E_XXt);
             muNew = tauExp * covNew * obj.Z.E * (obj.view.X' - muExp');
@@ -156,7 +156,7 @@ classdef BPCA < handle
         end
 
         function obj = qMuUpdate(obj, it)
-            tauExp = Utility.ternary(it == 1, obj.tau.getExpInit(), obj.tau.E);
+            tauExp = LogicUtils.ternary(it == 1, obj.tau.getExpInit(), obj.tau.E);
 
             covNew = (1/(obj.mu.priorPrec + obj.N * tauExp)) * eye(obj.D);
             muNew  = tauExp * covNew * (obj.view.X - obj.W.E * obj.Z.E) * ones(obj.N, 1);
@@ -208,7 +208,7 @@ classdef BPCA < handle
                 currElbo = obj.computeELBO();
                 elboVals(elboIdx) = currElbo;
                 
-                prevElbo = Utility.ternaryOpt(elboIdx == 1, @()nan, @()elboVals(elboIdx - 1));
+                prevElbo = LogicUtils.ternaryOpt(elboIdx == 1, @()nan, @()elboVals(elboIdx - 1));
                 
                 % [NOTE] The ELBO must increase with each iteration. This is a critical error,
                 % so it is logged regardless of the `RunConfig.getInstance().verbose` setting.

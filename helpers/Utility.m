@@ -115,7 +115,7 @@ classdef Utility
         % be used just in case both true and false statements can't/shouldn't be
         % evaluated or outside loops.
         %
-        % EXAMPLE: Utility.ternaryOpt(isscalar(priors), @() GaussianDistribution(priors), @() GaussianDistribution(priors(i)));
+        % EXAMPLE: LogicUtils.ternaryOpt(isscalar(priors), @() GaussianDistribution(priors), @() GaussianDistribution(priors(i)));
         function result = ternaryOpt(cond, valTrueFunc, valFalseFunc)
             if cond
                 result = valTrueFunc();
@@ -352,7 +352,7 @@ classdef Utility
             if isDiagonal
                 diagElements = diag(A);
 
-                diagElementsOrValue = Utility.ternary(all(diagElements == diagElements(1)), ...
+                diagElementsOrValue = LogicUtils.ternary(all(diagElements == diagElements(1)), ...
                     diagElements(1), diagElements);
             else
                 diagElementsOrValue = [];

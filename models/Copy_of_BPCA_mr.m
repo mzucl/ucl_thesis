@@ -116,9 +116,9 @@ classdef BPCA_mr < handle
         end
 
         function obj = qWUpdate(obj, it)
-            alphaExp = Utility.ternary(it == 1, obj.alpha.getExpInit(), obj.alpha.E);
-            tauExp = Utility.ternary(it == 1, obj.tau.getExpInit(), obj.tau.E);
-            muExp = Utility.ternary(it == 1, obj.mu.getExpInit(), obj.mu.E);
+            alphaExp = LogicUtils.ternary(it == 1, obj.alpha.getExpInit(), obj.alpha.E);
+            tauExp = LogicUtils.ternary(it == 1, obj.tau.getExpInit(), obj.tau.E);
+            muExp = LogicUtils.ternary(it == 1, obj.mu.getExpInit(), obj.mu.E);
 
             covNew = Utility.matrixInverse(diag(alphaExp) + tauExp * obj.stats.E_ZZt);
             muNew = tauExp * covNew * (obj.stats.E_Z_times_Xt - sum(obj.stats.E_Z, 2) * muExp');
@@ -137,7 +137,7 @@ classdef BPCA_mr < handle
         end
 
         function obj = qMuUpdate(obj, it)
-            tauExp = Utility.ternary(it == 1, obj.tau.getExpInit(), obj.tau.E);
+            tauExp = LogicUtils.ternary(it == 1, obj.tau.getExpInit(), obj.tau.E);
 
             covNew = (1/(obj.mu.priorPrec + obj.N * tauExp)) * eye(obj.D);
             muNew = tauExp * covNew * (obj.stats.X_col_sum - sum(obj.W.E * obj.stats.E_Z, 2));
@@ -205,7 +205,7 @@ classdef BPCA_mr < handle
                 params.K = obj.K;
                 
                 % Covariance is shared, don't recompute it!
-                tauExp = Utility.ternary(it == 1, obj.tau.getExpInit(), obj.tau.E);
+                tauExp = LogicUtils.ternary(it == 1, obj.tau.getExpInit(), obj.tau.E);
                 params.covZ = Utility.matrixInverse(eye(obj.K) + tauExp * obj.W.E_XtX);
                 
                 
@@ -271,7 +271,7 @@ classdef BPCA_mr < handle
                 currElbo = obj.computeELBO();
                 elboVals(elboIdx) = currElbo;
 
-                prevElbo = Utility.ternaryOpt(elboIdx == 1, @()nan, @()elboVals(elboIdx - 1));
+                prevElbo = LogicUtils.ternaryOpt(elboIdx == 1, @()nan, @()elboVals(elboIdx - 1));
                 
                 % The ELBO must increase with each iteration. This is a critical error,
                 % so it is logged regardless of the `RunConfig.getInstance().verbose` setting.

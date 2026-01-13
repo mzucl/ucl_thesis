@@ -106,8 +106,8 @@ classdef BPCA_v2 < handle
 
 
         function obj = qZUpdate(obj, it)
-            tauExp = Utility.ternary(it == 1, obj.tau.getExpInit(), obj.tau.E);
-            muExp = Utility.ternary(it == 1, obj.mu.getExpInit(), obj.mu.E);
+            tauExp = LogicUtils.ternary(it == 1, obj.tau.getExpInit(), obj.tau.E);
+            muExp = LogicUtils.ternary(it == 1, obj.mu.getExpInit(), obj.mu.E);
 
             covNew = Utility.matrixInverse(eye(obj.K) + tauExp * obj.W.E_XtX);
             muNew = tauExp * covNew * obj.W.E_Xt * (obj.view.X - muExp);
@@ -117,9 +117,9 @@ classdef BPCA_v2 < handle
 
         
         function obj = qWUpdate(obj, it)
-            alphaExp = Utility.ternary(it == 1, obj.alpha.getExpInit(), obj.alpha.E);
-            tauExp = Utility.ternary(it == 1, obj.tau.getExpInit(), obj.tau.E);
-            muExp = Utility.ternary(it == 1, obj.mu.getExpInit(), obj.mu.E);
+            alphaExp = LogicUtils.ternary(it == 1, obj.alpha.getExpInit(), obj.alpha.E);
+            tauExp = LogicUtils.ternary(it == 1, obj.tau.getExpInit(), obj.tau.E);
+            muExp = LogicUtils.ternary(it == 1, obj.mu.getExpInit(), obj.mu.E);
 
             covNew = Utility.matrixInverse(alphaExp * eye(obj.K) + tauExp * obj.Z.E_XXt);
             muNew = tauExp * covNew * obj.Z.E * (obj.view.X' - muExp');

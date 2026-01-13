@@ -112,7 +112,7 @@ classdef Datasets
         % Returns N of one digit and N of other with labels
         % One digit is in the top rows the other is in the bottom rows
         function [X, y] = getMNISTData(folderName, binaryLabels, N)
-            labelsFileName = Utility.ternary(binaryLabels, '/binaryLabels.tsv', '/continuousLabels.tsv');
+            labelsFileName = LogicUtils.ternary(binaryLabels, '/binaryLabels.tsv', '/continuousLabels.tsv');
 
             % featuresInCols = true for both X1 and X2
             X1 = readmatrix(['datasets/', folderName, '/pixels.tsv'], 'FileType', 'text'); % [N x D1];
@@ -137,7 +137,7 @@ classdef Datasets
                 testPerc = 0.3;
             end
 
-            labelsFileName = Utility.ternary(binaryLabels, '/binaryLabels.tsv', '/continuousLabels.tsv');
+            labelsFileName = LogicUtils.ternary(binaryLabels, '/binaryLabels.tsv', '/continuousLabels.tsv');
 
             % featuresInCols = true for both X1 and X2
             X1 = readmatrix(['datasets/', folderName, '/pixels.tsv'], 'FileType', 'text'); % [N x D1];

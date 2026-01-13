@@ -280,7 +280,7 @@ classdef GammaContainer < handle
             if nargin < 2
                 d = false;
             end
-            value = Utility.ternary(d, diag(obj.expInit), obj.expInit);
+            value = LogicUtils.ternary(d, diag(obj.expInit), obj.expInit);
         end
 
 

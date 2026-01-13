@@ -148,7 +148,7 @@ end
 
 
 %% Export results to CSV
-summaryTable = res.computeMeanAndStd(Utility.ternary(isa(model, 'BGFA'), 'BGFA', 'SGFA'), 'HERMES');  
+summaryTable = res.computeMeanAndStd(LogicUtils.ternary(isa(model, 'BGFA'), 'BGFA', 'SGFA'), 'HERMES');  
 writetable(summaryTable, [mfilename, '_summary', '.csv']);
 resTable = res.storeResult();
 writetable(resTable, [mfilename, '.csv']);

@@ -46,8 +46,8 @@ classdef SGFAGroup < BaseView
         end
 
         function obj = qWUpdate(obj, it)
-            alphaExp = Utility.ternary(it == 1, obj.alpha.getExpInit(true), obj.alpha.E_Diag);
-            tauExp = Utility.ternary(it == 1, obj.tau.getExpInit(), obj.tau.E);
+            alphaExp = LogicUtils.ternary(it == 1, obj.alpha.getExpInit(true), obj.alpha.E_Diag);
+            tauExp = LogicUtils.ternary(it == 1, obj.tau.getExpInit(), obj.tau.E);
 
             covNew = Utility.matrixInverse(tauExp * obj.Z.E_XXt + alphaExp);
             muNew = covNew * tauExp * obj.Z.E * (obj.X.X - obj.mu.E)';

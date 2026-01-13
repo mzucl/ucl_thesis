@@ -312,9 +312,9 @@ classdef Visualization
 
             hfigAx = axes(hfig); % Moved here for optimization purposes
             for i = 1:numPlots
-                ax = Utility.ternary(numPlots == 1, hfigAx, subplot(1, numPlots, i));
+                ax = LogicUtils.ternary(numPlots == 1, hfigAx, subplot(1, numPlots, i));
                 Visualization.renderHintonDiagram(arrW{i}, ax, ...
-                    Utility.ternaryOpt(isSubplotTitlesSpecified && i <= length(subplotTitles), @() subplotTitles{i}, @() ''));
+                    LogicUtils.ternaryOpt(isSubplotTitlesSpecified && i <= length(subplotTitles), @() subplotTitles{i}, @() ''));
             end
 
             if addTitle && numPlots > 1

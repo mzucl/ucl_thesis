@@ -55,7 +55,7 @@ classdef BGFA < BaseModel
     
                 for m = 1:obj.Mc
                     view = obj.views(m);
-                    tauExp = Utility.ternary(it == 1, view.tau.getExpInit(), view.tau.E);
+                    tauExp = LogicUtils.ternary(it == 1, view.tau.getExpInit(), view.tau.E);
 
                     covNew = covNew + tauExp * view.W.E_XtX;
                     muNew = muNew + tauExp * view.W.E_Xt * (view.X.X - view.mu.E);

@@ -163,7 +163,7 @@ tic;
 mu = RandomMatrices.intMatrix(50, 1);
 
 for i = 1:100000
-    E_Xt = Utility.ternary(lala, mu', mu);
+    E_Xt = LogicUtils.ternary(lala, mu', mu);
 end
 elapsedTime = toc;
 fprintf('Elapsed time : %.4f seconds\n', elapsedTime);

@@ -149,7 +149,7 @@ classdef (Abstract) BaseModel < handle
 
             if (RunConfig.getInstance().verbose)
                 numRemovedFactors = length(removeIdx);
-                factorText = Utility.ternary(numRemovedFactors == 1, 'factor', 'factors');
+                factorText = LogicUtils.ternary(numRemovedFactors == 1, 'factor', 'factors');
                 
                 fprintf('Removed %d %s in iteration %d\n', numRemovedFactors, factorText, it);
             end
@@ -187,7 +187,7 @@ classdef (Abstract) BaseModel < handle
             end
 
             if (RunConfig.getInstance().verbose)
-                factorText = Utility.ternary(numRemovedFactors == 1, 'factor', 'factors');
+                factorText = LogicUtils.ternary(numRemovedFactors == 1, 'factor', 'factors');
                 fprintf('Removed %d %s in iteration %d\n', numRemovedFactors, factorText, it);
             end
 
@@ -243,7 +243,7 @@ classdef (Abstract) BaseModel < handle
                 currElbo = obj.computeELBO();
                 elboVals(elboIdx) = currElbo;
 
-                prevElbo = Utility.ternaryOpt(elboIdx == 1, @()nan, @()elboVals(elboIdx - 1));
+                prevElbo = LogicUtils.ternaryOpt(elboIdx == 1, @()nan, @()elboVals(elboIdx - 1));
                 
                 % The ELBO must increase with each iteration. This is a critical error,
                 % so it is logged regardless of the `RunConfig.getInstance().verbose` setting.

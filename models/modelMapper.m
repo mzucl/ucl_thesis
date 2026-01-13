@@ -36,8 +36,8 @@ function qZcUpdate(Zc, Xc, params)
     it_   = params.it;
     covZ_ = params.covZ;
 
-    tauExp = Utility.ternary(it_ == 1, tau_.getExpInit(), tau_.E);
-    muExp = Utility.ternary(it_ == 1, mu_.getExpInit(), mu_.E);
+    tauExp = LogicUtils.ternary(it_ == 1, tau_.getExpInit(), tau_.E);
+    muExp = LogicUtils.ternary(it_ == 1, mu_.getExpInit(), mu_.E);
 
     muNew = tauExp * covZ_ * W_.E_Xt * (Xc.X - muExp);
     Zc.updateDistributionsParameters(muNew, covZ_);

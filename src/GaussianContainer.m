@@ -425,7 +425,7 @@ classdef GaussianContainer < handle
 
         function value = get.E(obj)
             if ~obj.cacheFlags(1)
-                obj.cache.E = Utility.ternary(obj.cols, obj.mu, obj.mu'); % 'mu' is always stored in columns format
+                obj.cache.E = LogicUtils.ternary(obj.cols, obj.mu, obj.mu'); % 'mu' is always stored in columns format
                 obj.cacheFlags(1) = true;
             end
             value = obj.cache.E;
@@ -433,7 +433,7 @@ classdef GaussianContainer < handle
 
         function value = get.E_Xt(obj)
             if ~obj.cacheFlags(2)
-                obj.cache.E_Xt = Utility.ternary(obj.cols, obj.mu', obj.mu);
+                obj.cache.E_Xt = LogicUtils.ternary(obj.cols, obj.mu', obj.mu);
                 obj.cacheFlags(2) = true;
             end
             value = obj.cache.E_Xt;
