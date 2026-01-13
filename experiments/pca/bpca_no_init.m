@@ -41,7 +41,7 @@ for s = 1:stabilityRun
         [elboVals, it] = obj.fit();
 
         % Validation
-        if ~Utility.isMonotonicIncreasing(elboVals)
+        if ~MatrixValidation.isMonotonicIncreasing(elboVals)
             fprintf(2, 'ELBO decreased at some iteration!!!');
         end
 

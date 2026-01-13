@@ -21,7 +21,7 @@ profile off;
 profile viewer;
     
 %% Validate ELBO values
-if ~Utility.isMonotonicIncreasing(elboVals)
+if ~MatrixValidation.isMonotonicIncreasing(elboVals)
     fprintf(2, 'ELBO decreased at some iteration!!!');
 end
 

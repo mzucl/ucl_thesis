@@ -62,10 +62,14 @@ classdef RandomMatrices
                 n (1,1) {mustBeInteger, mustBePositive}
             end
         
-            [Q, Rtri] = qr(randn(n));
-        
+            % [Q, Rtri] = qr(Drandn(n));
+            [Q, ~] = qr(Drandn(n));
+            
             % Determine sign of determinant from upper-triangular R
-            if prod(sign(diag(Rtri))) < 0
+            % TODO: Check if the condition below is a valid (the goal is to
+            % avoid computing det(Q))
+            % if prod(sign(diag(Rtri))) < 0
+            if det(Q) < 0
                 Q(:,1) = -Q(:,1);  % Flip first column to correct determinant
             end
         

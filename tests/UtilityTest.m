@@ -10,10 +10,10 @@ classdef UtilityTest < matlab.unittest.TestCase
         end
 
         function testIsMonotonicIncreasing(testCase)
-            testCase.verifyTrue(Utility.isMonotonicIncreasing([1, 2, 3]));
-            testCase.verifyTrue(Utility.isMonotonicIncreasing([-1.23, -0.56, 3]));
-            testCase.verifyTrue(~Utility.isMonotonicIncreasing([-1.23, -0.56, 0, 1, 5, 2]));
-            testCase.verifyTrue(~Utility.isMonotonicIncreasing([1.23, 0.56, 0.11]));
+            testCase.verifyTrue(MatrixValidation.isMonotonicIncreasing([1, 2, 3]));
+            testCase.verifyTrue(MatrixValidation.isMonotonicIncreasing([-1.23, -0.56, 3]));
+            testCase.verifyTrue(~MatrixValidation.isMonotonicIncreasing([-1.23, -0.56, 0, 1, 5, 2]));
+            testCase.verifyTrue(~MatrixValidation.isMonotonicIncreasing([1.23, 0.56, 0.11]));
         end
 
         function testAreEqual(testCase)

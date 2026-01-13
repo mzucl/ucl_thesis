@@ -19,7 +19,7 @@ obj = BPCA_mr('fgg');
 [W_PPCA, sigmaSq] = PPCA(X, D - 1); % PPCA expects X in [N x D] format
 
 %% Validation
-if ~Utility.isMonotonicIncreasing(elboVals)
+if ~MatrixValidation.isMonotonicIncreasing(elboVals)
     fprintf(2, 'ELBO decreased at some iteration!!!');
 end
 
