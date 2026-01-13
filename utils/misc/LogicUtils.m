@@ -1,22 +1,56 @@
 classdef LogicUtils
+    % LOGICUTILS Utility class for logical and conditional helpers
+    %
+    % Provides static methods for:
+    %   - Conditional ternary operations
+    %   - Lazy evaluation ternary operations
+    %
+    % Example usage:
+    %   result = LogicUtils.ternary(x > 0, 1, -1);
+    %   result = LogicUtils.ternaryOpt(x > 0, @() expensiveComputation1(), @() expensiveComputation2());
 
-    methods (Static)
+    methods(Static)
+        %% Simple ternary operator
         function result = ternary(cond, valTrue, valFalse)
+            % TERNARY Returns valTrue if cond is true, valFalse otherwise
+            %
+            % Usage:
+            %   result = LogicUtils.ternary(condition, valueIfTrue, valueIfFalse);
+            arguments
+                cond (1,1) logical
+                valTrue
+                valFalse
+            end
+
             if cond
                 result = valTrue;
             else
                 result = valFalse;
             end
         end
-        
-        % Optimized version that doesn't evaluate the unnecessary value,
-        % either 'valTrue' or 'valFalse' depending on the 'cond'
-        % Also, slower compared to 'ternary' for simple stuff, so it should
-        % be used just in case both true and false statements can't/shouldn't be
-        % evaluated or outside loops.
-        %
-        % EXAMPLE: Utility.ternaryOpt(isscalar(priors), @() GaussianDistribution(priors), @() GaussianDistribution(priors(i)));
+
+        %% Lazy evaluation ternary
         function result = ternaryOpt(cond, valTrueFunc, valFalseFunc)
+            % TERNARYOPT Returns valTrueFunc() if cond is true, valFalseFunc() otherwise
+            %
+            % Both valTrueFunc and valFalseFunc are function handles that are
+            % ONLY evaluated if selected.
+            %
+            % Use when computing valTrue or valFalse is expensive or cannot/should not 
+            % be evaluated immediately.
+            %
+            % WARNING: This function is SLOWER than 'ternary'. Do NOT use
+            % inside loops!
+            %
+            % Usage:
+            %   result = LogicUtils.ternaryOpt(condition, @() computeTrue(), @() computeFalse());
+            %   result = LogicUtils.ternaryOpt(isscalar(priors), @() GaussianDistribution(priors), @() GaussianDistribution(priors(i)));
+            arguments
+                cond (1,1) logical
+                valTrueFunc (1,1) function_handle
+                valFalseFunc (1,1) function_handle
+            end
+
             if cond
                 result = valTrueFunc();
             else
