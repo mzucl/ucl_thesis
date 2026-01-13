@@ -120,7 +120,7 @@ classdef GFAGroup < handle
 
             cov_inv = pagemtimes(ZZt_3D, T_3D) + alpha_3D;
 
-            covNew = arrayfun(@(i) Utility.matrixInverse(cov_inv(:,:,i)), ...
+            covNew = arrayfun(@(i) LinearAlgebra.inverseLU(cov_inv(:,:,i)), ...
                 1:size(cov_inv, 3), 'UniformOutput', false);
 
             % Convert cell array to multidimensional matrix

@@ -37,7 +37,7 @@ classdef SGFA < BaseModel
                 muNew = muNew + tauExp * view.W.E_Xt * (view.X.X - view.mu.E);
             end
 
-            covNew = Utility.matrixInverse(eye(obj.K.Val) + covNew);
+            covNew = LinearAlgebra.inverseLU(eye(obj.K.Val) + covNew);
             muNew = covNew * muNew;
 
             obj.Z.updateDistributionsParameters(muNew, covNew);

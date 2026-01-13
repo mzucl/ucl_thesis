@@ -109,7 +109,7 @@ classdef BPCA_v2 < handle
             tauExp = LogicUtils.ternary(it == 1, obj.tau.getExpInit(), obj.tau.E);
             muExp = LogicUtils.ternary(it == 1, obj.mu.getExpInit(), obj.mu.E);
 
-            covNew = Utility.matrixInverse(eye(obj.K) + tauExp * obj.W.E_XtX);
+            covNew = LinearAlgebra.inverseLU(eye(obj.K) + tauExp * obj.W.E_XtX);
             muNew = tauExp * covNew * obj.W.E_Xt * (obj.view.X - muExp);
 
             obj.Z.updateDistributionsParameters(muNew, covNew);
@@ -121,7 +121,7 @@ classdef BPCA_v2 < handle
             tauExp = LogicUtils.ternary(it == 1, obj.tau.getExpInit(), obj.tau.E);
             muExp = LogicUtils.ternary(it == 1, obj.mu.getExpInit(), obj.mu.E);
 
-            covNew = Utility.matrixInverse(alphaExp * eye(obj.K) + tauExp * obj.Z.E_XXt);
+            covNew = LinearAlgebra.inverseLU(alphaExp * eye(obj.K) + tauExp * obj.Z.E_XXt);
             muNew = tauExp * covNew * obj.Z.E * (obj.view.X' - muExp');
             
             obj.W.updateDistributionsParameters(muNew, covNew);

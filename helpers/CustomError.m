@@ -11,8 +11,14 @@ classdef CustomError < MException
         % Error messages
         ERR_NOT_ENOUGH_INPUT_ARG  = 'Not enough input arguments provided.';
         ERR_TOO_MANY_INPUT_ARG    = 'Too many input arguments provided.';
+
         ERR_INVALID_NUMERIC_ARG   = 'Input argument must be numeric.';
+
         ERR_INVALID_POSITIVE_ARG  = 'Input argument must be strictly positive.';
+        ERR_NON_SINGULAR_ARG      = 'Input argument must be a non-singular matrix.';
+        ERR_NON_SYMMETRIC_ARG     = 'Input argument must be a symmetric matrix.';
+        ERR_NON_PD_ARG           = 'Input argument must be positive definite.';
+
         ERR_UNKNOWN_MODEL         = 'Unknown model name';
     end
 

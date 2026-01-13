@@ -49,7 +49,7 @@ classdef SGFAGroup < BaseView
             alphaExp = LogicUtils.ternary(it == 1, obj.alpha.getExpInit(true), obj.alpha.E_Diag);
             tauExp = LogicUtils.ternary(it == 1, obj.tau.getExpInit(), obj.tau.E);
 
-            covNew = Utility.matrixInverse(tauExp * obj.Z.E_XXt + alphaExp);
+            covNew = LinearAlgebra.inverseLU(tauExp * obj.Z.E_XXt + alphaExp);
             muNew = covNew * tauExp * obj.Z.E * (obj.X.X - obj.mu.E)';
            
             obj.W.updateDistributionsParameters(muNew, covNew);

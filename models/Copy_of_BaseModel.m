@@ -164,7 +164,7 @@ classdef BaseModel < handle
         %             muNew = muNew + view.W.E_Xt * (view.X.X + view.bound.T - 1/4 * view.mu.E);
         %         end
         % 
-        %         covNew = Utility.matrixInverse(eye(obj.K.Val) + covNew);
+        %         covNew = LinearAlgebra.inverseLU(eye(obj.K.Val) + covNew);
         %         muNew = covNew * muNew;
         % 
         %         obj.Z.updateDistributionsParameters(muNew, covNew);
@@ -363,7 +363,7 @@ classdef BaseModel < handle
             mu2_ = obj.views{2}.mu.E;
             T1_ = obj.views{1}.tau.E * eye(obj.D(1));
             
-            sigma_Z = Utility.matrixInverse(eye(K_eff) + W1_' * T1_ * W1_);
+            sigma_Z = LinearAlgebra.inverseLU(eye(K_eff) + W1_' * T1_ * W1_);
     
             % Find the best threshold on the train data
             MU_Z = sigma_Z * (W1_' * T1_ * (X_tr' - mu1_));

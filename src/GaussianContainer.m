@@ -443,10 +443,10 @@ classdef GaussianContainer < handle
             if ~obj.cacheFlags(3)
                 value = obj.Size * obj.dim/2 * (1 + log(2 * pi));
                 if obj.type == "DS"
-                    obj.cache.H = value + obj.Size/2 * Utility.logDetUsingCholesky(obj.cov);
+                    obj.cache.H = value + obj.Size/2 * LinearAlgebra.logDetCholesky(obj.cov);
                 elseif obj.type == "DD"
                     for k = 1:obj.Size
-                        value = value + 1/2 * Utility.logDetUsingCholesky(obj.cov(:, :, k));
+                        value = value + 1/2 * LinearAlgebra.logDetCholesky(obj.cov(:, :, k));
                     end
                     obj.cache.H = value;
                 end

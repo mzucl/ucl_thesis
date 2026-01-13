@@ -54,7 +54,7 @@ mu2 = model.views(2).mu.E;
 T1 = model.views(1).tau.E * eye(model.D(1));
 T2 = model.views(2).tau.E * eye(model.D(2));
 
-sigma_Z = Utility.matrixInverse(eye(K) + W1' * T1 * W1);
+sigma_Z = LinearAlgebra.inverseLU(eye(K) + W1' * T1 * W1);
 
 MU_Z = sigma_Z * (W1' * T1 * (X1_test' - mu1));
 

@@ -331,7 +331,7 @@ classdef MatrixTransformationsTest < matlab.unittest.TestCase
             res2 = N/4 * eye(D);
 
             testCase.verifyEqual(res1, res2);
-            testCase.verifyEqual(Utility.matrixInverse(res1), 4/N * eye(D));
+            testCase.verifyEqual(LinearAlgebra.inverseLU(res1), 4/N * eye(D));
         end
 
         % For vectorization in q(mu) for Bohning bound
@@ -480,7 +480,7 @@ classdef MatrixTransformationsTest < matlab.unittest.TestCase
             end
             
             % Vectorized approach
-            res2 = Utility.flatten3DTo2D(Sigma_W)' * Utility.flatten3DTo2D(Utility.outerProduct3D(MU_Z));
+            res2 = LinearAlgebra.flatten3DTo2D(Sigma_W)' * LinearAlgebra.flatten3DTo2D(LinearAlgebra.outerProduct3D(MU_Z));
             
             testCase.verifyEqual(res1, res2);
         end
@@ -507,7 +507,7 @@ classdef MatrixTransformationsTest < matlab.unittest.TestCase
             end
             
             % Vectorized approach
-            res2 = Utility.flatten3DTo2D(Sigma_W)' * Utility.flatten3DTo2D(Utility.outerProduct3D(MU_Z));
+            res2 = LinearAlgebra.flatten3DTo2D(Sigma_W)' * LinearAlgebra.flatten3DTo2D(LinearAlgebra.outerProduct3D(MU_Z));
             
             testCase.verifyEqual(res1, res2);
         end

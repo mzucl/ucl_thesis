@@ -46,7 +46,7 @@ classdef BinaryView < BaseView
             Rt = (obj.X.X + obj.bound.T - obj.bound.H.* obj.mu.E)';
             
             if isa(obj.bound, 'BohningBound')
-                covNew = Utility.matrixInverse(1/4 * obj.Z.E_XXt + alphaExp);
+                covNew = LinearAlgebra.inverseLU(1/4 * obj.Z.E_XXt + alphaExp);
                 muNew = covNew * obj.Z.E * Rt;
             elseif isa(obj.bound, 'JaakkolaBound')
                 Ht = obj.bound.H'; % Access dth col of Ht instead of dth row of H
@@ -54,7 +54,7 @@ classdef BinaryView < BaseView
                 covNew = repmat(eye(obj.K.Val), 1, 1, obj.D);
                 muNew = zeros(obj.K.Val, obj.D);
                 for d = 1:obj.D
-                    covNew(:, :, d) = Utility.matrixInverse(obj.Z.getExpXtDX(diag(Ht(:, d)), false) + alphaExp); % XtDX = false
+                    covNew(:, :, d) = LinearAlgebra.inverseLU(obj.Z.getExpXtDX(diag(Ht(:, d)), false) + alphaExp); % XtDX = false
                 end
 
                 % Vectorized code
@@ -77,7 +77,7 @@ classdef BinaryView < BaseView
                     ones(obj.N, 1));
 
             elseif isa(obj.bound, 'JaakkolaBound')
-                covNew = Utility.matrixInverse(diag(obj.bound.H * ones(obj.N, 1)) + ...
+                covNew = LinearAlgebra.inverseLU(diag(obj.bound.H * ones(obj.N, 1)) + ...
                     obj.mu.priorPrec * eye(obj.D));
                 muNew = covNew * ((obj.X.X + obj.bound.T - obj.bound.H .* (obj.W.E * obj.Z.E)) * ...
                     ones(obj.N, 1));

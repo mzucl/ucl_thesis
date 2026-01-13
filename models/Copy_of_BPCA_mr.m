@@ -120,7 +120,7 @@ classdef BPCA_mr < handle
             tauExp = LogicUtils.ternary(it == 1, obj.tau.getExpInit(), obj.tau.E);
             muExp = LogicUtils.ternary(it == 1, obj.mu.getExpInit(), obj.mu.E);
 
-            covNew = Utility.matrixInverse(diag(alphaExp) + tauExp * obj.stats.E_ZZt);
+            covNew = LinearAlgebra.inverseLU(diag(alphaExp) + tauExp * obj.stats.E_ZZt);
             muNew = tauExp * covNew * (obj.stats.E_Z_times_Xt - sum(obj.stats.E_Z, 2) * muExp');
             
             % TODO: <Z> * <mu>' where <mu>' is replicated accross rows if we use repmat(<mu>, N, 1) that
@@ -206,7 +206,7 @@ classdef BPCA_mr < handle
                 
                 % Covariance is shared, don't recompute it!
                 tauExp = LogicUtils.ternary(it == 1, obj.tau.getExpInit(), obj.tau.E);
-                params.covZ = Utility.matrixInverse(eye(obj.K) + tauExp * obj.W.E_XtX);
+                params.covZ = LinearAlgebra.inverseLU(eye(obj.K) + tauExp * obj.W.E_XtX);
                 
                 
                 % This is basically qZ update! In this setup as it is now

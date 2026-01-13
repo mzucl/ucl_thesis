@@ -102,7 +102,7 @@ classdef BPCA_mr < handle
             tauExp = LogicUtils.ternary(it == 1, obj.tau.getExpInit(), obj.tau.E);
             muExp = LogicUtils.ternary(it == 1, obj.mu.getExpInit(), obj.mu.E);
 
-            covNew = Utility.matrixInverse(diag(alphaExp) + tauExp * obj.stats.E_ZZt);
+            covNew = LinearAlgebra.inverseLU(diag(alphaExp) + tauExp * obj.stats.E_ZZt);
             muNew = tauExp * covNew * (obj.stats.E_Z_times_Xt - obj.stats.Z_col_sum * muExp');
             
             obj.W.updateDistributionsParameters(muNew, covNew);
@@ -177,7 +177,7 @@ classdef BPCA_mr < handle
                 
                 % Covariance is shared, don't recompute it!
                 tauExp = LogicUtils.ternary(it == 1, obj.tau.getExpInit(), obj.tau.E);
-                params.covZ = Utility.matrixInverse(eye(obj.K) + tauExp * obj.W.E_XtX);
+                params.covZ = LinearAlgebra.inverseLU(eye(obj.K) + tauExp * obj.W.E_XtX);
                 
                 mapper = @(data, info, intermKVStore) modelMapper(data, info, intermKVStore, params);
                 result = mapreduce(obj.ds, mapper, @modelReducer, inMatlab, ...

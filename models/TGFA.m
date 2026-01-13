@@ -68,7 +68,7 @@ classdef TGFA < BaseModel
                     muNew = muNew + view.W.E_Xt * (view.X.X + view.bound.T - 1/4 * view.mu.E);
                 end
     
-                covNew = Utility.matrixInverse(eye(obj.K.Val) + covNew);
+                covNew = LinearAlgebra.inverseLU(eye(obj.K.Val) + covNew);
                 muNew = covNew * muNew;
     
                 obj.Z.updateDistributionsParameters(muNew, covNew);

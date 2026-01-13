@@ -262,7 +262,7 @@ classdef CodeVectorizationsTest < matlab.unittest.TestCase
             SIGMA = pagemtimes(ZZt_3D, T_3D) + alpha_3D;
 
             % Matrix inverse
-            SIGMA_inv = arrayfun(@(i) Utility.matrixInverse(SIGMA(:,:,i)), ...
+            SIGMA_inv = arrayfun(@(i) LinearAlgebra.inverseLU(SIGMA(:,:,i)), ...
                 1:size(SIGMA, 3), 'UniformOutput', false);
 
             % Convert cell array to multidimensional matrix
@@ -277,7 +277,7 @@ classdef CodeVectorizationsTest < matlab.unittest.TestCase
                 testCase.verifyTrue(diffSqNorm < 1e-9);
 
                 % Compare inverse
-                diffSqNorm = norm(SIGMA_inv(:, :, d) - Utility.matrixInverse(sigma));
+                diffSqNorm = norm(SIGMA_inv(:, :, d) - LinearAlgebra.inverseLU(sigma));
                 testCase.verifyTrue(diffSqNorm < 1e-9);
             end
         end

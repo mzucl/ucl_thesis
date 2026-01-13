@@ -86,7 +86,7 @@ for i = 1:k
     mu2 = bestModel.views(2).mu.E;
     T1 = bestModel.views(1).tau.E * eye(bestModel.D(1));
     
-    sigma_Z = Utility.matrixInverse(eye(K_eff) + W1' * T1 * W1);
+    sigma_Z = LinearAlgebra.inverseLU(eye(K_eff) + W1' * T1 * W1);
 
    
     % Threshold on train data

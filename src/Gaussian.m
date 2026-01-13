@@ -357,7 +357,7 @@ classdef Gaussian < handle
 
         function value = get.H(obj)
             if ~obj.cacheFlags(1)
-                obj.cache.H = 1/2 * Utility.logDetUsingCholesky(obj.cov) + obj.dim/2 * (1 + log(2 * pi));
+                obj.cache.H = 1/2 * LinearAlgebra.logDetCholesky(obj.cov) + obj.dim/2 * (1 + log(2 * pi));
                 obj.cacheFlags(1) = true;
             end
             value = obj.cache.H;

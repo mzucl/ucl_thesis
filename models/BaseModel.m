@@ -473,7 +473,7 @@ classdef (Abstract) BaseModel < handle
             mu2_ = obj.views(2).mu.E;
             T1_ = obj.views(1).tau.E * eye(obj.D(1));
             
-            sigma_Z = Utility.matrixInverse(eye(K_eff) + W1_' * T1_ * W1_);
+            sigma_Z = LinearAlgebra.inverseLU(eye(K_eff) + W1_' * T1_ * W1_);
     
             % Find the best threshold on the train data
             MU_Z = sigma_Z * (W1_' * T1_ * (X_tr' - mu1_));
@@ -517,7 +517,7 @@ classdef (Abstract) BaseModel < handle
         %         mu_Z = mu_Z + W_exp' * tau_exp * (inputViews{m} - mu_exp);
         %     end
         % 
-        %     sigma_Z = Utility.matrixInverse(sigma_Z);
+        %     sigma_Z = LinearAlgebra.inverseLU(sigma_Z);
         %     mu_Z = sigma_Z * mu_Z;
         % 
         %     % [NOTE] Although this is a sigmoid function, the output is not 

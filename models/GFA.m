@@ -106,7 +106,7 @@ classdef GFA < handle
                 sum_WtTX = sum_WtTX + WtT * view.X.X;
             end
 
-            covNew = Utility.matrixInverse(eye(obj.K.Val) + covNew);
+            covNew = LinearAlgebra.inverseLU(eye(obj.K.Val) + covNew);
             muNew = covNew * sum_WtTX;
 
             obj.Z.updateDistributionsParameters(muNew, covNew);
