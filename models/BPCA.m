@@ -211,12 +211,12 @@ classdef BPCA < handle
                 prevElbo = Utility.ternaryOpt(elboIdx == 1, @()nan, @()elboVals(elboIdx - 1));
                 
                 % [NOTE] The ELBO must increase with each iteration. This is a critical error,
-                % so it is logged regardless of the `RunConfig.getInstance().enableLogging` setting.
+                % so it is logged regardless of the `RunConfig.getInstance().verbose` setting.
                 if ~isnan(prevElbo)
                     if currElbo < prevElbo
                         fprintf(2, '[ERROR] ELBO decreased in iteration %d by %f!\n', it, abs(currElbo - prevElbo));
                     else
-                        if RunConfig.getInstance().enableLogging
+                        if RunConfig.getInstance().verbose
                             fprintf('------ ELBO increased by: %.4f\n', currElbo - prevElbo);
                         end
                     end

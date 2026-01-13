@@ -1,37 +1,35 @@
 classdef CustomError < MException
+    % CUSTOMERROR Enhanced exception class with logging and helper methods
+    %
+    %   Provides structured error messages, optional logging, and 
+    %   input argument validation helpers.
+
     properties (Constant)
-        % Global flag to enable/disable logging
-        ENABLE_LOGGING           = true;
-        ERR_NOT_ENOUGH_INPUT_ARG = "Not enough input arguments provided.";
-        ERR_TOO_MANY_INPUT_ARG   = "Too many input arguments provided.";
+        % Error type
+        ERR_TYPE_ARG_VALIDATION = 'ValidateInput';
 
-
-
-        ERR_INVALID_ARGUMENTS = 'Invalid arguments provided. Please check your input values.';
-        ERR_INVALID_PRIOR_PARAMETER = 'The prior parameter is invalid. It must be of type Gamma.';
-        ERR_TOO_FEW_ARGUMENTS = 'Insufficient arguments provided. At least the required parameters must be specified.';
-        ERR_INVALID_PARAMETERS = 'Invalid parameters. Both parameters must be numeric values.';
-        ERR_PARAMETERS_POSITIVE = 'Parameters must be strictly positive values.';
-        ERR_EXPECTATION_POSITIVE = 'The expectation must be a strictly positive value.';
-        ERR_INVALID_PARAMETER_A = 'Parameter "a" must be a strictly positive value.';
-        ERR_INVALID_PARAMETER_B = 'Parameter "b" must be a strictly positive value.';
-
-
-
-        ERR_UNKNOWN_MODEL        = "Unknown model name";
+        % Error messages
+        ERR_NOT_ENOUGH_INPUT_ARG  = 'Not enough input arguments provided.';
+        ERR_TOO_MANY_INPUT_ARG    = 'Too many input arguments provided.';
+        ERR_INVALID_NUMERIC_ARG   = 'Input argument must be numeric.';
+        ERR_INVALID_POSITIVE_ARG  = 'Input argument must be strictly positive.';
+        ERR_UNKNOWN_MODEL         = 'Unknown model name';
     end
-    
+
     methods
         function obj = CustomError(category, className, funcName, message)
+            % Construct a CustomError with formatted message and optional logging
+            %
+            %   OBJ = CUSTOMERROR(CATEGORY, CLASSNAME, FUNCNAME, MESSAGE)
+
             timestamp = datetime('now', 'Format', 'yyyy-MM-dd HH:mm:ss');
             errID = sprintf('%s:%s:%s', category, className, funcName);
-            fullMessage = sprintf('##### ERROR [%s] %s in %s > %s: %s', ...
+            fullMessage = sprintf('##### ERROR [%s] %s %s > %s: %s', ...
                                   category, timestamp, className, funcName, message);
 
             obj = obj@MException(errID, fullMessage);
-            
-            % Check if logging is enabled
-            if CustomError.ENABLE_LOGGING
+
+            if RunConfig.getInstance().logErrors
                 CustomError.logError(fullMessage);
             end
         end
@@ -39,6 +37,7 @@ classdef CustomError < MException
 
     methods (Static, Access = private)
         function logError(msg)
+            % Append error message to log file
             fid = fopen('error_log.txt', 'a');
             if fid ~= -1
                 fprintf(fid, '%s\n', msg);
@@ -51,7 +50,10 @@ classdef CustomError < MException
 
     methods (Static, Access = public)
         function raiseError(category, message)
-            % Extract call stack
+            % Raise a CustomError using the calling function's stack
+            %
+            %   raiseError(CATEGORY, MESSAGE)
+
             stack = dbstack(1);  % Skip this helper
             if isempty(stack)
                 className = 'UnknownClass';
@@ -59,7 +61,7 @@ classdef CustomError < MException
             else
                 fullName = stack(1).name;
                 splitName = split(fullName, '.');
-        
+
                 if numel(splitName) == 2
                     className = splitName{1};
                     funcName = splitName{2};
@@ -68,15 +70,19 @@ classdef CustomError < MException
                     funcName = fullName;
                 end
             end
-        
+
             throw(CustomError(category, className, funcName, message));
         end
 
         function validateNumberOfParameters(actualNumArgs, minNumArgs, maxNumArgs)
+            % Validate number of input arguments
+            %
+            %   validateNumberOfParameters(ACTUALNUMARGS, MINNUMARGS, MAXNUMARGS)
+
             if actualNumArgs < minNumArgs
-                CustomError.raiseError('InputCheck', CustomError.ERR_NOT_ENOUGH_INPUT_ARG);
+                CustomError.raiseError(ERR_TYPE_ARG_VALIDATION, CustomError.ERR_NOT_ENOUGH_INPUT_ARG);
             elseif actualNumArgs > maxNumArgs
-                CustomError.raiseError('InputCheck', CustomError.ERR_TOO_MANY_INPUT_ARG);
+                CustomError.raiseError(ERR_TYPE_ARG_VALIDATION, CustomError.ERR_TOO_MANY_INPUT_ARG);
             end
         end
     end

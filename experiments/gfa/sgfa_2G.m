@@ -4,7 +4,8 @@ close all; clearvars; clc;
 RunConfig.resetToDefaults();
 
 %% Generate data and run the experiment
-data = Datasets.generateSyntheticGFAData(2);
+M = 2; % Number of views
+data = Datasets.generateSyntheticGFAData(M);
 
 K = 10;
 bestOverallModel = Experiment('sgfa', K, data.X_train, mfilename, '', '', '', true, true).run();

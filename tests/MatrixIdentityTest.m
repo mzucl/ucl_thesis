@@ -6,7 +6,7 @@ classdef MatrixIdentityTest < matlab.unittest.TestCase
             mVals = [5, 5, 2, 10];
             nVals = [5, 3, 7, 10];
             for i = 1:length(mVals)
-                A = Utility.generateRandomIntMatrix(mVals(i), nVals(i));
+                A = RandomMatrices.intMatrix(mVals(i), nVals(i));
 
                 sum = 0;
                 for col = 1:nVals(i)
@@ -23,9 +23,9 @@ classdef MatrixIdentityTest < matlab.unittest.TestCase
             mVals = [2, 5, 5, 2, 10];
             nVals = [2, 5, 3, 7, 10];
             for i = 1:length(mVals)
-                A = Utility.generateRandomIntMatrix(mVals(i), nVals(i));
+                A = RandomMatrices.intMatrix(mVals(i), nVals(i));
 
-                v = Utility.generateRandomIntMatrix(mVals(i), 1); % Mx1
+                v = RandomMatrices.intMatrix(mVals(i), 1); % Mx1
                 o = ones(nVals(i), 1); % Nx1 vector of '1'
 
                 sum = 0;
@@ -46,9 +46,9 @@ classdef MatrixIdentityTest < matlab.unittest.TestCase
             kVals = [2, 4, 4, 9, 12];
 
             for i = 1:length(mVals)
-                A = Utility.generateRandomIntMatrix(mVals(i), nVals(i));
-                B = Utility.generateRandomIntMatrix(kVals(i), nVals(i));
-                W = Utility.generateRandomIntMatrix(mVals(i), kVals(i));
+                A = RandomMatrices.intMatrix(mVals(i), nVals(i));
+                B = RandomMatrices.intMatrix(kVals(i), nVals(i));
+                W = RandomMatrices.intMatrix(mVals(i), kVals(i));
 
                 sum = 0;
                 for col = 1:nVals(i)
@@ -69,9 +69,9 @@ classdef MatrixIdentityTest < matlab.unittest.TestCase
             kVals = [2, 4, 4, 9, 12];
 
             for i = 1:length(mVals)
-                A = Utility.generateRandomIntMatrix(mVals(i), nVals(i));
-                W = Utility.generateRandomIntMatrix(mVals(i), kVals(i));
-                v = Utility.generateRandomIntMatrix(kVals(i), 1);
+                A = RandomMatrices.intMatrix(mVals(i), nVals(i));
+                W = RandomMatrices.intMatrix(mVals(i), kVals(i));
+                v = RandomMatrices.intMatrix(kVals(i), 1);
 
                 o = ones(nVals(i), 1); % Nx1 vector of '1'
 
@@ -91,7 +91,7 @@ classdef MatrixIdentityTest < matlab.unittest.TestCase
             mVals = [5, 5, 2, 10];
             nVals = [5, 3, 7, 10];
             for i = 1:length(mVals)
-                A = Utility.generateRandomIntMatrix(mVals(i), nVals(i));
+                A = RandomMatrices.intMatrix(mVals(i), nVals(i));
 
                 sum = 0;
                 for col = 1:nVals(i)
@@ -107,7 +107,7 @@ classdef MatrixIdentityTest < matlab.unittest.TestCase
             mVals = [5, 5, 2, 10];
             nVals = [5, 3, 7, 10];
             for i = 1:length(mVals)
-                A = Utility.generateRandomIntMatrix(mVals(i), nVals(i));
+                A = RandomMatrices.intMatrix(mVals(i), nVals(i));
 
                 testCase.verifyEqual(trace(A' * A), dot(A(:), A(:)));
             end 
@@ -119,8 +119,8 @@ classdef MatrixIdentityTest < matlab.unittest.TestCase
             mVals = [5, 5, 2, 10];
             nVals = [5, 3, 7, 10];
             for i = 1:length(mVals)
-                A = Utility.generateRandomIntMatrix(mVals(i), nVals(i));
-                B = Utility.generateRandomIntMatrix(nVals(i), mVals(i));
+                A = RandomMatrices.intMatrix(mVals(i), nVals(i));
+                B = RandomMatrices.intMatrix(nVals(i), mVals(i));
 
                 A_tr = A';
                 testCase.verifyEqual(trace(A * B), dot(A_tr(:), B(:)));
@@ -136,9 +136,9 @@ classdef MatrixIdentityTest < matlab.unittest.TestCase
             nVals = [5, 3, 7, 10];
             kVals = [5, 5, 12, 15];
             for i = 1:length(mVals)
-                A = Utility.generateRandomIntMatrix(mVals(i), nVals(i));
-                B = Utility.generateRandomIntMatrix(nVals(i), kVals(i));
-                C = Utility.generateRandomIntMatrix(kVals(i), mVals(i));
+                A = RandomMatrices.intMatrix(mVals(i), nVals(i));
+                B = RandomMatrices.intMatrix(nVals(i), kVals(i));
+                C = RandomMatrices.intMatrix(kVals(i), mVals(i));
 
                 AB_tr = (A * B)';
                 testCase.verifyEqual(trace(A * B * C), dot(AB_tr(:), C(:)));
@@ -150,8 +150,8 @@ classdef MatrixIdentityTest < matlab.unittest.TestCase
             dVals = [5, 5, 2, 10];
             kVals = [5, 5, 12, 15];
             for i = 1:length(dVals)
-                W = Utility.generateRandomIntMatrix(dVals(i), kVals(i));
-                A = Utility.generateRandomIntMatrix(kVals(i), kVals(i));
+                W = RandomMatrices.intMatrix(dVals(i), kVals(i));
+                A = RandomMatrices.intMatrix(kVals(i), kVals(i));
 
                 res = W * A * W';
                 sum = 0;
@@ -165,13 +165,14 @@ classdef MatrixIdentityTest < matlab.unittest.TestCase
             end 
         end
 
+        % FAILS!!!
         % %% sum(sum(a_kl * mu(k, :)' * mu(l, :))) = A x (mu * mu') where x is element size
         %% mu(k, :)' * mu(l, :) are elements of mu * mu'
         function testIdentity10(testCase)
             dVals = [5, 5, 2, 10];
             kVals = [5, 5, 12, 15];
             for i = 1:length(dVals)
-                MU = Utility.generateRandomIntMatrix(kVals(i), dVals(i));
+                MU = RandomMatrices.intMatrix(kVals(i), dVals(i));
                 
                 res = MU * MU';
 
@@ -180,6 +181,228 @@ classdef MatrixIdentityTest < matlab.unittest.TestCase
                         testCase.verifyEqual(MU(k, :)' * MU(l, :), res(k, l));
                     end
                 end
+            end 
+        end
+
+
+        % For categorical
+        function testIdentity11(testCase)
+            dVals = [5, 5, 2, 10];
+            kVals = [5, 5, 12, 15];
+            for i = 1:length(dVals)
+                W = RandomMatrices.intMatrix(dVals(i), kVals(i));
+                A = RandomMatrices.intMatrix(dVals(i), dVals(i));
+                
+                W_t = W';
+                res = W_t * A * W;
+
+                sum = zeros(kVals(i), kVals(i));
+                for d = 1:dVals(i)
+                    for d2 = 1:dVals(i)
+                        dCol = W_t(:, d);
+                        dRow = W(d2, :);
+                        sum = sum + A(d, d2) * dCol * dRow;
+                    end
+                end
+                testCase.verifyEqual(res, sum);
+            end 
+        end
+
+        function testIdentity12(testCase)
+            dVals = [5, 5, 2, 10];
+            kVals = [5, 5, 12, 15];
+            nVals = [15, 25, 12, 15];
+            for i = 1:length(dVals)
+                Z = RandomMatrices.intMatrix(kVals(i), nVals(i));
+                sum = zeros(kVals(i), kVals(i));
+
+                c = 3;
+                for n = 1:nVals(i)
+                    sum = sum + Z(:, n) * c * Z(:, n)';
+                end
+
+                testCase.verifyEqual(sum, c * (Z * Z'));
+            end 
+        end
+
+        function testIdentity13(testCase)
+            QdVals = [5, 5, 2, 10];
+            kVals = [5, 5, 12, 15];
+            nVals = [15, 25, 12, 15];
+
+            for i = 1:length(QdVals)
+                W = RandomMatrices.intMatrix(QdVals(i), kVals(i));
+                A = RandomMatrices.intMatrix(QdVals(i), QdVals(i));
+
+                Z = RandomMatrices.intMatrix(kVals(i), nVals(i));
+
+                sum1 = 0;
+
+                for n = 1:nVals(i)
+                    sum1 = sum1 + Z(:, n)' * W' * A * W * Z(:, n);
+                end
+
+                sum2 = 0;
+                for q = 1:QdVals(i)
+                    for q2 = 1:QdVals(i)
+                        sum2 = sum2 + W(q, :) * A(q, q2) * (Z * Z') * W(q2, :)';
+                    end
+                end
+
+                sum3 = 0;
+                for q = 1:QdVals(i)
+                    innerSum = zeros(kVals(i), 1);
+                    for q2 = 1:QdVals(i)
+                        innerSum = innerSum + A(q, q2) * W(q2, :)';
+                    end
+
+                    testCase.verifyEqual(innerSum, W' * A(q, :)');
+
+                    sum3 = sum3 + W(q, :) * (Z * Z') * innerSum;
+                end    
+
+                testCase.verifyEqual(sum1, sum3);
+
+                sum4 = 0;
+                for q = 1:QdVals(i)
+                    sum4 = sum4 + W(q, :) * (Z * Z') * W' * A(q, :)';
+                end    
+
+                testCase.verifyEqual(sum1, sum4);
+            end 
+        end
+
+
+        function testIdentitytotal(testCase)
+            QdVals = [5, 5, 2, 10];
+            kVals = [5, 5, 12, 15];
+            nVals = [15, 25, 12, 15];
+
+            for i = 1:length(QdVals)
+                W = RandomMatrices.intMatrix(QdVals(i), kVals(i));
+                A = RandomMatrices.intMatrix(QdVals(i), QdVals(i));
+                Z = RandomMatrices.intMatrix(kVals(i), nVals(i));
+                Rd = RandomMatrices.intMatrix(QdVals(i), nVals(i));
+                alpha = RandomMatrices.intMatrix(kVals(i), 1);
+
+                sum1 = 0;
+
+                for n = 1:nVals(i)
+                    zn = Z(:, n);
+                    sum1 = sum1 + zn'* W' * Rd(:, n) ...
+                        - 1/2 * zn' * W' * A * W * zn;
+                end
+                for k = 1:kVals(i)
+                    sum1 = sum1 - 1/2 * alpha(k) * W(:, k)' * W(:, k);
+                end
+
+              
+                sum2 = 0;
+                for q = 1:QdVals(i)
+                    innerSum = zeros(kVals(i), 1);
+                    for q2 = 1:QdVals(i)
+                        if q2 ~= q
+                            innerSum = innerSum + A(q, q2) * W(q2, :)';
+                        end
+                    end
+                    sum2 = sum2 - 1/2 * W(q, :) * (Z * Z' * A(q, q) + diag(alpha))  * W(q, :)' + ...
+                        W(q, :) * (Z * Rd(q, :)' - 1/2 * (Z * Z') * innerSum);
+                end
+
+                testCase.verifyEqual(sum1, sum2);
+            end 
+        end
+
+        function testIdentityColsTerm1(testCase)
+            QdVals = [5, 5, 2, 10];
+            kVals = [5, 5, 12, 15];
+            nVals = [15, 25, 12, 15];
+
+            for i = 1:length(QdVals)
+                W = RandomMatrices.intMatrix(QdVals(i), kVals(i));
+                A = RandomMatrices.intMatrix(QdVals(i), QdVals(i));
+                Z = RandomMatrices.intMatrix(kVals(i), nVals(i));
+                Rd = RandomMatrices.intMatrix(QdVals(i), nVals(i));
+                alpha = RandomMatrices.intMatrix(kVals(i), 1);
+
+                sum1 = 0;
+
+                for n = 1:nVals(i)
+                    zn = Z(:, n);
+                    sum1 = sum1 + zn'* W' * Rd(:, n);
+                end
+                
+                sum2 = 0;
+                for k = 1:kVals(i)
+                    sum2 = sum2 + W(:, k)' * Z(k, :)' * Rd(d, :);
+                end
+
+                testCase.verifyEqual(sum1, sum2);
+            end 
+        end
+
+        function testIdentityColsTerm2(testCase)
+            QdVals = [5, 5, 2, 10];
+            kVals = [5, 5, 12, 15];
+            nVals = [15, 25, 12, 15];
+
+            for i = 1:length(QdVals)
+                W = RandomMatrices.intMatrix(QdVals(i), kVals(i));
+                A = RandomMatrices.intMatrix(QdVals(i), QdVals(i));
+                Z = RandomMatrices.intMatrix(kVals(i), nVals(i));
+                Rd = RandomMatrices.intMatrix(QdVals(i), nVals(i));
+                alpha = RandomMatrices.intMatrix(kVals(i), 1);
+
+                sum1 = 0;
+
+                for n = 1:nVals(i)
+                    zn = Z(:, n);
+                    sum1 = sum1 + zn'* W' * A * W * zn;
+                end
+                
+                sum2 = 0;
+                for k = 1:kVals(i)
+                    for n = 1:nVals(i)
+                        for j = 1:kVals(i)
+                            sum2 = sum2 + Z(j, n) * W(:, j)' * A * W(:, k) * Z(k, n);
+                        end
+                    end
+                end
+
+                testCase.verifyEqual(sum1, sum2);
+            end 
+        end
+
+
+        % Page 38 iz sveske!
+        function testIdentityColsTerm21(testCase)
+            QdVals = [5, 5, 2, 10];
+            kVals = [5, 5, 12, 15];
+            nVals = [15, 25, 12, 15];
+
+            for i = 1:length(QdVals)
+                W = RandomMatrices.intMatrix(QdVals(i), kVals(i));
+                alpha = RandomMatrices.intMatrix(kVals(i), 1);
+                
+                sum1 = 0;
+                for k = 1:kVals(i)
+                    w_dk = W(:, k);
+                    sum1 = sum1 + w_dk' * alpha(k) * w_dk;
+                end
+
+                vec = W(:);
+                % Passes the test
+                % sum2 = sum( sum( W.^2 .* alpha' ) );
+                
+                % This WORKS!
+                alpha_diag = kron(alpha, ones(QdVals(i), 1));
+                % sum2 = vec' * diag(alpha_diag) * vec;
+
+
+                % THIS ALSO WORKS!!!
+                sum2 = vec' * kron(diag(alpha), eye(QdVals(i))) * vec;
+
+                testCase.verifyEqual(sum1, sum2);
             end 
         end
     end

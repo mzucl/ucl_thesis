@@ -1,3 +1,7 @@
+% Ah — yes, that's expected in MATLAB: the arguments block can only be used at 
+% the top of a function, and cannot be inside a static method after an if nargin check.
+
+
 % Author: Mediha Zukic
 % Contact: mediha.zukic.23@alumni.ucl.ac.uk
 % Date: 2025-05-13
@@ -23,6 +27,8 @@ addpath('src');
 addpath(genpath('tests'))
 % addpath(genpath('npy-matlab-master'))
 
+
+addpath(genpath('utils'))
 
 %% Run tests
 testResults = runtests('tests');
@@ -52,9 +58,9 @@ Visualization.formatFigure(hfig)
 return;
 
 
-A = Utility.generateRandomIntMatrix(50, 6000);
-B = Utility.generateRandomIntMatrix(6000, 50);
-C = Utility.generateRandomIntMatrix(50, 50);
+A = RandomMatrices.intMatrix(50, 6000);
+B = RandomMatrices.intMatrix(6000, 50);
+C = RandomMatrices.intMatrix(50, 50);
 
 tic;
 for i = 1:1000
@@ -154,7 +160,7 @@ return;
 
 lala = true;
 tic;
-mu = Utility.generateRandomIntMatrix(50, 1);
+mu = RandomMatrices.intMatrix(50, 1);
 
 for i = 1:100000
     E_Xt = Utility.ternary(lala, mu', mu);
@@ -235,9 +241,9 @@ return;
 % N = 9;
 % K = 9;
 % 
-% A = Utility.generateRandomIntMatrix(M, N);
-% B = Utility.generateRandomIntMatrix(N, K);
-% C = Utility.generateRandomIntMatrix(K, M);
+% A = RandomMatrices.intMatrix(M, N);
+% B = RandomMatrices.intMatrix(N, K);
+% C = RandomMatrices.intMatrix(K, M);
 % 
 % tic;
 % for i = 1:100000

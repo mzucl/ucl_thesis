@@ -9,7 +9,7 @@ classdef BinaryExtensionTest < matlab.unittest.TestCase
 
 
     
-    % [NOTE] The vectorized form a' * diag(h) * a is used in the derivation steps, 
+    % [NOTE] The vectorized form a' * diag(h) * a is used in the derivation, 
     % as it is easier to manipulate algebraically using standard matrix 
     % multiplication rules. However, in the implementation, the equivalent 
     % expression sum(h .* a.^2) is used instead, as it is more efficient and 
@@ -20,8 +20,8 @@ classdef BinaryExtensionTest < matlab.unittest.TestCase
             % Verifies that the summation sum_d h_d * a_d^2 matches 
             % the vectorized summation sum(h .* a.^2).
     
-            h = Utility.generateRandomIntMatrix(D, 1);
-            a = Utility.generateRandomIntMatrix(D, 1);
+            h = RandomMatrices.intMatrix(D, 1);
+            a = RandomMatrices.intMatrix(D, 1);
     
             scalarSum = 0;
             for d = 1:D
@@ -40,8 +40,8 @@ classdef BinaryExtensionTest < matlab.unittest.TestCase
             % Verifies that the manual summation sum_d h_d * a_d^2 matches 
             % the vectorized form a' * diag(h) * a.
  
-            h = Utility.generateRandomIntMatrix(D, 1);
-            a = Utility.generateRandomIntMatrix(D, 1);
+            h = RandomMatrices.intMatrix(D, 1);
+            a = RandomMatrices.intMatrix(D, 1);
     
             scalarSum = 0;
             for d = 1:D
@@ -57,8 +57,8 @@ classdef BinaryExtensionTest < matlab.unittest.TestCase
             % Verifies that H .* mu is equivalent to computing diag(H(:,n)) * mu 
             % column-wise for all n.
     
-            mu = Utility.generateRandomIntMatrix(D, 1);
-            H = Utility.generateRandomIntMatrix(D, N);
+            mu = RandomMatrices.intMatrix(D, 1);
+            H = RandomMatrices.intMatrix(D, N);
     
             % Vectorized computation: broadcasting mu across columns
             vecRes = H .* mu;
@@ -77,7 +77,7 @@ classdef BinaryExtensionTest < matlab.unittest.TestCase
             % Verifies that diag(H * ones(N, 1)) is equivalent to summing diag(H(:,n))
             % over all columns n.
         
-            H = Utility.generateRandomIntMatrix(D, N);
+            H = RandomMatrices.intMatrix(D, N);
         
             diagSumVectorized = diag(H * ones(N, 1));
         
@@ -94,9 +94,9 @@ classdef BinaryExtensionTest < matlab.unittest.TestCase
             % Verifies that the vectorized expression H .* (W * Z) * ones(N, 1) 
             % is equivalent to the manual summation over n of diag(H(:, n)) * W * Z(:, n).
         
-            H = Utility.generateRandomIntMatrix(D, N);
-            W = Utility.generateRandomIntMatrix(D, K);
-            Z = Utility.generateRandomIntMatrix(K, N);
+            H = RandomMatrices.intMatrix(D, N);
+            W = RandomMatrices.intMatrix(D, K);
+            Z = RandomMatrices.intMatrix(K, N);
         
             vecSum = H .* (W * Z) * ones(N, 1);
         
@@ -131,9 +131,9 @@ classdef BinaryExtensionTest < matlab.unittest.TestCase
             % sum z_n^T * W^T * r_n over n is equivalent to summing
             % W(d,:) * Z * r_d^T over d, where r_n is a column of R and r_d is a row of R.
         
-            W = Utility.generateRandomIntMatrix(D, K);
-            Z = Utility.generateRandomIntMatrix(K, N);
-            R = Utility.generateRandomIntMatrix(D, N);
+            W = RandomMatrices.intMatrix(D, K);
+            Z = RandomMatrices.intMatrix(K, N);
+            R = RandomMatrices.intMatrix(D, N);
         
             % Sum over n
             sum1 = 0;
@@ -156,9 +156,9 @@ classdef BinaryExtensionTest < matlab.unittest.TestCase
             % sum z_n^T * W^T * diag(h_n) * W * z_n over n is 
             % equivalent to summing W(d,:) * Z * diag(h_d) * Z' * W(d,:)' over d, 
             % where h_n is a column of H and h_d is a row of H.
-            H = Utility.generateRandomIntMatrix(D, N);
-            W = Utility.generateRandomIntMatrix(D, K);
-            Z = Utility.generateRandomIntMatrix(K, N);
+            H = RandomMatrices.intMatrix(D, N);
+            W = RandomMatrices.intMatrix(D, K);
+            Z = RandomMatrices.intMatrix(K, N);
         
             % Sum over n
             sum1 = 0;
@@ -180,9 +180,9 @@ classdef BinaryExtensionTest < matlab.unittest.TestCase
             % Verifies that the d-th column of sigma * Z * R' equals sigma * Z * r_d',
             % where r_d is the d-th row of R.
                 
-            sigma = Utility.generateRandomIntMatrix(K, K);
-            Z = Utility.generateRandomIntMatrix(K, N);
-            R = Utility.generateRandomIntMatrix(D, N);
+            sigma = RandomMatrices.intMatrix(K, K);
+            Z = RandomMatrices.intMatrix(K, N);
+            R = RandomMatrices.intMatrix(D, N);
         
             vecRes = sigma * Z * R';
         
@@ -201,11 +201,11 @@ classdef BinaryExtensionTest < matlab.unittest.TestCase
             % sum over n of (z_n' * W' + mu') * (x_n + t_n) 
             % equals the trace of (Z' * W' + mu') * (X + T), 
             % where z_n, x_n, and t_n are the n-th columns of Z, X, and T, respectively.
-            W = Utility.generateRandomIntMatrix(D, K);
-            Z = Utility.generateRandomIntMatrix(K, N);
-            T = Utility.generateRandomIntMatrix(D, N);
-            X = Utility.generateRandomIntMatrix(D, N);
-            mu = Utility.generateRandomIntMatrix(D, 1);
+            W = RandomMatrices.intMatrix(D, K);
+            Z = RandomMatrices.intMatrix(K, N);
+            T = RandomMatrices.intMatrix(D, N);
+            X = RandomMatrices.intMatrix(D, N);
+            mu = RandomMatrices.intMatrix(D, 1);
 
             scalarSum = 0;
             for n = 1:N
@@ -225,10 +225,10 @@ classdef BinaryExtensionTest < matlab.unittest.TestCase
             % equals ones(1, N) * ((Z' * W') .* H') * mu,
             % where z_n and h_n are the n-th columns of Z and H.
         
-            W = Utility.generateRandomIntMatrix(D, K);
-            Z = Utility.generateRandomIntMatrix(K, N);
-            H = Utility.generateRandomIntMatrix(D, N);
-            mu = Utility.generateRandomIntMatrix(D, 1);
+            W = RandomMatrices.intMatrix(D, K);
+            Z = RandomMatrices.intMatrix(K, N);
+            H = RandomMatrices.intMatrix(D, N);
+            mu = RandomMatrices.intMatrix(D, 1);
         
             scalarSum = 0;
             for n = 1:N
@@ -248,9 +248,9 @@ classdef BinaryExtensionTest < matlab.unittest.TestCase
             % equals trace of (W * Z)' * (H .* (W * Z)),
             % where z_n and h_n are the n-th columns of Z and H.
         
-            W = Utility.generateRandomIntMatrix(D, K);
-            Z = Utility.generateRandomIntMatrix(K, N);
-            H = Utility.generateRandomIntMatrix(D, N);
+            W = RandomMatrices.intMatrix(D, K);
+            Z = RandomMatrices.intMatrix(K, N);
+            H = RandomMatrices.intMatrix(D, N);
         
             scalarSum = 0;
             for n = 1:N
@@ -269,10 +269,10 @@ classdef BinaryExtensionTest < matlab.unittest.TestCase
             % sum over n,d of -c_{d,n} + xi_{d,n} * g_{d,n} - 1/2 * xi_{d,n}^2 * h_{d,n}
             % equals sum of vectorized expression -C + Xi .* G - 1/2 * Xi.^2 .* H.
         
-            Xi = Utility.generateRandomIntMatrix(D, N);
-            C = Utility.generateRandomIntMatrix(D, N);
-            G = Utility.generateRandomIntMatrix(D, N);
-            H = Utility.generateRandomIntMatrix(D, N);
+            Xi = RandomMatrices.intMatrix(D, N);
+            C = RandomMatrices.intMatrix(D, N);
+            G = RandomMatrices.intMatrix(D, N);
+            H = RandomMatrices.intMatrix(D, N);
         
             scalarSum = 0;
             for n = 1:N
@@ -282,6 +282,48 @@ classdef BinaryExtensionTest < matlab.unittest.TestCase
             end
         
             vecRes = sum(sum(-C + Xi .* G - 1/2 * Xi.^2 .* H));
+        
+            testCase.verifyEqual(scalarSum, vecRes);
+        end
+
+        function test_ELBO_05(testCase, D, N)
+            %test_ELBO_05
+            % Verifies vectorization of sum over d,n of h_{d,n} * y_{d,n}^2
+            % equals trace of Y' * (H .* Y),
+            % where y_{d,n} and h_{d,n} are elements of Y and H respectively.
+        
+            Y = RandomMatrices.intMatrix(D, N);
+            H = RandomMatrices.intMatrix(D, N);
+        
+            scalarSum = 0;
+            for n = 1:N
+                for d = 1:D
+                    scalarSum = scalarSum + H(d, n) * Y(d, n)^2;
+                end
+            end
+        
+            vecRes = trace(Y' * (H .* Y));
+        
+            testCase.verifyEqual(scalarSum, vecRes);
+        end
+
+        function test_ELBO_06(testCase, D, N)
+            %test_ELBO_06
+            % Verifies vectorization of the phi_3 term:
+            % sum over d,n of h_{d,n} * phi_{d,n}
+            % equals sum of vectorized expression H .* PHI.
+        
+            PHI = RandomMatrices.intMatrix(D, N);
+            H = RandomMatrices.intMatrix(D, N);
+        
+            scalarSum = 0;
+            for n = 1:N
+                for d = 1:D
+                    scalarSum = scalarSum + H(d, n) * PHI(d, n);
+                end
+            end
+        
+            vecRes = sum(sum(H .* PHI));
         
             testCase.verifyEqual(scalarSum, vecRes);
         end

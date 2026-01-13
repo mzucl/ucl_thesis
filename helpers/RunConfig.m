@@ -1,7 +1,10 @@
 classdef RunConfig < handle
     properties (Access = private, Constant)
-        INPUT_VALIDATION_DEFAULT = true;
-        ENABLE_LOGGING_DEFAULT = true;
+        VALIDATE_INPUT_DEFAULT = true;
+        VERBOSE_DEFAULT = true;
+        LOG_ERRORS_DEFAULT = true;
+        
+        
         ELBO_RECALC_INTERVAL_DEFAULT = 1;
         NUM_STABILITY_RUNS_DEFAULT = 2;
         NUM_MODEL_SELECTION_RUNS_DEFAULT = 2;
@@ -9,8 +12,11 @@ classdef RunConfig < handle
 
     properties (Access = public)
         % [Validation / Logs]
-        inputValidation       % If true, performs input validation (e.g. checks dimensions, symmetry, and positive semi-definiteness of covariance matrices)
-        enableLogging         % If true, enables logging to the command window (e.g. prints ELBO progress during training)
+        validateInput   % If true, performs input validation (checks dimensions, PSD of covariance matrices, etc.)
+        verbose         % If true, prints runtime progress and messages to the command window
+        logErrors       % If true, logs errors to a file
+
+        
         
         % [Experiment Setup]
         elboRecalcInterval     % Frequency (in iterations) at which the ELBO is recomputed during training
@@ -26,8 +32,10 @@ classdef RunConfig < handle
 
         % Helper method to set all properties to default values
         function setDefaults(obj)
-            obj.inputValidation = RunConfig.INPUT_VALIDATION_DEFAULT;
-            obj.enableLogging = RunConfig.ENABLE_LOGGING_DEFAULT;
+            obj.validateInput = RunConfig.VALIDATE_INPUT_DEFAULT;
+            obj.verbose = RunConfig.VERBOSE_DEFAULT;
+            obj.logErrors = RunConfig.LOG_ERRORS_DEFAULT;
+            
 
             obj.elboRecalcInterval = RunConfig.ELBO_RECALC_INTERVAL_DEFAULT;
             obj.numStabilityRuns = RunConfig.NUM_STABILITY_RUNS_DEFAULT;

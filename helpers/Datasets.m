@@ -200,7 +200,7 @@ classdef Datasets
                 D = [50, 30]; % Dimensions of the views
                 tau = {5; 10}; % Noise precisions (tau) for each view; Spherical noise;
                 
-                % Alpha (alpha) for each view K values
+                % Alpha for each view K values
                 alpha = zeros(K, M);
                 alpha(:, 1) = [1e6, 1, 1e6, 1];
                 alpha(:, 2) = [1, 1, 1, 1e6];
@@ -216,7 +216,8 @@ classdef Datasets
                 alpha(:, 3) = [1, 1e6, 1, 1e6];
             end
 
-            % Generate latent factors - row by row (in total K rows)
+            % Generate latent factors - row by row (in total K rows); Z[K x
+            % N];
             n = 1:N;
             Z(1, :) = sin((n)/(N/20));
             Z(2, :) = cos((n)/(N/20));
@@ -240,11 +241,11 @@ classdef Datasets
                 Ws{m} = zeros(Dm, K);
                 for k = 1:K
                     % Generate w_k (kth column of W) from p(W | alpha)
-                    alpha_m_k = alpha(k, m); % alpha (precision) for the view 'm' and column 'k'
+                    alpha_k_m = alpha(k, m); % alpha (precision) for the view 'm' and column 'k'
         
                     % normrnd(MU,SIGMA) returns an array of random numbers chosen from a
                     % normal distribution with mean MU and standard deviation SIGMA.
-                    Ws{m}(:, k) = normrnd(0, 1/sqrt(alpha_m_k), [Dm, 1]);
+                    Ws{m}(:, k) = normrnd(0, 1/sqrt(alpha_k_m), [Dm, 1]);
                 end
         
                 % Generate X for view 'm'

@@ -15,6 +15,11 @@ classdef Utility
     methods (Static, Access = private)
         function [constants, descriptions] = loadConstants(filename)
             CustomError.validateNumberOfParameters(nargin, 1, 1);
+
+            % Assumption: filename (`config.txt`) is located in the project root (one level above helpers/)
+            thisFile = mfilename("fullpath");
+            rootDir  = fileparts(fileparts(thisFile));
+            filename = fullfile(rootDir, filename);
                 
             lines = readlines(filename);
             constants = struct();
@@ -93,6 +98,9 @@ classdef Utility
             isIncreasing = all(diff(arr) > 0);
         end
         
+
+
+        
         function result = ternary(cond, valTrue, valFalse)
             if cond
                 result = valTrue;
@@ -120,7 +128,13 @@ classdef Utility
 
 
 
-        %% Check type
+
+        % ISSINGLENUMBER Check if input is a finite scalar numeric value.
+        %
+        %   RES = ISSINGLENUMBER(X) returns true if X is a 1x1 numeric value
+        %   (double, single, or integer type) that is finite (not NaN or Inf).
+        %   Otherwise, it returns false.
+        %
         function res = isSingleNumber(x)
             res = isscalar(x) && isnumeric(x) && ~isnan(x);
         end
@@ -258,7 +272,7 @@ classdef Utility
         % themselves rather than at the point of invocation. This is done for 
         % convenience, especially since these methods are often called within loops.
         function invMatrix = choleskyInverse(matrix)
-            if RunConfig.getInstance().inputValidation
+            if RunConfig.getInstance().validateInput
                 if Utility.isSingular(matrix)
                     error(['##### ERROR IN THE CLASS ' mfilename('class') ': Matrix must be non-singular for choleskyInverse.']);
                 elseif ~Utility.isSymmetricMatrix(matrix)
@@ -288,7 +302,7 @@ classdef Utility
         % 3. Not Necessarily Symmetric or Positive Definite (unlike
         % Cholesky decomposition)
         function invMatrix = matrixInverse(matrix)
-            if RunConfig.getInstance().inputValidation && Utility.isSingular(matrix)
+            if RunConfig.getInstance().validateInput && Utility.isSingular(matrix)
                     error(['##### ERROR IN THE CLASS ' mfilename('class') ': Matrix must be non-singular for matrixInverse.']);
             end
 
@@ -296,44 +310,6 @@ classdef Utility
             invMatrix = U \ (L \ P);
         end
 
-
-
-
-
-        %% Generate different matrices
-        function A = generateRandomSPDMatrix(n)
-            R = randn(n);
-
-            A = R' * R;
-        end
-
-        function A = generateRandomIntMatrix(m, n)
-            if nargin < 2 % Square matrix
-                n = m;
-            end
-            
-            minValue = 1;
-            maxValue = 10;
-            
-            A = randi([minValue, maxValue], m, n);
-        end
-
-        function R = generateRandomRotationMatrix(n)
-            [Q, ~] = qr(randn(n));  % QR decomposition of a random matrix
-            
-            % Ensure the determinant is 1 (not -1)
-            if det(Q) < 0
-                Q(:,1) = -Q(:,1);  % Flip the sign of the first column
-            end
-            
-            R = Q;
-        end
-
-        function matrix = generateRandomBinaryMatrix(m, n)
-            matrix = randi([0, 1], m, n);
-        end
-    
-    
 
 
 
@@ -480,3 +456,17 @@ classdef Utility
         end
     end
 end
+
+
+%% 
+% True only for NaN
+% isnan(NaN)    % true
+% isnan(Inf)    % false
+% isnan(5)      % false
+
+% True only for real, finite numbers: Rejects both NaN and ±Inf
+% isfinite(NaN)   % false
+% isfinite(Inf)   % false
+% isfinite(5)     % true
+
+

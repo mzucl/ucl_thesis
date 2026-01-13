@@ -136,7 +136,7 @@ classdef Gaussian < handle
                     if Utility.isSingleNumber(varargin{2})
                         mu = repmat(varargin{2}, dim, 1);
                     else
-                        if RunConfig.getInstance().inputValidation && size(varargin{2}, 1) ~= dim || size(varargin{2}, 2) ~= 1 % 'mu' is a column vector
+                        if RunConfig.getInstance().validateInput && size(varargin{2}, 1) ~= dim || size(varargin{2}, 2) ~= 1 % 'mu' is a column vector
                             error(['##### ERROR IN THE CLASS ' mfilename('class') ': Length of mu doesn''t match dimension.']);
                         end
                         mu = varargin{2};
@@ -147,20 +147,20 @@ classdef Gaussian < handle
                         covParam = varargin{3};
 
                         if Utility.isSingleNumber(covParam)
-                            if RunConfig.getInstance().inputValidation && covParam <= 0
+                            if RunConfig.getInstance().validateInput && covParam <= 0
                                 error(['##### ERROR IN THE CLASS ' mfilename ': Covariance parameter must be greater than 0.']);
                             end
                             cov = covParam * eye(dim); % Spherical
                             
                         elseif Utility.isArray(covParam)
-                            if RunConfig.getInstance().inputValidation && (length(covParam) ~= dim || ~Utility.isValidCovarianceMatrix(diag(covParam)))
+                            if RunConfig.getInstance().validateInput && (length(covParam) ~= dim || ~Utility.isValidCovarianceMatrix(diag(covParam)))
                                 error(['##### ERROR IN THE CLASS ' mfilename ': Parameter is either not a valid covariance matrix or' ...
                                     ' dimensionality doesn''t match.']);
                             end
                             cov = diag(covParam); % Diagonal
 
                         elseif Utility.isMatrix(covParam)
-                            if RunConfig.getInstance().inputValidation && (~isequal(size(covParam), [dim, dim]) || ~Utility.isValidCovarianceMatrix(covParam))
+                            if RunConfig.getInstance().validateInput && (~isequal(size(covParam), [dim, dim]) || ~Utility.isValidCovarianceMatrix(covParam))
                                 error(['##### ERROR IN THE CLASS ' mfilename ': Parameter is either not a valid covariance matrix or' ...
                                     'dimensionality doesn''t match.']);
                             end
@@ -168,7 +168,7 @@ classdef Gaussian < handle
                         end
 
                         if nargin > 3 % dim, mu, cov, priorPrec
-                            if RunConfig.getInstance().inputValidation && (~Utility.isSingleNumber(varargin{4}) || varargin{4} <= 0)
+                            if RunConfig.getInstance().validateInput && (~Utility.isSingleNumber(varargin{4}) || varargin{4} <= 0)
                                 error(['##### ERROR IN THE CLASS ' mfilename ': Invalid precision parameter.']);
                             end
                             priorPrec = varargin{4};
@@ -255,7 +255,7 @@ classdef Gaussian < handle
 
         %% Update methods
         function obj = updateMu(obj, mu)
-            if RunConfig.getInstance().inputValidation
+            if RunConfig.getInstance().validateInput
                 if nargin < 2
                     error(['##### ERROR IN THE THE CLASS ' class(obj) ': Too few arguments passed.']);
                 end
@@ -273,7 +273,7 @@ classdef Gaussian < handle
         end
 
         function obj = updateCovariance(obj, cov)
-            if RunConfig.getInstance().inputValidation
+            if RunConfig.getInstance().validateInput
                 if nargin < 2
                     error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
                 end
@@ -292,7 +292,7 @@ classdef Gaussian < handle
         end
 
         function updateParameters(obj, mu, cov)
-            if RunConfig.getInstance().inputValidation
+            if RunConfig.getInstance().validateInput
                 if nargin < 3
                     error(['##### ERROR IN THE THE CLASS ' class(obj) ': Too few arguments passed.']);
                 end
@@ -315,7 +315,7 @@ classdef Gaussian < handle
                 return; % No change
             end
 
-            if RunConfig.getInstance().inputValidation && ~obj.validateDimIndices(indices)
+            if RunConfig.getInstance().validateInput && ~obj.validateDimIndices(indices)
                 error(['##### ERROR IN THE CLASS ' class(obj) ': Index out of range.']); 
             end
             

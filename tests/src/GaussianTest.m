@@ -186,7 +186,7 @@ classdef GaussianTest < matlab.unittest.TestCase
             % cov: matrix
             dim = 3;
             mu = [1; 2; 3];
-            cov = Utility.generateRandomSPDMatrix(dim);
+            cov = RandomMatrices.spdMatrix(dim);
             obj = Gaussian(dim, mu, cov);
 
             GaussianTest.verifyObject(testCase, obj, mu, cov, ...
@@ -219,7 +219,7 @@ classdef GaussianTest < matlab.unittest.TestCase
             % cov: matrix
             dim = 5;
             mu = 5;
-            cov = Utility.generateRandomSPDMatrix(dim);
+            cov = RandomMatrices.spdMatrix(dim);
             obj = Gaussian(dim, mu, cov);
 
             GaussianTest.verifyObject(testCase, obj, repmat(mu, dim, 1), cov, ...
@@ -253,7 +253,7 @@ classdef GaussianTest < matlab.unittest.TestCase
             % cov: matrix
             dim = 3;
             mu = [1; 2; 3];
-            cov = Utility.generateRandomSPDMatrix(dim);
+            cov = RandomMatrices.spdMatrix(dim);
             obj = Gaussian(dim, mu, cov, priorPrec);
 
             GaussianTest.verifyObject(testCase, obj, mu, cov, priorPrec, dim);
@@ -283,7 +283,7 @@ classdef GaussianTest < matlab.unittest.TestCase
             % cov: matrix
             dim = 5;
             mu = 5;
-            cov = Utility.generateRandomSPDMatrix(dim);
+            cov = RandomMatrices.spdMatrix(dim);
             obj = Gaussian(dim, mu, cov, priorPrec);
 
             GaussianTest.verifyObject(testCase, obj, repmat(mu, dim, 1), cov, priorPrec, dim);
@@ -306,7 +306,7 @@ classdef GaussianTest < matlab.unittest.TestCase
 
             % Test 1.2: Expectations and Variance
             dim = 10;
-            cov = Utility.generateRandomSPDMatrix(dim);
+            cov = RandomMatrices.spdMatrix(dim);
             mu = ones(dim, 1);
             obj = Gaussian(dim, mu, cov);
             
@@ -362,7 +362,7 @@ classdef GaussianTest < matlab.unittest.TestCase
 
             testCase.verifyEqual(obj.cov, eye(dim));
 
-            covNew = Utility.generateRandomSPDMatrix(dim);
+            covNew = RandomMatrices.spdMatrix(dim);
             muNew = 5 * ones(dim, 1);
 
             obj.updateParameters(muNew, covNew);
@@ -376,7 +376,7 @@ classdef GaussianTest < matlab.unittest.TestCase
 
             testCase.verifyEqual(obj.cov, eye(dim));
 
-            covNew = Utility.generateRandomSPDMatrix(dim);
+            covNew = RandomMatrices.spdMatrix(dim);
 
             obj.updateCovariance(covNew);
 

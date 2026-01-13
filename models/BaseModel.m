@@ -147,7 +147,7 @@ classdef (Abstract) BaseModel < handle
                 return;
             end
 
-            if (RunConfig.getInstance().enableLogging)
+            if (RunConfig.getInstance().verbose)
                 numRemovedFactors = length(removeIdx);
                 factorText = Utility.ternary(numRemovedFactors == 1, 'factor', 'factors');
                 
@@ -186,7 +186,7 @@ classdef (Abstract) BaseModel < handle
                 return;
             end
 
-            if (RunConfig.getInstance().enableLogging)
+            if (RunConfig.getInstance().verbose)
                 factorText = Utility.ternary(numRemovedFactors == 1, 'factor', 'factors');
                 fprintf('Removed %d %s in iteration %d\n', numRemovedFactors, factorText, it);
             end
@@ -246,12 +246,12 @@ classdef (Abstract) BaseModel < handle
                 prevElbo = Utility.ternaryOpt(elboIdx == 1, @()nan, @()elboVals(elboIdx - 1));
                 
                 % The ELBO must increase with each iteration. This is a critical error,
-                % so it is logged regardless of the `RunConfig.getInstance().enableLogging` setting.
+                % so it is logged regardless of the `RunConfig.getInstance().verbose` setting.
                 if ~isnan(prevElbo)
                     if currElbo < prevElbo
                         fprintf(2, '[ERROR] ELBO decreased in iteration %d by %f!\n', it, abs(currElbo - prevElbo));
                     else
-                        if RunConfig.getInstance().enableLogging
+                        if RunConfig.getInstance().verbose
                             fprintf('------ ELBO increased by: %.4f\n', currElbo - prevElbo);
                         end
                     end
@@ -462,44 +462,78 @@ classdef (Abstract) BaseModel < handle
             end
         end
 
-        function [K_eff, predictionsTest] = makePredictions(obj, views, trainIdx, testIdx)
-            outputView = views{end};
-            inputViews = views(1:end-1);
 
-            N_total = size(outputView, 2);  % Total number of observations (train + test) 
-                                % [NOTE] obj.N refers only to the number of training samples
-            K_eff = size(obj.Z.E, 1);
-            sigma_Z = eye(K_eff);
-            mu_Z = zeros(K_eff, N_total); 
-
-            for m = 1:numel(inputViews)
-                view = obj.views(m);
-
-                W_exp = view.W.E;
-                mu_exp = view.mu.E;
-                tau_exp = view.tau.E;
-
-                sigma_Z = sigma_Z + W_exp' * tau_exp * W_exp;
-                mu_Z = mu_Z + W_exp' * tau_exp * (inputViews{m} - mu_exp);
-            end
-
-            sigma_Z = Utility.matrixInverse(sigma_Z);
-            mu_Z = sigma_Z * mu_Z;
-
-            % [NOTE] Although this is a sigmoid function, the output is not 
-            % a probability; it's used purely to clip values to the [0, 1] range.
-            predictions = Bound.sigma(obj.views(end).W.E * mu_Z + obj.views(end).mu.E);
-
+        function [K_eff, predictions_te] = makePredictions(obj, X_tr, y_tr, X_te)
+            Z_ = obj.Z.E;
+            K_eff = size(Z_, 1);
+            
+            W1_ = obj.views(1).W.E;
+            W2_ = obj.views(2).W.E;
+            mu1_ = obj.views(1).mu.E;
+            mu2_ = obj.views(2).mu.E;
+            T1_ = obj.views(1).tau.E * eye(obj.D(1));
+            
+            sigma_Z = Utility.matrixInverse(eye(K_eff) + W1_' * T1_ * W1_);
+    
             % Find the best threshold on the train data
-            [fpr, tpr, thresholds, ~] = perfcurve(outputView(trainIdx), predictions(trainIdx), 1);
-
+            MU_Z = sigma_Z * (W1_' * T1_ * (X_tr' - mu1_));
+            
+            % [NOTE] Even though this is sigmoid, the value we get is not
+            % probability, this is used just to clip it to the [0, 1] range
+            predictions_tr = Bound.sigma(W2_ * MU_Z + mu2_);
+            [fpr, tpr, thresholds, ~] = perfcurve(y_tr', predictions_tr, 1);
+    
             % Calculate G-means
             gMeans = sqrt(tpr .* (1 - fpr));
             [~, idx] = max(gMeans);
-            bestThreshold = thresholds(idx);
-
+            train_best_threshold = thresholds(idx);
+            
             % Predictions on the test data
-            predictionsTest = double(predictions(testIdx) >= bestThreshold);
+            MU_Z = sigma_Z * (W1_' * T1_ * (X_te' - mu1_));
+            predictions_te = Bound.sigma(W2_ * MU_Z + mu2_); 
+            predictions_te = predictions_te >= train_best_threshold;
+            predictions_te = double(predictions_te');
         end
+
+        % New version from the workshop!!!
+        % function [K_eff, predictionsTest] = makePredictions(obj, views, trainIdx, testIdx)
+        %     outputView = views{end};
+        %     inputViews = views(1:end-1);
+        % 
+        %     N_total = size(outputView, 2);  % Total number of observations (train + test) 
+        %                         % [NOTE] obj.N refers only to the number of training samples
+        %     K_eff = size(obj.Z.E, 1);
+        %     sigma_Z = eye(K_eff);
+        %     mu_Z = zeros(K_eff, N_total); 
+        % 
+        %     for m = 1:numel(inputViews)
+        %         view = obj.views(m);
+        % 
+        %         W_exp = view.W.E;
+        %         mu_exp = view.mu.E;
+        %         tau_exp = view.tau.E;
+        % 
+        %         sigma_Z = sigma_Z + W_exp' * tau_exp * W_exp;
+        %         mu_Z = mu_Z + W_exp' * tau_exp * (inputViews{m} - mu_exp);
+        %     end
+        % 
+        %     sigma_Z = Utility.matrixInverse(sigma_Z);
+        %     mu_Z = sigma_Z * mu_Z;
+        % 
+        %     % [NOTE] Although this is a sigmoid function, the output is not 
+        %     % a probability; it's used purely to clip values to the [0, 1] range.
+        %     predictions = Bound.sigma(obj.views(end).W.E * mu_Z + obj.views(end).mu.E);
+        % 
+        %     % Find the best threshold on the train data
+        %     [fpr, tpr, thresholds, ~] = perfcurve(outputView(trainIdx), predictions(trainIdx), 1);
+        % 
+        %     % Calculate G-means
+        %     gMeans = sqrt(tpr .* (1 - fpr));
+        %     [~, idx] = max(gMeans);
+        %     bestThreshold = thresholds(idx);
+        % 
+        %     % Predictions on the test data
+        %     predictionsTest = double(predictions(testIdx) >= bestThreshold);
+        % end
     end
 end

@@ -11,7 +11,7 @@ classdef MapReducerFrameworkTransformationsTest < matlab.unittest.TestCase
             N = 50;
             chunkSize = 10;
 
-            Z = Utility.generateRandomIntMatrix(K, N);
+            Z = RandomMatrices.intMatrix(K, N);
             
             numChunks = ceil(N / chunkSize);
             Zchunks = cell(1, numChunks);
@@ -39,7 +39,7 @@ classdef MapReducerFrameworkTransformationsTest < matlab.unittest.TestCase
             N = 50;
             chunkSize = 2;
 
-            Z = Utility.generateRandomIntMatrix(K, N);
+            Z = RandomMatrices.intMatrix(K, N);
             
             Zchunks = {};
             i = 1;
@@ -78,9 +78,9 @@ classdef MapReducerFrameworkTransformationsTest < matlab.unittest.TestCase
             N = 50;
             chunkSize = 10;
 
-            X = Utility.generateRandomIntMatrix(D, N);
-            Z = Utility.generateRandomIntMatrix(K, N);
-            mu = Utility.generateRandomIntMatrix(D, 1);
+            X = RandomMatrices.intMatrix(D, N);
+            Z = RandomMatrices.intMatrix(K, N);
+            mu = RandomMatrices.intMatrix(D, 1);
 
             numChunks = ceil(N / chunkSize);
             Zchunks = cell(1, numChunks);
@@ -111,8 +111,8 @@ classdef MapReducerFrameworkTransformationsTest < matlab.unittest.TestCase
             N = 50;
             chunkSize = 10;
 
-            Z = Utility.generateRandomIntMatrix(K, N);
-            W = Utility.generateRandomIntMatrix(D, K);
+            Z = RandomMatrices.intMatrix(K, N);
+            W = RandomMatrices.intMatrix(D, K);
 
             numChunks = ceil(N / chunkSize);
             WZchunks = cell(1, numChunks);
@@ -134,8 +134,8 @@ classdef MapReducerFrameworkTransformationsTest < matlab.unittest.TestCase
             N = 50;
             chunkSize = 10;
 
-            Z = Utility.generateRandomIntMatrix(K, N);
-            W = Utility.generateRandomIntMatrix(D, K);
+            Z = RandomMatrices.intMatrix(K, N);
+            W = RandomMatrices.intMatrix(D, K);
 
             numChunks = ceil(N / chunkSize);
             
@@ -161,7 +161,7 @@ classdef MapReducerFrameworkTransformationsTest < matlab.unittest.TestCase
             N = 50;
             chunkSize = 10;
 
-            X = Utility.generateRandomIntMatrix(D, N);
+            X = RandomMatrices.intMatrix(D, N);
 
             numChunks = ceil(N / chunkSize);
             Xchunks = cell(1, numChunks);
@@ -188,9 +188,9 @@ classdef MapReducerFrameworkTransformationsTest < matlab.unittest.TestCase
             N = 50;
             chunkSize = 10;
 
-            X = Utility.generateRandomIntMatrix(D, N);
-            Z = Utility.generateRandomIntMatrix(K, N);
-            W = Utility.generateRandomIntMatrix(D, K);
+            X = RandomMatrices.intMatrix(D, N);
+            Z = RandomMatrices.intMatrix(K, N);
+            W = RandomMatrices.intMatrix(D, K);
 
             numChunks = ceil(N / chunkSize);
             Xchunks = cell(1, numChunks);
@@ -219,9 +219,9 @@ classdef MapReducerFrameworkTransformationsTest < matlab.unittest.TestCase
             N = 50;
             chunkSize = 10;
 
-            X = Utility.generateRandomIntMatrix(D, N);
-            Z = Utility.generateRandomIntMatrix(K, N);
-            W = Utility.generateRandomIntMatrix(D, K);
+            X = RandomMatrices.intMatrix(D, N);
+            Z = RandomMatrices.intMatrix(K, N);
+            W = RandomMatrices.intMatrix(D, K);
 
             numChunks = ceil(N / chunkSize);
             Xchunks = cell(1, numChunks);

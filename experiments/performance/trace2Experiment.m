@@ -1,6 +1,6 @@
 clc;
-A = Utility.generateRandomIntMatrix(50, 6000);
-B = Utility.generateRandomIntMatrix(6000, 50);
+A = RandomMatrices.intMatrix(50, 6000);
+B = RandomMatrices.intMatrix(6000, 50);
 nruns = 10;
 
 tic;

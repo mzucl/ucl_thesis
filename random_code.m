@@ -19,3 +19,30 @@ GFA_experiment = experiment_mod.Experiment(N_FOLDS, n_reps, dataset, "./Models",
 % Call Python methods
 GFA_experiment.load_factors();
 GFA_experiment.load_taus();
+
+
+binaryVars = {};
+categoricalVars = {};
+continuousVars = {};
+
+for v = 1:width(T)
+    col = T.(v);
+    uniqueVals = unique(col);
+
+    if iscellstr(col) || isstring(col) || iscategorical(col)
+        % String-like columns → categorical
+        categoricalVars{end+1} = T.Properties.VariableNames{v};
+    elseif isnumeric(col)
+        if numel(uniqueVals) == 2
+            binaryVars{end+1} = T.Properties.VariableNames{v};
+        elseif numel(uniqueVals) < 0.05 * height(T) % heuristic threshold
+            categoricalVars{end+1} = T.Properties.VariableNames{v};
+        else
+            continuousVars{end+1} = T.Properties.VariableNames{v};
+        end
+    end
+end
+
+T_binary = T(:, binaryVars);
+T_categorical = T(:, categoricalVars);
+T_continuous = T(:, continuousVars);

@@ -49,7 +49,7 @@ classdef GaussianContainerTest < matlab.unittest.TestCase
             end
             
             % Test 3: 'mu' is a matrix
-            mu = Utility.generateRandomIntMatrix(dim, size_);
+            mu = RandomMatrices.intMatrix(dim, size_);
             obj = GaussianContainer(type, size_, cols, dim, mu);
 
             testCase.verifyEqual(obj.mu, mu);
@@ -85,7 +85,7 @@ classdef GaussianContainerTest < matlab.unittest.TestCase
             % 'mu': scalar
             % 'cov': matrix
             mu = 5;
-            cov = Utility.generateRandomSPDMatrix(dim);
+            cov = RandomMatrices.spdMatrix(dim);
             obj = GaussianContainer(type, size_, cols, dim, mu, cov);
 
             testCase.verifyEqual(obj.mu, mu * ones(dim, size_));
@@ -119,7 +119,7 @@ classdef GaussianContainerTest < matlab.unittest.TestCase
             % 'mu': array
             % 'cov': matrix
             mu = (1:dim)';
-            cov = Utility.generateRandomSPDMatrix(dim);
+            cov = RandomMatrices.spdMatrix(dim);
             obj = GaussianContainer(type, size_, cols, dim, mu, cov);
 
             for c = 1:size(mu, 2) % for each column in mu
@@ -130,7 +130,7 @@ classdef GaussianContainerTest < matlab.unittest.TestCase
             % Test 7 
             % 'mu': matrix
             % 'cov': scalar
-            mu = Utility.generateRandomIntMatrix(dim, size_);
+            mu = RandomMatrices.intMatrix(dim, size_);
             cov = 5;
             obj = GaussianContainer(type, size_, cols, dim, mu, cov);
 
@@ -140,7 +140,7 @@ classdef GaussianContainerTest < matlab.unittest.TestCase
             % Test 8
             % 'mu': matrix
             % 'cov': array
-            mu = Utility.generateRandomIntMatrix(dim, size_);
+            mu = RandomMatrices.intMatrix(dim, size_);
             cov = (1:dim)';
             obj = GaussianContainer(type, size_, cols, dim, mu, cov);
 
@@ -150,8 +150,8 @@ classdef GaussianContainerTest < matlab.unittest.TestCase
             % Test 9
             % 'mu': matrix
             % 'cov': matrix
-            mu = Utility.generateRandomIntMatrix(dim, size_);
-            cov = Utility.generateRandomSPDMatrix(dim);
+            mu = RandomMatrices.intMatrix(dim, size_);
+            cov = RandomMatrices.spdMatrix(dim);
             obj = GaussianContainer(type, size_, cols, dim, mu, cov);
 
             testCase.verifyEqual(obj.mu, mu);
@@ -194,7 +194,7 @@ classdef GaussianContainerTest < matlab.unittest.TestCase
             % 'mu': scalar
             % 'cov': matrix
             mu = 5;
-            cov = Utility.generateRandomSPDMatrix(dim);
+            cov = RandomMatrices.spdMatrix(dim);
             obj = GaussianContainer(type, size_, cols, dim, mu, cov);
 
             testCase.verifyEqual(obj.mu, mu * ones(dim, size_));
@@ -238,7 +238,7 @@ classdef GaussianContainerTest < matlab.unittest.TestCase
             % 'mu': array
             % 'cov': matrix
             mu = (1:dim)';
-            cov = Utility.generateRandomSPDMatrix(dim);
+            cov = RandomMatrices.spdMatrix(dim);
             obj = GaussianContainer(type, size_, cols, dim, mu, cov);
 
             for c = 1:size(mu, 2) % for each column in mu
@@ -252,7 +252,7 @@ classdef GaussianContainerTest < matlab.unittest.TestCase
             % Test 7 
             % 'mu': matrix
             % 'cov': scalar
-            mu = Utility.generateRandomIntMatrix(dim, size_);
+            mu = RandomMatrices.intMatrix(dim, size_);
             cov = 5;
             obj = GaussianContainer(type, size_, cols, dim, mu, cov);
 
@@ -264,7 +264,7 @@ classdef GaussianContainerTest < matlab.unittest.TestCase
             % Test 8
             % 'mu': matrix
             % 'cov': array
-            mu = Utility.generateRandomIntMatrix(dim, size_);
+            mu = RandomMatrices.intMatrix(dim, size_);
             cov = (1:dim)';
             obj = GaussianContainer(type, size_, cols, dim, mu, cov);
 
@@ -277,8 +277,8 @@ classdef GaussianContainerTest < matlab.unittest.TestCase
             % Test 9
             % 'mu': matrix
             % 'cov': matrix
-            mu = Utility.generateRandomIntMatrix(dim, size_);
-            cov = Utility.generateRandomSPDMatrix(dim);
+            mu = RandomMatrices.intMatrix(dim, size_);
+            cov = RandomMatrices.spdMatrix(dim);
             obj = GaussianContainer(type, size_, cols, dim, mu, cov);
 
             testCase.verifyEqual(obj.mu, mu);
@@ -345,7 +345,7 @@ classdef GaussianContainerTest < matlab.unittest.TestCase
             testCase.verifyEqual(obj.E, zeros(dim, size_));
             testCase.verifyEqual(obj.cov, eye(dim));
 
-            muNew = Utility.generateRandomIntMatrix(dim, size_);
+            muNew = RandomMatrices.intMatrix(dim, size_);
             obj.updateDistributionsMu(muNew);
 
             testCase.verifyEqual(obj.mu, muNew);
@@ -365,7 +365,7 @@ classdef GaussianContainerTest < matlab.unittest.TestCase
             testCase.verifyEqual(obj.E, zeros(size_, dim));
             testCase.verifyEqual(obj.cov, eye(dim));
 
-            muNew = Utility.generateRandomIntMatrix(dim, size_);
+            muNew = RandomMatrices.intMatrix(dim, size_);
             obj.updateDistributionsMu(muNew);
 
             testCase.verifyEqual(obj.mu, muNew);
@@ -385,7 +385,7 @@ classdef GaussianContainerTest < matlab.unittest.TestCase
             testCase.verifyEqual(obj.mu, zeros(dim, size_));
             testCase.verifyEqual(obj.cov, eye(dim));
 
-            covNew = Utility.generateRandomSPDMatrix(dim);
+            covNew = RandomMatrices.spdMatrix(dim);
             % Update
             obj.updateDistributionsCovariance(covNew);
 
@@ -406,8 +406,8 @@ classdef GaussianContainerTest < matlab.unittest.TestCase
             end
 
             covNew = zeros(dim, dim, size_); % Preallocate
-            covNew1 = Utility.generateRandomSPDMatrix(dim);
-            covNew2 = Utility.generateRandomSPDMatrix(dim);
+            covNew1 = RandomMatrices.spdMatrix(dim);
+            covNew2 = RandomMatrices.spdMatrix(dim);
             covNew(:, :, 1) = covNew1;
             covNew(:, :, 2) = covNew2;
 
@@ -430,8 +430,8 @@ classdef GaussianContainerTest < matlab.unittest.TestCase
             testCase.verifyEqual(obj.mu, zeros(dim, size_));
             testCase.verifyEqual(obj.cov, eye(dim));
 
-            muNew = Utility.generateRandomIntMatrix(dim, size_);
-            covNew = Utility.generateRandomSPDMatrix(dim);
+            muNew = RandomMatrices.intMatrix(dim, size_);
+            covNew = RandomMatrices.spdMatrix(dim);
 
             % Update
             obj.updateDistributionsParameters(muNew, covNew);
@@ -452,11 +452,11 @@ classdef GaussianContainerTest < matlab.unittest.TestCase
                 testCase.verifyEqual(obj.cov(:, :, i), eye(dim));
             end
 
-            muNew = Utility.generateRandomIntMatrix(dim, size_);
+            muNew = RandomMatrices.intMatrix(dim, size_);
 
             covNew = zeros(dim, dim, size_); % Preallocate
-            covNew1 = Utility.generateRandomSPDMatrix(dim);
-            covNew2 = Utility.generateRandomSPDMatrix(dim);
+            covNew1 = RandomMatrices.spdMatrix(dim);
+            covNew2 = RandomMatrices.spdMatrix(dim);
             covNew(:, :, 1) = covNew1;
             covNew(:, :, 2) = covNew2;
 
@@ -543,14 +543,14 @@ classdef GaussianContainerTest < matlab.unittest.TestCase
             dim = 5;
             size_ = 2;
             cols = true;
-            mu = Utility.generateRandomIntMatrix(dim, size_);
-            cov = Utility.generateRandomSPDMatrix(dim);
+            mu = RandomMatrices.intMatrix(dim, size_);
+            cov = RandomMatrices.spdMatrix(dim);
             obj = GaussianContainer(type, size_, cols, dim, mu, cov);
 
             testCase.verifyTrue(isequal(obj.getExpInit(), obj.E));
 
             % Set init expectation
-            expNew = Utility.generateRandomIntMatrix(dim, size_);
+            expNew = RandomMatrices.intMatrix(dim, size_);
             obj.setExpInit(expNew);
 
             testCase.verifyTrue(isequal(obj.getExpInit(), expNew));
@@ -561,14 +561,14 @@ classdef GaussianContainerTest < matlab.unittest.TestCase
             dim = 5;
             size_ = 2;
             cols = false;
-            mu = Utility.generateRandomIntMatrix(dim, size_);
-            cov = Utility.generateRandomSPDMatrix(dim);
+            mu = RandomMatrices.intMatrix(dim, size_);
+            cov = RandomMatrices.spdMatrix(dim);
             obj = GaussianContainer(type, size_, cols, dim, mu, cov);
 
             testCase.verifyTrue(isequal(obj.getExpInit(), obj.E));
 
             % Set init expectation
-            expNew = Utility.generateRandomIntMatrix(size_, dim);
+            expNew = RandomMatrices.intMatrix(size_, dim);
             obj.setExpInit(expNew);
 
             testCase.verifyTrue(isequal(obj.getExpInit(), expNew));
@@ -620,7 +620,7 @@ classdef GaussianContainerTest < matlab.unittest.TestCase
             testCase.verifyEqual(obj.mu, zeros(dim, size_));
             testCase.verifyEqual(obj.cov, eye(dim));
 
-            covNew = Utility.generateRandomSPDMatrix(dim);
+            covNew = RandomMatrices.spdMatrix(dim);
             obj.updateDistributionsCovariance(covNew);
             testCase.verifyEqual(obj.cov, covNew);
 

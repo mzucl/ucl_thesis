@@ -1,17 +1,17 @@
 classdef CodeVectorizationsTest < matlab.unittest.TestCase
     methods (Static)
         function [X, W, T] = generateViewMatrices(D, N, K)
-            X = Utility.generateRandomIntMatrix(D, N);
-            W = Utility.generateRandomIntMatrix(D, K);
-            T = diag(diag(Utility.generateRandomIntMatrix(D, D)));
+            X = RandomMatrices.intMatrix(D, N);
+            W = RandomMatrices.intMatrix(D, K);
+            T = diag(diag(RandomMatrices.intMatrix(D, D)));
         end
 
         % Generate view for the new GFA model: mu included, noise
         % spherical;
         function [X, W, mu, tau] = generateViewMatricesGFANew(D, N, K)
-            X = Utility.generateRandomIntMatrix(D, N);
-            W = Utility.generateRandomIntMatrix(D, K);
-            mu = Utility.generateRandomIntMatrix(D, 1);
+            X = RandomMatrices.intMatrix(D, N);
+            W = RandomMatrices.intMatrix(D, K);
+            mu = RandomMatrices.intMatrix(D, 1);
             tau = randi(15); % Drawn from Unif[1:15]
         end
     end
@@ -28,9 +28,9 @@ classdef CodeVectorizationsTest < matlab.unittest.TestCase
             K = 10;
             N = 50;
             % <tau> * \Sigma_z * <W>^T
-            X = Utility.generateRandomIntMatrix(D, N);
-            A = Utility.generateRandomIntMatrix(K, D);
-            mu = Utility.generateRandomIntMatrix(D, 1);
+            X = RandomMatrices.intMatrix(D, N);
+            A = RandomMatrices.intMatrix(K, D);
+            mu = RandomMatrices.intMatrix(D, 1);
 
             % Vectorized code
             MU = A * (X - mu);
@@ -49,9 +49,9 @@ classdef CodeVectorizationsTest < matlab.unittest.TestCase
             D = 20;
             K = 10;
             N = 50;
-            X = Utility.generateRandomIntMatrix(D, N);
-            W = Utility.generateRandomIntMatrix(D, K);
-            Z = Utility.generateRandomIntMatrix(K, N);
+            X = RandomMatrices.intMatrix(D, N);
+            W = RandomMatrices.intMatrix(D, K);
+            Z = RandomMatrices.intMatrix(K, N);
 
             sum = 0;
 
@@ -72,9 +72,9 @@ classdef CodeVectorizationsTest < matlab.unittest.TestCase
             D = 20;
             K = 10;
             N = 50;
-            X = Utility.generateRandomIntMatrix(D, N);
-            Z = Utility.generateRandomIntMatrix(K, N);
-            mu = Utility.generateRandomIntMatrix(D, 1);
+            X = RandomMatrices.intMatrix(D, N);
+            Z = RandomMatrices.intMatrix(K, N);
+            mu = RandomMatrices.intMatrix(D, 1);
 
             % Vectorized code
             MU = Z * (X' - mu');
@@ -97,10 +97,10 @@ classdef CodeVectorizationsTest < matlab.unittest.TestCase
             D = 20;
             K = 10;
             N = 50;
-            X = Utility.generateRandomIntMatrix(D, N);
-            Z = Utility.generateRandomIntMatrix(K, N);
-            mu = Utility.generateRandomIntMatrix(D, 1);
-            W = Utility.generateRandomIntMatrix(D, K);
+            X = RandomMatrices.intMatrix(D, N);
+            Z = RandomMatrices.intMatrix(K, N);
+            mu = RandomMatrices.intMatrix(D, 1);
+            W = RandomMatrices.intMatrix(D, K);
 
             sum = 0;
 
@@ -124,10 +124,10 @@ classdef CodeVectorizationsTest < matlab.unittest.TestCase
             D = 20;
             K = 10;
             N = 50;
-            X = Utility.generateRandomIntMatrix(D, N);
-            Z = Utility.generateRandomIntMatrix(K, N);
-            mu = Utility.generateRandomIntMatrix(D, 1);
-            W = Utility.generateRandomIntMatrix(D, K);
+            X = RandomMatrices.intMatrix(D, N);
+            Z = RandomMatrices.intMatrix(K, N);
+            mu = RandomMatrices.intMatrix(D, 1);
+            W = RandomMatrices.intMatrix(D, K);
 
             % Vectorized, but not optimized
             res1 = 1/2 * trace(X' * X) + N/2 * dot(mu, mu) + 1/2 * trace((W' * W) * (Z * Z')) + ...
@@ -159,7 +159,7 @@ classdef CodeVectorizationsTest < matlab.unittest.TestCase
             [X2, W2, T2] = CodeVectorizationsTest.generateViewMatrices(Ds(2), N, K);
             [X3, W3, T3] = CodeVectorizationsTest.generateViewMatrices(Ds(3), N, K);
 
-            sigmaZ = Utility.generateRandomIntMatrix(K, K);
+            sigmaZ = RandomMatrices.intMatrix(K, K);
             
             % Vectorized code
             MU = sigmaZ * (W1' * T1 * X1 + W2' * T2 * X2 + W3' * T3 * X3);
@@ -192,7 +192,7 @@ classdef CodeVectorizationsTest < matlab.unittest.TestCase
             W = blkdiag(W1, W2, W3);
             T = blkdiag(T1, T2, T3);
 
-            sigmaZ = Utility.generateRandomIntMatrix(K, K);
+            sigmaZ = RandomMatrices.intMatrix(K, K);
             
             % Vectorized code
             MU = W' * T * X; % blkdiag(W1' * T1, W2' * T2, W3' * T3)
@@ -219,9 +219,9 @@ classdef CodeVectorizationsTest < matlab.unittest.TestCase
             N = 100;
 
             [X, ~, T] = CodeVectorizationsTest.generateViewMatrices(D, N, K);
-            Z = Utility.generateRandomIntMatrix(K, N);
+            Z = RandomMatrices.intMatrix(K, N);
 
-            sigma = repmat(Utility.generateRandomSPDMatrix(K), 1, 1, D);
+            sigma = repmat(RandomMatrices.spdMatrix(K), 1, 1, D);
             
             % Vectorized code
             V = reshape(Z * X' * T, K, 1, D); % Columns of the matrix will be in the third dimension
@@ -250,8 +250,8 @@ classdef CodeVectorizationsTest < matlab.unittest.TestCase
             N = 10;
 
             [~, ~, T] = CodeVectorizationsTest.generateViewMatrices(D, N, K);
-            Z = Utility.generateRandomIntMatrix(K, N);
-            alpha = diag(Utility.generateRandomIntMatrix(K, K));
+            Z = RandomMatrices.intMatrix(K, N);
+            alpha = diag(RandomMatrices.intMatrix(K, K));
 
             T_3D = reshape(diag(T), 1, 1, []);
 
@@ -291,10 +291,10 @@ classdef CodeVectorizationsTest < matlab.unittest.TestCase
             N = 100;
 
             [~, W, T] = CodeVectorizationsTest.generateViewMatrices(D, N, K);
-            Z = Utility.generateRandomIntMatrix(K, N);
-            Sigma = Utility.generateRandomSPDMatrix(D);
+            Z = RandomMatrices.intMatrix(K, N);
+            Sigma = RandomMatrices.spdMatrix(D);
 
-            T_obs = Utility.generateRandomBinaryMatrix(D, N);
+            T_obs = RandomMatrices.binaryMatrix(D, N);
 
             % Vectorized code
             MU = Sigma * (T * W * Z + T_obs - 1/2 * ones(D, N));
@@ -326,7 +326,7 @@ classdef CodeVectorizationsTest < matlab.unittest.TestCase
             [X2, W2, mu2, tau2] = CodeVectorizationsTest.generateViewMatricesGFANew(Ds(2), N, K);
             [X3, W3, mu3, tau3] = CodeVectorizationsTest.generateViewMatricesGFANew(Ds(3), N, K);
 
-            sigmaZ = Utility.generateRandomIntMatrix(K, K);
+            sigmaZ = RandomMatrices.intMatrix(K, K);
             
             % Vectorized code
             MU = sigmaZ * (tau1 * W1' * (X1 - mu1) + tau2 * W2' * (X2 - mu2) + ...
@@ -351,9 +351,9 @@ classdef CodeVectorizationsTest < matlab.unittest.TestCase
             N = 100;
 
             [X, ~, mu, tau] = CodeVectorizationsTest.generateViewMatricesGFANew(D, N, K);
-            Z = Utility.generateRandomIntMatrix(K, N);
+            Z = RandomMatrices.intMatrix(K, N);
             
-            sigmaW = Utility.generateRandomIntMatrix(K, K);
+            sigmaW = RandomMatrices.intMatrix(K, K);
 
             % Vectorized code
             MU = sigmaW * tau * Z * (X - mu)';

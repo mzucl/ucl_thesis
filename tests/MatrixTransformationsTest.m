@@ -7,10 +7,10 @@ classdef MatrixTransformationsTest < matlab.unittest.TestCase
             D = 20;
             K = 10;
             N = 50;
-            X = Utility.generateRandomIntMatrix(D, N);
-            W = Utility.generateRandomIntMatrix(D, K);
-            Z = Utility.generateRandomIntMatrix(K, N);
-            mu = Utility.generateRandomIntMatrix(D, 1);
+            X = RandomMatrices.intMatrix(D, N);
+            W = RandomMatrices.intMatrix(D, K);
+            Z = RandomMatrices.intMatrix(K, N);
+            mu = RandomMatrices.intMatrix(D, 1);
 
             sum = 0;
             for n = 1:N
@@ -36,10 +36,10 @@ classdef MatrixTransformationsTest < matlab.unittest.TestCase
             K = 10;
             N = 50;
 
-            X = Utility.generateRandomIntMatrix(D, N);
-            W = Utility.generateRandomIntMatrix(D, K);
-            T = diag(diag(Utility.generateRandomIntMatrix(D, D)));
-            Z = Utility.generateRandomIntMatrix(K, N);
+            X = RandomMatrices.intMatrix(D, N);
+            W = RandomMatrices.intMatrix(D, K);
+            T = diag(diag(RandomMatrices.intMatrix(D, D)));
+            Z = RandomMatrices.intMatrix(K, N);
 
             sum1 = 0;
             for n = 1:N
@@ -60,9 +60,9 @@ classdef MatrixTransformationsTest < matlab.unittest.TestCase
             K = 10;
             N = 50;
 
-            W = Utility.generateRandomIntMatrix(D, K);
-            T = diag(diag(Utility.generateRandomIntMatrix(D, D)));
-            Z = Utility.generateRandomIntMatrix(K, N);
+            W = RandomMatrices.intMatrix(D, K);
+            T = diag(diag(RandomMatrices.intMatrix(D, D)));
+            Z = RandomMatrices.intMatrix(K, N);
 
             sum1 = 0;
             for n = 1:N
@@ -81,8 +81,8 @@ classdef MatrixTransformationsTest < matlab.unittest.TestCase
             % Setup
             D = 20;
             K = 10;
-            W = Utility.generateRandomIntMatrix(D, K);
-            alpha = Utility.generateRandomIntMatrix(K, 1);
+            W = RandomMatrices.intMatrix(D, K);
+            alpha = RandomMatrices.intMatrix(K, 1);
 
             sum1 = 0;
             for k = 1:K
@@ -105,9 +105,9 @@ classdef MatrixTransformationsTest < matlab.unittest.TestCase
             D = 20;
             K = 10;
             N = 50;
-            X = Utility.generateRandomIntMatrix(D, N);
-            W = Utility.generateRandomIntMatrix(D, K);
-            Z = Utility.generateRandomIntMatrix(K, N);
+            X = RandomMatrices.intMatrix(D, N);
+            W = RandomMatrices.intMatrix(D, K);
+            Z = RandomMatrices.intMatrix(K, N);
 
             sum = 0;
             for n = 1:N
@@ -126,10 +126,10 @@ classdef MatrixTransformationsTest < matlab.unittest.TestCase
             D = 20;
             K = 10;
             N = 50;
-            X = Utility.generateRandomIntMatrix(D, N);
-            W = Utility.generateRandomIntMatrix(D, K);
-            T = diag(diag(Utility.generateRandomIntMatrix(D, D)));
-            Z = Utility.generateRandomIntMatrix(K, N);
+            X = RandomMatrices.intMatrix(D, N);
+            W = RandomMatrices.intMatrix(D, K);
+            T = diag(diag(RandomMatrices.intMatrix(D, D)));
+            Z = RandomMatrices.intMatrix(K, N);
 
             sum1 = 0;
             for n = 1:N
@@ -158,10 +158,10 @@ classdef MatrixTransformationsTest < matlab.unittest.TestCase
             K = 10;
             N = 50;
 
-            X = Utility.generateRandomIntMatrix(D, N);
-            W = Utility.generateRandomIntMatrix(D, K);
-            Z = Utility.generateRandomIntMatrix(K, N);
-            mu = Utility.generateRandomIntMatrix(D, 1);
+            X = RandomMatrices.intMatrix(D, N);
+            W = RandomMatrices.intMatrix(D, K);
+            Z = RandomMatrices.intMatrix(K, N);
+            mu = RandomMatrices.intMatrix(D, 1);
 
             sum1 = 0;
             for n = 1:N
@@ -182,8 +182,8 @@ classdef MatrixTransformationsTest < matlab.unittest.TestCase
             K = 10;
             N = 50;
 
-            W = Utility.generateRandomIntMatrix(D, K);
-            Z = Utility.generateRandomIntMatrix(K, N);
+            W = RandomMatrices.intMatrix(D, K);
+            Z = RandomMatrices.intMatrix(K, N);
 
             sum1 = 0;
             for n = 1:N
@@ -204,8 +204,8 @@ classdef MatrixTransformationsTest < matlab.unittest.TestCase
             N = 50;
             D = 20;
 
-            X = Utility.generateRandomIntMatrix(D, N);
-            mu = Utility.generateRandomIntMatrix(D, 1);
+            X = RandomMatrices.intMatrix(D, N);
+            mu = RandomMatrices.intMatrix(D, 1);
 
             sum1 = 0;
             for n = 1:N
@@ -224,10 +224,10 @@ classdef MatrixTransformationsTest < matlab.unittest.TestCase
             N = 50;
             D = 20;
 
-            X = Utility.generateRandomIntMatrix(D, N);
-            W = Utility.generateRandomIntMatrix(D, K);
-            Z = Utility.generateRandomIntMatrix(K, N);
-            mu = Utility.generateRandomIntMatrix(D, 1);
+            X = RandomMatrices.intMatrix(D, N);
+            W = RandomMatrices.intMatrix(D, K);
+            Z = RandomMatrices.intMatrix(K, N);
+            mu = RandomMatrices.intMatrix(D, 1);
 
             sum1 = 0;
             for n = 1:N
@@ -248,10 +248,10 @@ classdef MatrixTransformationsTest < matlab.unittest.TestCase
             N = 50;
             D = 20;
 
-            X = Utility.generateRandomIntMatrix(D, N);
-            W = Utility.generateRandomIntMatrix(D, K);
-            Z = Utility.generateRandomIntMatrix(K, N);
-            mu = Utility.generateRandomIntMatrix(D, 1);
+            X = RandomMatrices.intMatrix(D, N);
+            W = RandomMatrices.intMatrix(D, K);
+            Z = RandomMatrices.intMatrix(K, N);
+            mu = RandomMatrices.intMatrix(D, 1);
             beta = randi(15);
             tau = randi(100);
 
@@ -277,10 +277,10 @@ classdef MatrixTransformationsTest < matlab.unittest.TestCase
             N = 50;
             D = 20;
 
-            X = Utility.generateRandomIntMatrix(D, N);
-            W = Utility.generateRandomIntMatrix(D, K);
-            Z = Utility.generateRandomIntMatrix(K, N);
-            mu = Utility.generateRandomIntMatrix(D, 1);
+            X = RandomMatrices.intMatrix(D, N);
+            W = RandomMatrices.intMatrix(D, K);
+            Z = RandomMatrices.intMatrix(K, N);
+            mu = RandomMatrices.intMatrix(D, 1);
 
             tr1 = trace(W * Z * (X - mu)');
             
@@ -298,8 +298,8 @@ classdef MatrixTransformationsTest < matlab.unittest.TestCase
         % ln q(Z) - second line
         function testIdentityBinary1_1(testCase)
             D = 10;
-            a = Utility.generateRandomIntMatrix(D, 1);
-            h = Utility.generateRandomIntMatrix(D, 1);
+            a = RandomMatrices.intMatrix(D, 1);
+            h = RandomMatrices.intMatrix(D, 1);
 
             sum = 0;
             for d = 1:D
@@ -315,7 +315,7 @@ classdef MatrixTransformationsTest < matlab.unittest.TestCase
         function testIdentityBinary1_2(testCase)
             D = 10;
             K = 8;
-            W = Utility.generateRandomIntMatrix(D, K);
+            W = RandomMatrices.intMatrix(D, K);
             D = 1/4 * eye(D);
 
             testCase.verifyEqual(W' * D * W, 1/4 * (W' * W));
@@ -339,7 +339,7 @@ classdef MatrixTransformationsTest < matlab.unittest.TestCase
             D = 10;
             N = 100;
             H = 1/4 * ones(D, N);
-            WZ = Utility.generateRandomIntMatrix(D, N);
+            WZ = RandomMatrices.intMatrix(D, N);
             
             res1 = H .* WZ;
             res2 = 1/4 * WZ;
@@ -351,9 +351,9 @@ classdef MatrixTransformationsTest < matlab.unittest.TestCase
         function testIdentityBinary1_3(testCase)
             D = 10;
             N = 20;
-            T = Utility.generateRandomIntMatrix(D, N);
+            T = RandomMatrices.intMatrix(D, N);
             H = 1/4 * ones(D, N);
-            mu = Utility.generateRandomIntMatrix(D, 1);
+            mu = RandomMatrices.intMatrix(D, 1);
 
             testCase.verifyEqual(T - H .* mu, T - 1/4 * mu);
         end
@@ -364,9 +364,9 @@ classdef MatrixTransformationsTest < matlab.unittest.TestCase
         function testIdentityBinary2_1(testCase)
             D = 10;
             K = 8;
-            MU = Utility.generateRandomIntMatrix(K, D);
-            diagMatrix = diag(Utility.generateRandomIntMatrix(D, 1));
-            Sigma = Utility.generateRandomIntMatrix(K, K);
+            MU = RandomMatrices.intMatrix(K, D);
+            diagMatrix = diag(RandomMatrices.intMatrix(D, 1));
+            Sigma = RandomMatrices.intMatrix(K, K);
 
             sum = zeros(K, K);
             for d = 1:D
@@ -381,9 +381,9 @@ classdef MatrixTransformationsTest < matlab.unittest.TestCase
         % Part 2
         function testIdentityBinary2_2(testCase)
             K = 8;
-            mu_1 = Utility.generateRandomIntMatrix(K, 1);
-            Sigma_1 = Utility.generateRandomIntMatrix(K, K);
-            D = diag(Utility.generateRandomIntMatrix(K, 1));
+            mu_1 = RandomMatrices.intMatrix(K, 1);
+            Sigma_1 = RandomMatrices.intMatrix(K, K);
+            D = diag(RandomMatrices.intMatrix(K, 1));
 
             res1 = trace((mu_1 * mu_1' + Sigma_1) * D);
             res2 = mu_1' * D * mu_1 + trace(Sigma_1 * D);
@@ -395,9 +395,9 @@ classdef MatrixTransformationsTest < matlab.unittest.TestCase
         function testIdentityBinary2_3(testCase)
             K = 8;
             N = 100;
-            MU = Utility.generateRandomIntMatrix(K, N);
-            Sigma = Utility.generateRandomIntMatrix(K, K);
-            D = diag(Utility.generateRandomIntMatrix(K, 1));
+            MU = RandomMatrices.intMatrix(K, N);
+            Sigma = RandomMatrices.intMatrix(K, K);
+            D = diag(RandomMatrices.intMatrix(K, 1));
 
             % Test 2: D is diagonal
             res1 = zeros(N, N);
@@ -424,8 +424,8 @@ classdef MatrixTransformationsTest < matlab.unittest.TestCase
         function testIdentityBinary3_1(testCase)
             D = 10;
             N = 100;
-            Y = Utility.generateRandomIntMatrix(D, N); % Y = WZ
-            H = Utility.generateRandomIntMatrix(D, N);
+            Y = RandomMatrices.intMatrix(D, N); % Y = WZ
+            H = RandomMatrices.intMatrix(D, N);
 
             res1 = trace(Y' * (H .* Y));
             res2 = 0;
@@ -443,8 +443,8 @@ classdef MatrixTransformationsTest < matlab.unittest.TestCase
         function testIdentityBinary3_1_1(testCase)
             D = 10;
             N = 100;
-            H = Utility.generateRandomIntMatrix(D, N); % A = WZ
-            Tr = Utility.generateRandomIntMatrix(D, N); % Matrix of traces
+            H = RandomMatrices.intMatrix(D, N); % A = WZ
+            Tr = RandomMatrices.intMatrix(D, N); % Matrix of traces
 
             res1 = sum(sum(H .* Tr));
 
@@ -465,8 +465,8 @@ classdef MatrixTransformationsTest < matlab.unittest.TestCase
             D = 20;
             N = 100;
             K = 12;
-            H = Utility.generateRandomIntMatrix(D, N);
-            MU_Z = Utility.generateRandomIntMatrix(K, N); % mu_zn are the cols
+            H = RandomMatrices.intMatrix(D, N);
+            MU_Z = RandomMatrices.intMatrix(K, N); % mu_zn are the cols
 
             % randi(10, [3, 3, 5]) -> generate a 3x3x5 array of random integers between 1 and 10
             Sigma_W = randi(10, [K, K, D]);
@@ -492,8 +492,8 @@ classdef MatrixTransformationsTest < matlab.unittest.TestCase
             D = 20;
             N = 100;
             K = 12;
-            H = Utility.generateRandomIntMatrix(D, N);
-            MU_Z = Utility.generateRandomIntMatrix(K, N); % mu_zn are the cols
+            H = RandomMatrices.intMatrix(D, N);
+            MU_Z = RandomMatrices.intMatrix(K, N); % mu_zn are the cols
 
             % randi(10, [3, 3, 5]) -> generate a 3x3x5 array of random integers between 1 and 10
             Sigma_W = randi(10, [K, K, D]);
@@ -517,7 +517,7 @@ classdef MatrixTransformationsTest < matlab.unittest.TestCase
             N = 50;
             K = 9;
             D = 20;
-            Z = Utility.generateRandomIntMatrix(K, N);
+            Z = RandomMatrices.intMatrix(K, N);
             H = 1/4 * ones(D, N);
 
             res1 = Z * diag(H(1, :)) * Z';

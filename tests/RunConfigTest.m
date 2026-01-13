@@ -3,8 +3,8 @@ classdef RunConfigTest < matlab.unittest.TestCase
     % their `private` access level within that class while still allowing 
     % their use here.
     properties (Access = private, Constant)
-        INPUT_VALIDATION_DEFAULT = true;
-        ENABLE_LOGGING_DEFAULT = true;
+        VALIDATE_INPUT_DEFAULT = true;
+        VERBOSE_DEFAULT = true;
         ELBO_RECALC_INTERVAL_DEFAULT = 1;
         NUM_STABILITY_RUNS_DEFAULT = 2;
         NUM_MODEL_SELECTION_RUNS_DEFAULT = 2;
@@ -13,7 +13,7 @@ classdef RunConfigTest < matlab.unittest.TestCase
     methods(Test)
         function testAll(testCase)
             rc1 = RunConfig.getInstance();
-            testCase.verifyTrue(rc1.inputValidation == RunConfigTest.INPUT_VALIDATION_DEFAULT);
+            testCase.verifyTrue(rc1.inputValidation == RunConfigTest.VALIDATE_INPUT_DEFAULT);
 
             % Update `rc1`
             rc1.inputValidation = false;
@@ -32,8 +32,8 @@ classdef RunConfigTest < matlab.unittest.TestCase
             rc2.resetToDefaults();
 
             % Verify that both instances are reset
-            testCase.verifyEqual(rc1.inputValidation, RunConfigTest.INPUT_VALIDATION_DEFAULT);
-            testCase.verifyEqual(rc2.inputValidation, RunConfigTest.INPUT_VALIDATION_DEFAULT);
+            testCase.verifyEqual(rc1.inputValidation, RunConfigTest.VALIDATE_INPUT_DEFAULT);
+            testCase.verifyEqual(rc2.inputValidation, RunConfigTest.VALIDATE_INPUT_DEFAULT);
             testCase.verifyEqual(rc1.numModelSelectionRuns, RunConfigTest.NUM_MODEL_SELECTION_RUNS_DEFAULT);
             testCase.verifyEqual(rc2.numModelSelectionRuns, RunConfigTest.NUM_MODEL_SELECTION_RUNS_DEFAULT);
         end

@@ -40,16 +40,27 @@ classdef BPCA_mr < handle
 
             obj.D = numel(obj.ds.SelectedVariableNames);
 
+            % obj.view = ViewHandler(X, false);
+            % obj.N = obj.view.N; -> ?? this is distrubuted now
+            % obj.D = obj.view.D;
+
+            % BPCA can infer the right number of components, thus K is not
+            % passed in as a parameter
             obj.K = obj.D - 1;
+
 
             % Set default values
             if nargin < 4, tol = Utility.getConfigValue('Optimization', 'DEFAULT_TOL'); end
             if nargin < 3, maxIter = Utility.getConfigValue('Optimization', 'DEFAULT_MAX_ITER'); end
             if nargin < 2, W_init = randn(obj.D, obj.K); end
 
+            % TODO: Why transpose above: mean of W is stored in columns even thought cols = false for obj.W
+            % Check how we init W from the PPCA model
+            
             obj.maxIter = maxIter;
             obj.tol = tol;
            
+
             %% Model setup and initialization
             %                  dim, mu,    cov,  priorPrec
             obj.mu = Gaussian(obj.D, 0, eye(obj.D), 10^3);
@@ -59,6 +70,7 @@ classdef BPCA_mr < handle
             
             %                         type, size_, cols,   dim,   mu, cov, priorPrec
             obj.W = GaussianContainer("DS", obj.D, false, obj.K, W_init');
+            % TODO: Check if mean sixe is validated in the constructor
             
             %
             tauPrior = Gamma( ...
@@ -71,6 +83,12 @@ classdef BPCA_mr < handle
             obj.tau.setExpInit(10);
             obj.alpha.setExpInit(repmat(1e2, obj.K, 1));
             obj.mu.setExpInit(randn(obj.D, 1));
+
+            % Performed only once
+            % TODO: don't have obj.N! so this can't be the first update
+            % equations that are run
+            % obj.qConstantUpdates();
+            % obj.alpha.updateAllDistributionsA(obj.alpha.prior.a + obj.D/2);
         end
 
 
@@ -93,8 +111,8 @@ classdef BPCA_mr < handle
             expZZt = obj.stats.E_ZZt;
 
             val = 1/2 * obj.stats.Tr_XtX + obj.N/2 * obj.mu.E_XtX + ...
-                1/2 * sum(expWtW_tr(:) .* expZZt(:)) - sum(obj.stats.X_times_E_Zt(:) .* obj.W.E(:)) - ...
-                obj.mu.E' * (obj.stats.X_col_sum - obj.W.E * obj.stats.Z_col_sum);
+                1/2 * sum(expWtW_tr(:) .* expZZt(:)) - sum(obj.stats.X_times_E_Zt(:) .* obj.W.E(:)) + ...
+                obj.mu.E' * (sum(obj.W.E * obj.stats.E_Z, 2) - obj.stats.X_col_sum);
         end
 
         function obj = qWUpdate(obj, it)
@@ -103,8 +121,14 @@ classdef BPCA_mr < handle
             muExp = Utility.ternary(it == 1, obj.mu.getExpInit(), obj.mu.E);
 
             covNew = Utility.matrixInverse(diag(alphaExp) + tauExp * obj.stats.E_ZZt);
-            muNew = tauExp * covNew * (obj.stats.E_Z_times_Xt - obj.stats.Z_col_sum * muExp');
+            muNew = tauExp * covNew * (obj.stats.E_Z_times_Xt - sum(obj.stats.E_Z, 2) * muExp');
             
+            % TODO: <Z> * <mu>' where <mu>' is replicated accross rows if we use repmat(<mu>, N, 1) that
+            % would create a NXD matrix which is what we want to avoid;
+            % that is the same as sum(zn * <mu>') rank-1 updates, zn are cols of Z and this
+            % is sum(Z, 2) * <mu>'
+        
+
             obj.W.updateDistributionsParameters(muNew, covNew);
         end
 
@@ -114,9 +138,12 @@ classdef BPCA_mr < handle
 
         function obj = qMuUpdate(obj, it)
             tauExp = Utility.ternary(it == 1, obj.tau.getExpInit(), obj.tau.E);
-            covNew = (1/(obj.mu.priorPrec + obj.N * tauExp)) * eye(obj.D);
-            muNew = tauExp * covNew * (obj.stats.X_col_sum - obj.W.E * obj.stats.Z_col_sum);
 
+            covNew = (1/(obj.mu.priorPrec + obj.N * tauExp)) * eye(obj.D);
+            muNew = tauExp * covNew * (obj.stats.X_col_sum - sum(obj.W.E * obj.stats.E_Z, 2));
+            % Can it be?
+            % obj.W.E * sum(obj.stats.E_Z, 2)? <- CHECK THIS!!!
+            
             obj.mu.updateParameters(muNew, covNew);
         end
 
@@ -128,6 +155,12 @@ classdef BPCA_mr < handle
         
 
         %% fit() and ELBO
+        % elboIterStep - specifies the interval at which the ELBO should 
+        % be computed; e.g. if elboIterStep = 2 elbo will be computed every
+        % second iteration.
+        
+
+
         function elbo = computeELBO(obj)
             elbo = obj.getExpectationLnPX() + obj.stats.E_LnP_Z + obj.getExpectationLnPW() + ... % p(.)
                 obj.alpha.E_LnP + obj.mu.E_LnP + obj.tau.E_LnP + ... % p(.)
@@ -138,34 +171,30 @@ classdef BPCA_mr < handle
             value = obj.N * obj.D/2 * (obj.tau.E_LnX - log(2 * pi)) - obj.tau.E * obj.expectedReconstructionLoss();
         end
 
+
         function value = getExpectationLnPW(obj)
             value = -1/2 * dot(obj.W.E_SNC, obj.alpha.E) + ...
                 + obj.D/2 * (obj.alpha.E_LnX - obj.K * log(2*pi));
         end
 
-        % elboIterStep - specifies the interval at which the ELBO should 
-        % be computed; e.g. if elboIterStep = 2 elbo will be computed every
-        % second iteration.
+
+        % Updated FIT method using mapreduce and local GaussianContainer for Z
         function [elboVals, it] = fit(obj, elboIterStep)
             if nargin < 2
                 elboIterStep = 1;
             end
         
-            % For testing purposes (decreased from the default 5000)
-            obj.maxIter = 1200;
-
             elboVals = -Inf(1, obj.maxIter);
             elboIdx = 1;
         
-            %% Select environment
+            obj.maxIter = 1200;
             % Ensure no parallel pool is active
             delete(gcp('nocreate'));
-            inMatlab = mapreducer(0);
-            
-            % Run mapreduce on a Parallel Pool
-            % p = parpool('Processes', 12);
+
+            % p = parpool('Processes',4);
             % inPool = mapreducer(p);
-            %%
+
+            inMatlab = mapreducer(0);
             for it = 1:obj.maxIter
                 % Save global params to shared storage (if needed)
                 params.mu = obj.mu;
@@ -179,28 +208,62 @@ classdef BPCA_mr < handle
                 tauExp = Utility.ternary(it == 1, obj.tau.getExpInit(), obj.tau.E);
                 params.covZ = Utility.matrixInverse(eye(obj.K) + tauExp * obj.W.E_XtX);
                 
+                
+                % This is basically qZ update! In this setup as it is now
+                % it needs to be run first!
+
+
+                % Clean storage
+                % TODO: Add the name as a const!!!
+                % if isfolder("ZcStorage")
+                %     delete("ZcStorage/Zc_*.mat");
+                % else
+                %     mkdir("ZcStorage");
+                % end
+
+               
+
+                %% Run mapreduce
+                % data = tabularTextDatastore('Xdata.csv');
+                % data.ReadSize = 100;  % Read 1000 rows at a time
+
+
+                % data = tabularTextDatastore('dataChunks/*.csv');
+                % data.ReadSize = 'file';  % Now each file is treated as a chunk
+
+                % Here we will use an anonymous function as our mapper. This function
+                % definition includes the value of model params (`W`, `mu`, `tau`) computed in the previous iteration.
+                % mapr = mapreducer(0);  % Use in-memory map reducer
                 mapper = @(data, info, intermKVStore) modelMapper(data, info, intermKVStore, params);
                 result = mapreduce(obj.ds, mapper, @modelReducer, inMatlab, ...
                     'OutputFolder', 'mr', ...
-                    'Display', 'on');
+                    'Display', 'on');  % <<< ensures no parallel pool is used);
 
                 % Extract and aggregate results from reducer output
                 tbl = readall(result);
                 obj.stats = tbl.Value{1};
 
+
+
                 obj.N = obj.stats.N;
-                % Moved from the constructor because obj.N is not yet known.
-                % Perform constant updates at the first iteration.
+
+                % Do const updates prev done in the constructor
                 if it == 1
                     obj.qConstantUpdates();
                 end
 
+
+
+
+        
                 % Update global variables
                 obj.qWUpdate(it);
                 obj.qMuUpdate(it);
                 obj.qAlphaUpdate();
                 obj.qTauUpdate();
+        
 
+                % Compute ELBO if needed
                 if it ~= 1 && mod(it, elboIterStep) ~= 0
                     continue;
                 end
@@ -222,6 +285,7 @@ classdef BPCA_mr < handle
                     end
                 end
 
+                
                 % Check for convergence
                 if elboIdx ~= 1 && abs(currElbo - prevElbo) / abs(currElbo) < obj.tol
                     fprintf('### Convergence at iteration: %d\n', it);
@@ -229,6 +293,9 @@ classdef BPCA_mr < handle
                     break;
                 end
 
+                % Check if maximal number of iterations reached
+                % TODO: Check in the BasicModel do I have this first line
+                % below!
                 if it == obj.maxIter
                     elboVals = elboVals(1:elboIdx);
                     fprintf(2, '[ERROR] Model did not converge in %d iterations!\n', obj.maxIter);

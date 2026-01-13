@@ -1,13 +1,13 @@
 classdef GammaTest < matlab.unittest.TestCase
     methods (Static)
         function verifyObject(testCase, obj, a, b, prior)
-            testCase.verifyEqual(obj.a, a);
-            testCase.verifyEqual(obj.b, b);
+            testCase.verifyEqual(obj.getA, a);
+            testCase.verifyEqual(obj.getB, b);
 
-            % Verify obj.prior if prior is passed in as a parameter
+            % Verify obj.getPrior if prior is passed in as a parameter
             if nargin > 4
-                areEqual = Utility.isNaN(obj.prior) && Utility.isNaN(prior) || ...
-                    obj.prior == prior;
+                areEqual = Utility.isNaN(obj.getPrior) && Utility.isNaN(prior) || ...
+                    obj.getPrior == prior;
 
                 testCase.verifyTrue(areEqual);
             end
@@ -104,7 +104,7 @@ classdef GammaTest < matlab.unittest.TestCase
 
             % They still should have the same prior 
             %   (this will test if the prior is copied correctly)
-            testCase.verifyTrue(obj.prior == deepCopy.prior);
+            testCase.verifyTrue(obj.getPrior == deepCopy.getPrior);
         end
 
 
@@ -121,7 +121,7 @@ classdef GammaTest < matlab.unittest.TestCase
             truePrior = Gamma();
             obj = Gamma(truePrior);
             GammaTest.verifyObject(testCase, obj, Utility.getConfigValue('Distribution', 'DEFAULT_GAMMA_A'), Utility.getConfigValue('Distribution', 'DEFAULT_GAMMA_B'), truePrior);
-            GammaTest.verifyObject(testCase, obj.prior, Utility.getConfigValue('Distribution', 'DEFAULT_GAMMA_A'), Utility.getConfigValue('Distribution', 'DEFAULT_GAMMA_B'), NaN);
+            GammaTest.verifyObject(testCase, obj.getPrior, Utility.getConfigValue('Distribution', 'DEFAULT_GAMMA_A'), Utility.getConfigValue('Distribution', 'DEFAULT_GAMMA_B'), NaN);
           
             % Test 3: One parameter constructor - parameter is numeric,
             % thus value for a
@@ -140,7 +140,7 @@ classdef GammaTest < matlab.unittest.TestCase
             obj = Gamma(a, b, prior);
 
             GammaTest.verifyObject(testCase, obj, a, b, prior);
-            GammaTest.verifyObject(testCase, obj.prior, aPrior, bPrior, NaN);
+            GammaTest.verifyObject(testCase, obj.getPrior, aPrior, bPrior, NaN);
         end
 
 
@@ -152,22 +152,19 @@ classdef GammaTest < matlab.unittest.TestCase
             a = 1; b = 2;
             obj = Gamma(a, b);
             testCase.verifyEqual(obj.E, 0.5);
-            testCase.verifyEqual(obj.Var, 0.25);
             testCase.verifyEqual(obj.E_LnP, NaN);
 
             a = 1; b = 1;
             obj = Gamma(a, b);
             testCase.verifyEqual(obj.E, 1);
-            testCase.verifyEqual(obj.Var, 1);
             testCase.verifyEqual(obj.H, 1);
             testCase.verifyEqual(obj.E_LnP, NaN);
 
             a = 1; b = exp(1);
             obj = Gamma(a, b);
             testCase.verifyEqual(obj.E, exp(-1));
-            testCase.verifyEqual(obj.Var, exp(-2));
             testCase.verifyEqual(obj.H, 0);
-            testCase.verifyTrue(abs(obj.E_LnX - (psi(obj.a) - log(obj.b))) < 1e-12);
+            testCase.verifyTrue(abs(obj.E_LnX - (psi(obj.getA) - log(obj.getB))) < 1e-12);
             testCase.verifyEqual(obj.E_LnP, NaN);
 
             a = 14; b = 7;
@@ -186,11 +183,11 @@ classdef GammaTest < matlab.unittest.TestCase
         function testSetters(testCase)
             a = 2; b = 1;
             obj = Gamma(a, b);
-            testCase.verifyTrue(obj.getExpInit() == obj.E);
+            testCase.verifyTrue(obj.getInitialExp() == obj.E);
 
-            expInit = 34;
-            obj.setExpInit(expInit);
-            testCase.verifyTrue(obj.getExpInit() == expInit);
+            initialExp = 34;
+            obj.setInitialExp(initialExp);
+            testCase.verifyTrue(obj.getInitialExp() == initialExp);
         end
 
 
@@ -208,7 +205,7 @@ classdef GammaTest < matlab.unittest.TestCase
             obj.updateA(aNew);
             GammaTest.verifyObject(testCase, obj, aNew, b);
             
-            a = obj.a;
+            a = obj.getA;
 
             % updateB
             bNew = 100;

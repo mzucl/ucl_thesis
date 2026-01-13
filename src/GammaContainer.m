@@ -132,7 +132,7 @@ classdef GammaContainer < handle
         %
         %%
         function obj = GammaContainer(type, size_, a, b, prior)
-            if RunConfig.getInstance().inputValidation
+            if RunConfig.getInstance().validateInput
                 if nargin == 0
                     error(['##### ERROR IN THE CLASS ' class(obj) ': Too few argumentes passed in.']);
                 end
@@ -161,14 +161,14 @@ classdef GammaContainer < handle
                     if Utility.isSingleNumber(b)
                         obj.b = repmat(b, size_, 1);
                     else
-                        if RunConfig.getInstance().inputValidation && size(b, 1) ~= size_ % 'b' must be a column vector
+                        if RunConfig.getInstance().validateInput && size(b, 1) ~= size_ % 'b' must be a column vector
                             error(['##### ERROR IN THE CLASS ' class(obj) ': Length of b doesn''t match the size.']);
                         end
                         obj.b = b;
                     end
                     
                     if nargin > 4 % prior
-                        if RunConfig.getInstance().inputValidation && ~Utility.isNaNOrInstanceOf(prior, 'Gamma')
+                        if RunConfig.getInstance().validateInput && ~Utility.isNaNOrInstanceOf(prior, 'Gamma')
                             error(['##### ERROR IN THE CLASS ' class(obj) ': Invalid prior parameter.']);
                         end
                         obj.prior = prior.copy();
@@ -191,7 +191,7 @@ classdef GammaContainer < handle
         %% Update methods
         % [NOTE]: 'type' dependent
         function obj = updateAllDistributionsA(obj, a)
-            if RunConfig.getInstance().inputValidation
+            if RunConfig.getInstance().validateInput
                 if nargin < 2
                     error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
                 end
@@ -211,7 +211,7 @@ classdef GammaContainer < handle
 
         % [NOTE]: 'type' dependent
         function obj = updateAllDistributionsB(obj, b)
-            if RunConfig.getInstance().inputValidation
+            if RunConfig.getInstance().validateInput
                 if nargin < 2
                     error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
                 end
@@ -241,7 +241,7 @@ classdef GammaContainer < handle
             if nargin < 2 || isempty(indices)
                 return; % No change
             end
-            if RunConfig.getInstance().inputValidation && ~obj.validateIndices(indices)
+            if RunConfig.getInstance().validateInput && ~obj.validateIndices(indices)
                 error(['##### ERROR IN THE CLASS ' class(obj) ': Index out of range.']); 
             end
             obj.b(indices) = [];
@@ -259,7 +259,7 @@ classdef GammaContainer < handle
 
         %% Setters
         function obj = setExpInit(obj, value)
-            if RunConfig.getInstance().inputValidation
+            if RunConfig.getInstance().validateInput
                 if ~all(value > 0)
                     error(['##### ERROR IN THE CLASS ' class(obj) ': Expectation is a strictly positive number.']);
                 end

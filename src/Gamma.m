@@ -1,92 +1,83 @@
-% Author: Mediha Zukic
-% Contact: mediha.zukic.23@alumni.ucl.ac.uk
-% Date: 2025-05-13
-
 % The Gamma distribution is the distribution of the sum of 
 % independent exponential random variables. It is characterized by:
 % 
-% - The shape parameter 'a', which represents the number of 
+% - The shape parameter `a`, representing the number of 
 %   exponential random variables being summed.
-% - The rate parameter 'b' (also known as the inverse scale parameter), 
-%   which governs the rate of exponential decay.
+% - The rate parameter `b` (inverse scale), which governs
+%   the rate of exponential decay.
 % 
 % Note:
-% - Both 'a' and 'b' must always be strictly positive.
+% - Both `a` and `b` must always be strictly positive.
 %
-%%
+% Example usage:
+%   g = Gamma(2, 3);       % a = 2, b = 3
+%   E = g.E;               % expected value
 classdef Gamma < handle
-    properties
-        a  
-        b
-        prior
+    properties (Access = private)
+        a        % Shape parameter
+        b        % Rate (inverse scale) parameter
+        prior    % Prior distribution (Gamma instance)
     end
-
 
     properties (Access = private)
-        expInit % Explicit expectation initialization
+        initialExp              % Explicit expectation initialization
+
+        % Stores computed dependent properties to avoid recomputation
         cache = struct(...
-            'E', NaN, ...
-            'H', NaN, ...
-            'E_LnX', NaN, ...
-            'E_LnP', NaN);
+            'E', NaN, ...       % Cached expected value
+            'H', NaN, ...       % Cached entropy
+            'E_LnX', NaN, ...   % Cached E[ln(x)] w.r.t q(x)
+            'E_LnP', NaN)       % Cached E[ln(p(x))] w.r.t q(x)
 
-        cacheFlags = false(1, 4); % Hardcoded for optimization purposes!
+        % Flags to indicate whether cached values are valid
+        cacheFlags = false(1, 4)
     end
 
-
-
+    % Short property names are intentional to mirror mathematical notation.
     properties (Dependent)
-        E
-        H          % Entropy
-        E_LnX      % E[ln(x)] wrt to q(x)
-        E_LnP      % E[ln(p(x))] wrt to the q(x)
-
-        Var
-        Val        % Sample from the distribution
+        E           % Expected value
+        H           % Entropy
+        E_LnX       % E[ln(x)] w.r.t q(x)
+        E_LnP       % E[ln(p(x))] w.r.t q(x)
     end
-    
 
-
-    methods(Access = private)
+    methods (Access = private)
         function clearCache(obj)
+            % CLEARCACHE Invalidates all dependent property cache flags
             obj.cacheFlags = false(1, 4);
         end
-    end
 
-    methods (Static)
-        function obj = loadobj(s)
-            obj = Gamma(s.a, s.b);
-            
-            if isfield(s, 'priorClass') && strcmp(s.priorClass, 'Gamma')
-                obj.prior = Gamma.loadobj(s.prior);  % recursively load
+        function obj = validateAndSetProperty(obj, value, propName)
+            % Validate number of arguments
+            CustomError.validateNumberOfParameters(nargin, 3, 3);
+    
+            % Input validation
+            if RunConfig.getInstance().validateInput
+                if ~Utility.isSingleNumber(value)
+                    CustomError.raiseError(CustomError.ERR_TYPE_INPUT_VALIDATION, ...
+                        CustomError.ERR_INVALID_PARAMETER_NUMERICAL);
+                end
+                if value <= 0
+                    CustomError.raiseError(CustomError.ERR_TYPE_INPUT_VALIDATION, ...
+                        CustomError.ERR_INVALID_PARAMETER_POSITIVE);
+                end
             end
+    
+            % Set the property
+            obj.(propName) = value;
+    
+            % Clear cache
+            obj.clearCache();
         end
     end
-
-
 
     methods
-        % TODO: Write tests for this and the loadObj
-        function s = saveobj(obj)
-            s.a = obj.a;
-            s.b = obj.b;
-
-            if isa(obj.prior, 'Gamma')
-                s.prior = saveobj(obj.prior);  % recursively save prior
-                s.priorClass = 'Gamma';
-            end
-            
-        end
-
-
-        %% Deep copy and operators overloading
+        %% Deep copy
         function newObj = copy(obj)
+            % COPY Creates a deep copy of the Gamma object
             newObj = Gamma();
-            
             newObj.a = obj.a;
             newObj.b = obj.b;
-            
-            % Copy the prior (manually)
             if ~Utility.isNaN(obj.prior)
                 newObj.prior = Gamma();
                 newObj.prior.a = obj.prior.a;
@@ -94,195 +85,130 @@ classdef Gamma < handle
             end
         end
 
+        %% Equality operators
         function isEqual = eq(obj1, obj2)
+            % EQ Checks equality between two Gamma objects
             if ~Utility.isNaNOrInstanceOf(obj1, 'Gamma') || ~Utility.isNaNOrInstanceOf(obj2, 'Gamma')
                 isEqual = false;
                 return;
             end
-
-            % Both are NaN
             if Utility.isNaN(obj1) && Utility.isNaN(obj2)
                 isEqual = true;
                 return;
-
-            % Only one is NaN
             elseif xor(Utility.isNaN(obj1), Utility.isNaN(obj2))
                 isEqual = false;
                 return;
             end
-                
-            % Both are set - compare them!    
             isEqual = obj1.a == obj2.a && obj1.b == obj2.b;
-
-            % If parameters a and b are not equal, they are different objects
-            % regardless of the prior!
-            %   Second part of the condition is added because obj1.prior ==
-            %   obj2.prior won't call 'isEqual' if both are NaN, and we are
-            %   relaying on that call for comparing priors.
-            if ~isEqual || Utility.isNaN(obj1.prior) && Utility.isNaN(obj2.prior)
+            if ~isEqual || (Utility.isNaN(obj1.prior) && Utility.isNaN(obj2.prior))
                 return;
             end
-
             isEqual = obj1.prior == obj2.prior;
         end
 
         function isNotEqual = ne(obj1, obj2)
+            % NE Checks inequality between two Gamma objects
             isNotEqual = ~eq(obj1, obj2);
         end
 
-
-
-        %% Constructor Options for Gamma
-
-        % ZERO PARAMETERS:
-        % - Default values are assigned to 'a' and 'b'.
-        % - The 'prior' is set to NaN.
-        
-        % 1 PARAMETER: a
-        % OPTION 1: 'a' is an instance of Gamma.
-        %   - Set 'obj' and 'prior' to the provided Gamma instance.
-        % OPTION 2: 'a' is a scalar.
-        %   - Set both 'a' and 'b' to the scalar value.
-        
-        % 2 PARAMETERS: a, b
-        % - The constructor is called as Gamma(a, b).
-        
-        % 3 PARAMETERS: a, b, prior
-        % - Same as the previous constructor, but with the 'prior' set to the given value.
-        
-        %%
-        function obj = Gamma(a, b, prior)
-            % Default param values
+        % Default constructor: initializes with default values
+        function obj = Gamma()
             obj.a = Utility.getConfigValue('Distribution', 'DEFAULT_GAMMA_A');
             obj.b = Utility.getConfigValue('Distribution', 'DEFAULT_GAMMA_B');
             obj.prior = NaN;
-
-            switch nargin
-                case 1
-                    % If the ONLY parameter is of a type Gamma that is
-                    % the prior and we initialize the 'obj' and its prior
-                    % using that value
-                    if Utility.areAllInstancesOf(a, 'Gamma')
-                        obj = a.copy();
-                        obj.prior = a.copy();
-
-                    % The one parameter passed in is the value for 'a', set
-                    % both 'a' and 'b' to that value
-                    elseif Utility.isSingleNumber(a)
-                        obj.updateParameters(a, a);
-                    else
-                        error(['##### ERROR IN THE CLASS ' class(obj) ': Invalid arguments passed.']);
-                    end
-            
-                case {2, 3} % a, b
-                    obj.updateParameters(a, b);
-
-                    if nargin == 3 % prior
-                        if RunConfig.getInstance().inputValidation && ~Utility.isNaNOrInstanceOf(prior, 'Gamma')
-                            error(['##### ERROR IN THE CLASS ' class(obj) ': Invalid prior parameter.']);
-                        end
-                        obj.prior = prior.copy();
-                    end
-            end
-
-            % Set initial expectation to the actual expectation
-            obj.setExpInit(obj.E);
         end
 
-
+        % function obj = Gamma(a, b, prior)
+        %     % GAMMA Constructs a Gamma object
+        %     %
+        %     % Usage:
+        %     %   obj = Gamma()               % default a and b
+        %     %   obj = Gamma(a)              % sets a=b=a
+        %     %   obj = Gamma(a, b)           % sets a and b
+        %     %   obj = Gamma(a, b, prior)    % sets a, b, and prior
+        %     %   obj = Gamma(priorGammaObj)  % copy constructor with prior
+        % 
+        %     obj.a = Utility.getConfigValue('Distribution', 'DEFAULT_GAMMA_A');
+        %     obj.b = Utility.getConfigValue('Distribution', 'DEFAULT_GAMMA_B');
+        %     obj.prior = NaN;
+        % 
+        %     switch nargin
+        %         case 1
+        %             if Utility.areAllInstancesOf(a, 'Gamma')
+        %                 obj = a.copy();
+        %                 obj.prior = a.copy();
+        %             elseif Utility.isSingleNumber(a)
+        %                 obj.updateParameters(a, a);
+        %             else
+        %                 error(['##### ERROR IN CLASS ' class(obj) ': Invalid arguments.']);
+        %             end
+        %         case {2,3}
+        %             obj.updateParameters(a, b);
+        %             if nargin == 3
+        %                 if RunConfig.getInstance().validateInput && ...
+        %                         ~Utility.isNaNOrInstanceOf(prior, 'Gamma')
+        %                     error(['##### ERROR IN CLASS ' class(obj) ': Invalid prior parameter.']);
+        %                 end
+        %                 obj.prior = prior.copy();
+        %             end
+        %     end
+        % 
+        %     obj.setInitialExp(obj.E);
+        % end
 
         %% Update methods
         function obj = updateParameters(obj, a, b)
-            if RunConfig.getInstance().inputValidation
+            % UPDATEPARAMETERS Updates both shape (a) and rate (b) parameters
+            if RunConfig.getInstance().validateInput
                 if nargin < 3
-                    error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
+                    error(['##### ERROR IN CLASS ' class(obj) ': Too few arguments.']);
                 end
                 if ~Utility.isSingleNumber(a) || ~Utility.isSingleNumber(b)
-                    error(['##### ERROR IN THE CLASS ' class(obj) ': Parameters must be numerical values.']);
+                    error(['##### ERROR IN CLASS ' class(obj) ': Parameters must be numeric.']);
                 end
                 if (a <= 0 || b <= 0)
-                    error(['##### ERROR IN THE CLASS ' class(obj) ': Parameters are strictly positive number.']);
+                    error(['##### ERROR IN CLASS ' class(obj) ': Parameters must be positive.']);
                 end
             end
-
             obj.a = a;
             obj.b = b;
-
-            % Clear cache
             obj.clearCache();
         end
-        
+
         function obj = updateA(obj, a)
-            if RunConfig.getInstance().inputValidation
-                if nargin < 2
-                    error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
-                end
-                if ~Utility.isSingleNumber(a)
-                    error(['##### ERROR IN THE CLASS ' class(obj) ': Parameter must be a numerical value.']);
-                end
-                if (a <= 0)
-                    error(['##### ERROR IN THE CLASS ' class(obj) ': Parameter a is a strictly positive number.']);
-                end
-            end
-
-            obj.a = a;
-            
-            % Clear cache
-            obj.clearCache();
+            % UPDATEA Updates the shape parameter `a`
+            obj = obj.validateAndSetProperty(a, 'a');
         end
-
+        
         function obj = updateB(obj, b)
-            if RunConfig.getInstance().inputValidation
-                if nargin < 2
-                    error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
-                end
-                if ~Utility.isSingleNumber(b)
-                    error(['##### ERROR IN THE CLASS ' class(obj) ': Parameter must be a numerical value.']);
-                end
-                if (b <= 0)
-                    error(['##### ERROR IN THE CLASS ' class(obj) ': Parameter b is a strictly positive number.']);
-                end
-            end
-
-            obj.b = b;
-
-            % Clear cache
-            obj.clearCache();
+            % UPDATEB Updates the rate parameter `b`
+            obj = obj.validateAndSetProperty(b, 'b');
         end
-
-
         
-        %% Setters
-        function obj = setExpInit(obj, value)
-            if RunConfig.getInstance().inputValidation && value <= 0
-                error(['##### ERROR IN THE CLASS ' class(obj) ': Expectation is a strictly positive number.']);
-            end
-            obj.expInit = value;
+        function obj = setInitialExp(obj, initialExp)
+            % SETINITIALEXP Sets the initial expectation value
+            obj = obj.validateAndSetProperty(initialExp, 'initialExp');
         end
 
 
-
-        %% Getters
-        function value = getExpInit(obj)
-            value = obj.expInit;
+        %% Getter for initial expectation
+        function value = getInitialExp(obj)
+            % GETINITIALEXP Returns the initial expectation value
+            value = obj.initialExp;
         end
-
-        
 
         %% Dependent properties
         function value = get.E(obj)
+            % GET.E Returns the expected value
             if ~obj.cacheFlags(1)
                 obj.cache.E = obj.a / obj.b;
                 obj.cacheFlags(1) = true;
             end
             value = obj.cache.E;
         end
-        
+
         function value = get.H(obj)
-            % From MATLAB help
-            % Y = gammaln(X) computes the natural logarithm of the gamma function for each element of X.
-            % log(X) is the natural logarithm of the elements of X.
-            % psi(X) evaluates the psi function (also know as the digamma function) for each element of X.
+            % GET.H Returns the entropy of the Gamma distribution
             if ~obj.cacheFlags(2)
                 obj.cache.H = gammaln(obj.a) - (obj.a - 1) * psi(obj.a) - log(obj.b) + obj.a;
                 obj.cacheFlags(2) = true;
@@ -291,6 +217,7 @@ classdef Gamma < handle
         end
 
         function value = get.E_LnX(obj)
+            % GET.E_LNX Returns E[ln(x)] w.r.t q(x)
             if ~obj.cacheFlags(3)
                 obj.cache.E_LnX = psi(obj.a) - log(obj.b);
                 obj.cacheFlags(3) = true;
@@ -299,8 +226,9 @@ classdef Gamma < handle
         end
 
         function value = get.E_LnP(obj)
+            % GET.E_LNP Returns E[ln(p(x))] w.r.t q(x)
             if ~obj.cacheFlags(4)
-                if isa(obj.prior, 'Gamma') % The value is set only when prior is defined
+                if isa(obj.prior, 'Gamma')
                     obj.cache.E_LnP = -gammaln(obj.prior.a) + obj.prior.a * log(obj.prior.b) + ...
                         (obj.prior.a - 1) * (psi(obj.a) - log(obj.b)) - obj.prior.b * obj.a / obj.b;
                 else
@@ -310,13 +238,102 @@ classdef Gamma < handle
             end
             value = obj.cache.E_LnP;
         end
+    end
 
-        function value = get.Var(obj)
-            value = obj.a / obj.b^2;
+    methods (Static)
+        function obj = fromParameters(a, b, prior)
+            % FROMPARAMETERS Creates Gamma object with given a, b, and optional prior
+            CustomError.validateNumberOfParameters(nargin, 1, 3);
+
+            if nargin == 1
+                b = a;
+            end
+
+            obj = Gamma();  % default initialization
+            
+            
+            
+            
+            obj.updateParameters(a, b);
+
+            if nargin == 3
+                if ~isa(prior, 'Gamma') && ~isnan(prior)
+                    error('Gamma:InvalidPrior', 'Prior must be a Gamma object or NaN.');
+                end
+                obj.prior = prior.copy();
+            end
+
+            obj.setExpInit(obj.E);
         end
 
-        function value = get.Val(obj)
-            value = gamrnd(obj.a, obj.b);
+        function obj = fromPrior(prior)
+            % FROMPRIOR Creates a Gamma object as a copy of a prior
+            if ~isa(prior, 'Gamma')
+                error('Gamma:InvalidInput', 'Input must be a Gamma object.');
+            end
+            obj = prior.copy();
+            obj.prior = prior.copy();
+        end
+    end
+
+      % function obj = Gamma(a, b, prior)
+        %     % GAMMA Constructs a Gamma object
+        %     %
+        %     % Usage:
+        %     %   obj = Gamma()               % default a and b
+        %     %   obj = Gamma(a)              % sets a=b=a
+        %     %   obj = Gamma(a, b)           % sets a and b
+        %     %   obj = Gamma(a, b, prior)    % sets a, b, and prior
+        %     %   obj = Gamma(priorGammaObj)  % copy constructor with prior
+        % 
+        %     obj.a = Utility.getConfigValue('Distribution', 'DEFAULT_GAMMA_A');
+        %     obj.b = Utility.getConfigValue('Distribution', 'DEFAULT_GAMMA_B');
+        %     obj.prior = NaN;
+        % 
+        %     switch nargin
+        %         case 1
+        %             if Utility.areAllInstancesOf(a, 'Gamma')
+        %                 obj = a.copy();
+        %                 obj.prior = a.copy();
+        %             elseif Utility.isSingleNumber(a)
+        %                 obj.updateParameters(a, a);
+        %             else
+        %                 error(['##### ERROR IN CLASS ' class(obj) ': Invalid arguments.']);
+        %             end
+        %         case {2,3}
+        %             obj.updateParameters(a, b);
+        %             if nargin == 3
+        %                 if RunConfig.getInstance().validateInput && ...
+        %                         ~Utility.isNaNOrInstanceOf(prior, 'Gamma')
+        %                     error(['##### ERROR IN CLASS ' class(obj) ': Invalid prior parameter.']);
+        %                 end
+        %                 obj.prior = prior.copy();
+        %             end
+        %     end
+        % 
+        %     obj.setInitialExp(obj.E);
+        % end
+
+
+
+    
+    % NOTE:
+    % These getters are primarily intended for unit testing and debugging.
+    % Core algorithms should rely on dependent properties and public methods.
+    methods (Access = {?matlab.unittest.TestCase})
+        function value = getA(obj)
+            % GETA Returns the shape parameter `a`
+            value = obj.a;
+        end
+
+        function value = getB(obj)
+            % GETB Returns the rate parameter `b`
+            value = obj.b;
+        end
+
+        function value = getPrior(obj)
+            % GETPRIOR Returns the prior
+            value = obj.prior;
         end
     end
 end

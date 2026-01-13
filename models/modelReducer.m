@@ -1,5 +1,8 @@
-% REDUCER (sum all emitted stats)
-% Mixed reducer: some keys you want to sum, and one key (e.g. 'Z_E') you want to concatenate
+% REDUCER FUNCTION
+% Aggregates all emitted statistics from the mappers.
+% Mixed reducer behavior:
+%   - Sum the values for most keys
+%   - Concatenate the values for specific keys (e.g., 'Z_E')
 function modelReducer(~, intermValIter, outKV)
     % Initialize sumStats using the first value
     if hasnext(intermValIter)
@@ -8,7 +11,6 @@ function modelReducer(~, intermValIter, outKV)
         sumStats = struct(); % Return empty if nothing received
         return;
     end
-
     % Iterate through the rest of the intermediate values
     while hasnext(intermValIter)
         val = getnext(intermValIter);
@@ -16,12 +18,12 @@ function modelReducer(~, intermValIter, outKV)
 
         for i = 1:numel(statFields)
             field = statFields{i};
-            % Concatenate matrices horizontally
-            if strcmp(field, 'E_Z')
-                sumStats.(field) = [sumStats.(field), val.(field)];
-            else
-                sumStats.(field) = sumStats.(field) + val.(field);
-            end
+            % if strcmp(field, 'E_Z')
+            %     sumStats.(field) = [sumStats.(field), val.(field)];
+            % else
+            %     sumStats.(field) = sumStats.(field) + val.(field);
+            % end
+            sumStats.(field) = sumStats.(field) + val.(field);
         end
     end
 
