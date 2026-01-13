@@ -1,12 +1,12 @@
 classdef UtilityTest < matlab.unittest.TestCase
     methods (Test)
         function testIsSingleNumber(testCase)
-            testCase.verifyTrue(Utility.isSingleNumber(5));
-            testCase.verifyTrue(~Utility.isSingleNumber(NaN));
-            testCase.verifyTrue(~Utility.isSingleNumber([1, 2]));
-            testCase.verifyTrue(Utility.isSingleNumber(5));
-            testCase.verifyTrue(~Utility.isSingleNumber([1, 2; 2, 3]));
-            testCase.verifyTrue(~Utility.isSingleNumber( Gamma() ));
+            testCase.verifyTrue(NumericValidation.isFiniteNumericScalar(5));
+            testCase.verifyTrue(~NumericValidation.isFiniteNumericScalar(NaN));
+            testCase.verifyTrue(~NumericValidation.isFiniteNumericScalar([1, 2]));
+            testCase.verifyTrue(NumericValidation.isFiniteNumericScalar(5));
+            testCase.verifyTrue(~NumericValidation.isFiniteNumericScalar([1, 2; 2, 3]));
+            testCase.verifyTrue(~NumericValidation.isFiniteNumericScalar( Gamma() ));
         end
 
         function testIsMonotonicIncreasing(testCase)
@@ -17,12 +17,12 @@ classdef UtilityTest < matlab.unittest.TestCase
         end
 
         function testAreEqual(testCase)
-            testCase.verifyTrue(Utility.areEqual(NaN, NaN));
-            testCase.verifyTrue(~Utility.areEqual(Gamma(), NaN));
-            testCase.verifyTrue(~Utility.areEqual(NaN, Gamma()));
-            testCase.verifyTrue(Utility.areEqual(Gamma(1, 2), Gamma(1, 2)));
-            testCase.verifyTrue(~Utility.areEqual(Gamma(1, 2), Gamma(3, 2)));
-            testCase.verifyTrue(~Utility.areEqual(Gamma(1, 2), Gaussian())); % Different objects
+            testCase.verifyTrue(TypeValidation.areEquivalent(NaN, NaN));
+            testCase.verifyTrue(~TypeValidation.areEquivalent(Gamma(), NaN));
+            testCase.verifyTrue(~TypeValidation.areEquivalent(NaN, Gamma()));
+            testCase.verifyTrue(TypeValidation.areEquivalent(Gamma(1, 2), Gamma(1, 2)));
+            testCase.verifyTrue(~TypeValidation.areEquivalent(Gamma(1, 2), Gamma(3, 2)));
+            testCase.verifyTrue(~TypeValidation.areEquivalent(Gamma(1, 2), Gaussian())); % Different objects
         end
     end
 end

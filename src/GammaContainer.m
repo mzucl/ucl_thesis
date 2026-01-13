@@ -158,7 +158,7 @@ classdef GammaContainer < handle
                    
                 case {4, 5} % type, size, a, b
                     obj.a = a;
-                    if Utility.isSingleNumber(b)
+                    if NumericValidation.isFiniteNumericScalar(b)
                         obj.b = repmat(b, size_, 1);
                     else
                         if RunConfig.getInstance().validateInput && size(b, 1) ~= size_ % 'b' must be a column vector
@@ -168,7 +168,7 @@ classdef GammaContainer < handle
                     end
                     
                     if nargin > 4 % prior
-                        if RunConfig.getInstance().validateInput && ~Utility.isNaNOrInstanceOf(prior, 'Gamma')
+                        if RunConfig.getInstance().validateInput && ~TypeValidation.isNaNOrInstanceOf(prior, 'Gamma')
                             error(['##### ERROR IN THE CLASS ' class(obj) ': Invalid prior parameter.']);
                         end
                         obj.prior = prior.copy();
@@ -195,7 +195,7 @@ classdef GammaContainer < handle
                 if nargin < 2
                     error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
                 end
-                if ~Utility.isSingleNumber(a)
+                if ~NumericValidation.isFiniteNumericScalar(a)
                     error(['##### ERROR IN THE CLASS ' class(obj) ': Parameter must be a numerical value.']);
                 end
                 if (a <= 0)
@@ -215,7 +215,7 @@ classdef GammaContainer < handle
                 if nargin < 2
                     error(['##### ERROR IN THE CLASS ' class(obj) ': Too few arguments passed.']);
                 end
-                if ~(Utility.isSingleNumber(b) || MatrixValidation.isNumericVector(b) && size(b, 1) == obj.Size) % 'b' must be a column vector
+                if ~(NumericValidation.isFiniteNumericScalar(b) || MatrixValidation.isNumericVector(b) && size(b, 1) == obj.Size) % 'b' must be a column vector
                     error(['##### ERROR IN THE CLASS ' class(obj) ': Dimensions do not match.']);
                 end
                 if ~all(b > 0)
@@ -225,7 +225,7 @@ classdef GammaContainer < handle
                 end
             end
 
-            if Utility.isSingleNumber(b)
+            if NumericValidation.isFiniteNumericScalar(b)
                 obj.b = repmat(b, obj.Size, 1);
             else
                 obj.b = b;

@@ -6,7 +6,7 @@ classdef GammaTest < matlab.unittest.TestCase
 
             % Verify obj.getPrior if prior is passed in as a parameter
             if nargin > 4
-                areEqual = Utility.isNaN(obj.getPrior) && Utility.isNaN(prior) || ...
+                areEqual = NumericValidation.isNaN(obj.getPrior) && NumericValidation.isNaN(prior) || ...
                     obj.getPrior == prior;
 
                 testCase.verifyTrue(areEqual);

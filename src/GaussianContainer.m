@@ -196,7 +196,7 @@ classdef GaussianContainer < handle
             end
             
             if nargin > 4 % mu
-                if Utility.isSingleNumber(mu)
+                if NumericValidation.isFiniteNumericScalar(mu)
                     obj.mu = mu * ones(obj.dim, size_);
                  
                 elseif MatrixValidation.isNumericVector(mu)
@@ -215,7 +215,7 @@ classdef GaussianContainer < handle
                     % 'cov' is the same for all distributions
                     compCov = zeros(obj.dim, obj.dim); % Preallocate
 
-                    if Utility.isSingleNumber(cov)
+                    if NumericValidation.isFiniteNumericScalar(cov)
                         if RunConfig.getInstance().validateInput && cov <= 0
                             error(['##### ERROR IN THE CLASS ' mfilename ': Covariance parameter must be greater than 0.']);
                         end
@@ -243,7 +243,7 @@ classdef GaussianContainer < handle
                     end
 
                     if nargin > 6 % priorPrec
-                        if Utility.isSingleNumber(priorPrec)
+                        if NumericValidation.isFiniteNumericScalar(priorPrec)
                             if RunConfig.getInstance().validateInput && (priorPrec <= 0 || obj.type ~= "DS")
                                 error(['##### ERROR IN THE CLASS ' mfilename ': Invalid precision parameter.']);
                             end

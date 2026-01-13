@@ -53,7 +53,7 @@ classdef Gamma < handle
     
             % Input validation
             if RunConfig.getInstance().validateInput
-                if ~Utility.isSingleNumber(value)
+                if ~NumericValidation.isFiniteNumericScalar(value)
                     CustomError.raiseError(CustomError.ERR_TYPE_INPUT_VALIDATION, ...
                         CustomError.ERR_INVALID_PARAMETER_NUMERICAL);
                 end
@@ -78,7 +78,7 @@ classdef Gamma < handle
             newObj = Gamma();
             newObj.a = obj.a;
             newObj.b = obj.b;
-            if ~Utility.isNaN(obj.prior)
+            if ~NumericValidation.isNaN(obj.prior)
                 newObj.prior = Gamma();
                 newObj.prior.a = obj.prior.a;
                 newObj.prior.b = obj.prior.b;
@@ -88,19 +88,19 @@ classdef Gamma < handle
         %% Equality operators
         function isEqual = eq(obj1, obj2)
             % EQ Checks equality between two Gamma objects
-            if ~Utility.isNaNOrInstanceOf(obj1, 'Gamma') || ~Utility.isNaNOrInstanceOf(obj2, 'Gamma')
+            if ~TypeValidation.isNaNOrInstanceOf(obj1, 'Gamma') || ~TypeValidation.isNaNOrInstanceOf(obj2, 'Gamma')
                 isEqual = false;
                 return;
             end
-            if Utility.isNaN(obj1) && Utility.isNaN(obj2)
+            if NumericValidation.isNaN(obj1) && NumericValidation.isNaN(obj2)
                 isEqual = true;
                 return;
-            elseif xor(Utility.isNaN(obj1), Utility.isNaN(obj2))
+            elseif xor(NumericValidation.isNaN(obj1), NumericValidation.isNaN(obj2))
                 isEqual = false;
                 return;
             end
             isEqual = obj1.a == obj2.a && obj1.b == obj2.b;
-            if ~isEqual || (Utility.isNaN(obj1.prior) && Utility.isNaN(obj2.prior))
+            if ~isEqual || (NumericValidation.isNaN(obj1.prior) && NumericValidation.isNaN(obj2.prior))
                 return;
             end
             isEqual = obj1.prior == obj2.prior;
@@ -134,10 +134,10 @@ classdef Gamma < handle
         % 
         %     switch nargin
         %         case 1
-        %             if Utility.areAllInstancesOf(a, 'Gamma')
+        %             if TypeValidation.areAllInstancesOf(a, 'Gamma')
         %                 obj = a.copy();
         %                 obj.prior = a.copy();
-        %             elseif Utility.isSingleNumber(a)
+        %             elseif NumericValidation.isFiniteNumericScalar(a)
         %                 obj.updateParameters(a, a);
         %             else
         %                 error(['##### ERROR IN CLASS ' class(obj) ': Invalid arguments.']);
@@ -146,7 +146,7 @@ classdef Gamma < handle
         %             obj.updateParameters(a, b);
         %             if nargin == 3
         %                 if RunConfig.getInstance().validateInput && ...
-        %                         ~Utility.isNaNOrInstanceOf(prior, 'Gamma')
+        %                         ~TypeValidation.isNaNOrInstanceOf(prior, 'Gamma')
         %                     error(['##### ERROR IN CLASS ' class(obj) ': Invalid prior parameter.']);
         %                 end
         %                 obj.prior = prior.copy();
@@ -163,7 +163,7 @@ classdef Gamma < handle
                 if nargin < 3
                     error(['##### ERROR IN CLASS ' class(obj) ': Too few arguments.']);
                 end
-                if ~Utility.isSingleNumber(a) || ~Utility.isSingleNumber(b)
+                if ~NumericValidation.isFiniteNumericScalar(a) || ~NumericValidation.isFiniteNumericScalar(b)
                     error(['##### ERROR IN CLASS ' class(obj) ': Parameters must be numeric.']);
                 end
                 if (a <= 0 || b <= 0)
@@ -292,10 +292,10 @@ classdef Gamma < handle
         % 
         %     switch nargin
         %         case 1
-        %             if Utility.areAllInstancesOf(a, 'Gamma')
+        %             if TypeValidation.areAllInstancesOf(a, 'Gamma')
         %                 obj = a.copy();
         %                 obj.prior = a.copy();
-        %             elseif Utility.isSingleNumber(a)
+        %             elseif NumericValidation.isFiniteNumericScalar(a)
         %                 obj.updateParameters(a, a);
         %             else
         %                 error(['##### ERROR IN CLASS ' class(obj) ': Invalid arguments.']);
@@ -304,7 +304,7 @@ classdef Gamma < handle
         %             obj.updateParameters(a, b);
         %             if nargin == 3
         %                 if RunConfig.getInstance().validateInput && ...
-        %                         ~Utility.isNaNOrInstanceOf(prior, 'Gamma')
+        %                         ~TypeValidation.isNaNOrInstanceOf(prior, 'Gamma')
         %                     error(['##### ERROR IN CLASS ' class(obj) ': Invalid prior parameter.']);
         %                 end
         %                 obj.prior = prior.copy();

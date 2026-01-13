@@ -49,3 +49,15 @@ set(gcf, 'Color', [1 1 1]); % White background color for the figure
                 s.priorClass = 'Gamma';
             end
         end
+
+
+                function loss = BCE(yTrue, yPred)
+            % yTrue: vector of true labels (0 or 1)
+            % yPred: vector of predicted probabilities (between 0 and 1)
+            
+            % Ensure predictions are in a valid range [epsilon, 1 - epsilon] to avoid log(0)
+            epsilon = 1e-15; 
+            yPred = max(min(yPred, 1 - epsilon), epsilon);
+        
+            loss = -mean(yTrue .* log(yPred) + (1 - yTrue) .* log(1 - yPred));
+        end

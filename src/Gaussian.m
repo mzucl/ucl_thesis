@@ -124,7 +124,7 @@ classdef Gaussian < handle
                         priorPrec = dist.priorPrec;
 
                     % OPTION 2
-                    elseif Utility.isSingleNumber(varargin{1})
+                    elseif NumericValidation.isFiniteNumericScalar(varargin{1})
                         dim = varargin{1};
                         mu = zeros(dim, 1);
                         cov = eye(dim);
@@ -133,7 +133,7 @@ classdef Gaussian < handle
                 case {2, 3, 4} % dim, mu
                     dim = varargin{1};
 
-                    if Utility.isSingleNumber(varargin{2})
+                    if NumericValidation.isFiniteNumericScalar(varargin{2})
                         mu = repmat(varargin{2}, dim, 1);
                     else
                         if RunConfig.getInstance().validateInput && size(varargin{2}, 1) ~= dim || size(varargin{2}, 2) ~= 1 % 'mu' is a column vector
@@ -146,7 +146,7 @@ classdef Gaussian < handle
                     if nargin > 2 % dim, mu, cov
                         covParam = varargin{3};
 
-                        if Utility.isSingleNumber(covParam)
+                        if NumericValidation.isFiniteNumericScalar(covParam)
                             if RunConfig.getInstance().validateInput && covParam <= 0
                                 error(['##### ERROR IN THE CLASS ' mfilename ': Covariance parameter must be greater than 0.']);
                             end
@@ -168,7 +168,7 @@ classdef Gaussian < handle
                         end
 
                         if nargin > 3 % dim, mu, cov, priorPrec
-                            if RunConfig.getInstance().validateInput && (~Utility.isSingleNumber(varargin{4}) || varargin{4} <= 0)
+                            if RunConfig.getInstance().validateInput && (~NumericValidation.isFiniteNumericScalar(varargin{4}) || varargin{4} <= 0)
                                 error(['##### ERROR IN THE CLASS ' mfilename ': Invalid precision parameter.']);
                             end
                             priorPrec = varargin{4};
@@ -208,18 +208,18 @@ classdef Gaussian < handle
         end
 
         function isEqual = eq(obj1, obj2)
-            if ~Utility.isNaNOrInstanceOf(obj1, 'Gaussian') || ...
-                    ~Utility.isNaNOrInstanceOf(obj2, 'Gaussian')
+            if ~TypeValidation.isNaNOrInstanceOf(obj1, 'Gaussian') || ...
+                    ~TypeValidation.isNaNOrInstanceOf(obj2, 'Gaussian')
                 isEqual = false;
                 return;
             end
 
             % Both are NaN
-            if Utility.isNaN(obj1) && Utility.isNaN(obj2)
+            if NumericValidation.isNaN(obj1) && NumericValidation.isNaN(obj2)
                 isEqual = true;
                 return;
             % Only one is NaN
-            elseif xor(Utility.isNaN(obj1), Utility.isNaN(obj2))
+            elseif xor(NumericValidation.isNaN(obj1), NumericValidation.isNaN(obj2))
                 isEqual = false;
                 return;
             end

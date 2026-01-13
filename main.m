@@ -36,8 +36,8 @@ testResults = runtests('tests');
 
 
 %% 
-X1 = Utility.importCSV('datasets/mnist38/pixels.csv');
-X2 = Utility.importCSV('datasets/mnist38/continuousLabels.csv');
+X1 = readmatrix('datasets/mnist38/pixels.csv');
+X2 = readmatrix('datasets/mnist38/continuousLabels.csv');
 
 
 %%
