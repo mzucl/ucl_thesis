@@ -290,7 +290,7 @@ classdef BaseModel < handle
         %% Additional methods
         function obj = removeFactors(obj, it, threshold)
             if nargin < 3
-                threshold = Utility.getConfigValue('Model', 'LATENT_FACTORS_THRESHOLD');
+                threshold = ConfigUtils.getValue('Model', 'LATENT_FACTORS_THRESHOLD');
             end
             % Calculate the average of the square of elements for each row of Z
             avgSquare = mean(obj.Z.E.^2, 2);

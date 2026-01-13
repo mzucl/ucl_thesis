@@ -12,8 +12,8 @@ classdef BGFA < BaseModel
 
             % Set default values
             if nargin < 7, doRotation = false; end
-            if nargin < 6, tol = Utility.getConfigValue('Optimization', 'DEFAULT_TOL'); end
-            if nargin < 5, maxIter = Utility.getConfigValue('Optimization', 'DEFAULT_MAX_ITER'); end
+            if nargin < 6, tol = ConfigUtils.getValue('Optimization', 'DEFAULT_TOL'); end
+            if nargin < 5, maxIter = ConfigUtils.getValue('Optimization', 'DEFAULT_MAX_ITER'); end
             if nargin < 4, bound = 'B'; end
             
             obj = obj@BaseModel(data, K, maxIter, tol, doRotation);

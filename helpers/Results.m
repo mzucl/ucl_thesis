@@ -15,7 +15,7 @@ classdef Results < handle
     methods(Static, Access=private)
         function str = formatMeanAndStd(meanValue, stdValue, numOfDecimalSpaces)
             if nargin < 3
-                numOfDecimalSpaces = 4;% Utility.getConfigValue('Export', 'NUMBER_OF_DECIMAL_PLACES_MEAN_STD');
+                numOfDecimalSpaces = 4;% ConfigUtils.getValue('Export', 'NUMBER_OF_DECIMAL_PLACES_MEAN_STD');
             end
         
             formatSpec = sprintf('%%.%df ± %%.%df', numOfDecimalSpaces, numOfDecimalSpaces);

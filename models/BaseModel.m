@@ -132,7 +132,7 @@ classdef (Abstract) BaseModel < handle
         function obj = removeFactors_Z(obj, it, threshold)
             CustomError.validateNumberOfParameters(nargin, 2, 3);
             if nargin < 3
-                threshold = Utility.getConfigValue('Model', 'LATENT_FACTORS_THRESHOLD');
+                threshold = ConfigUtils.getValue('Model', 'LATENT_FACTORS_THRESHOLD');
             end
 
             % Calculate the average of the square of elements for each row of Z
@@ -168,7 +168,7 @@ classdef (Abstract) BaseModel < handle
         function removeFactors(obj, it, threshold)
             CustomError.validateNumberOfParameters(nargin, 2, 3);
             if nargin < 3
-                threshold = Utility.getConfigValue('Model', 'LATENT_FACTORS_THRESHOLD');
+                threshold = ConfigUtils.getValue('Model', 'LATENT_FACTORS_THRESHOLD');
             end
             
             W_all = cell(1, obj.M);

@@ -108,10 +108,10 @@ classdef Gaussian < handle
         function [dim, mu, cov, priorPrec] = initParameters(varargin)
 
             % Default values
-            dim = Utility.getConfigValue('Distribution', 'DEFAULT_GAUSS_DIM');
-            mu = Utility.getConfigValue('Distribution', 'DEFAULT_GAUSS_MU');
-            cov = 1/Utility.getConfigValue('Distribution', 'DEFAULT_GAUSS_PRECISION');
-            priorPrec = Utility.getConfigValue('Distribution', 'DEFAULT_GAUSS_PRECISION');
+            dim = ConfigUtils.getValue('Distribution', 'DEFAULT_GAUSS_DIM');
+            mu = ConfigUtils.getValue('Distribution', 'DEFAULT_GAUSS_MU');
+            cov = 1/ConfigUtils.getValue('Distribution', 'DEFAULT_GAUSS_PRECISION');
+            priorPrec = ConfigUtils.getValue('Distribution', 'DEFAULT_GAUSS_PRECISION');
 
             switch nargin
                 case 1 % dim

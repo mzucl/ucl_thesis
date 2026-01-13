@@ -43,8 +43,8 @@ classdef BPCA_mr < handle
             obj.K = obj.D - 1;
 
             % Set default values
-            if nargin < 4, tol = Utility.getConfigValue('Optimization', 'DEFAULT_TOL'); end
-            if nargin < 3, maxIter = Utility.getConfigValue('Optimization', 'DEFAULT_MAX_ITER'); end
+            if nargin < 4, tol = ConfigUtils.getValue('Optimization', 'DEFAULT_TOL'); end
+            if nargin < 3, maxIter = ConfigUtils.getValue('Optimization', 'DEFAULT_MAX_ITER'); end
             if nargin < 2, W_init = randn(obj.D, obj.K); end
 
             obj.maxIter = maxIter;
@@ -62,8 +62,8 @@ classdef BPCA_mr < handle
             
             %
             tauPrior = Gamma( ...
-                Utility.getConfigValue('Distribution', 'DEFAULT_GAMMA_A'), ...
-                Utility.getConfigValue('Distribution', 'DEFAULT_GAMMA_B'));
+                ConfigUtils.getValue('Distribution', 'DEFAULT_GAMMA_A'), ...
+                ConfigUtils.getValue('Distribution', 'DEFAULT_GAMMA_B'));
 
             obj.tau = Gamma(tauPrior);
 

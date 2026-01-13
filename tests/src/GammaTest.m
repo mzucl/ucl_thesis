@@ -115,13 +115,13 @@ classdef GammaTest < matlab.unittest.TestCase
         function testConstructor(testCase)
             % Test 1: Default constructor
             obj = Gamma();
-            GammaTest.verifyObject(testCase, obj, Utility.getConfigValue('Distribution', 'DEFAULT_GAMMA_A'), Utility.getConfigValue('Distribution', 'DEFAULT_GAMMA_B'));
+            GammaTest.verifyObject(testCase, obj, ConfigUtils.getValue('Distribution', 'DEFAULT_GAMMA_A'), ConfigUtils.getValue('Distribution', 'DEFAULT_GAMMA_B'));
 
             % Test 2: One parameter constructor - parameter is the prior
             truePrior = Gamma();
             obj = Gamma(truePrior);
-            GammaTest.verifyObject(testCase, obj, Utility.getConfigValue('Distribution', 'DEFAULT_GAMMA_A'), Utility.getConfigValue('Distribution', 'DEFAULT_GAMMA_B'), truePrior);
-            GammaTest.verifyObject(testCase, obj.getPrior, Utility.getConfigValue('Distribution', 'DEFAULT_GAMMA_A'), Utility.getConfigValue('Distribution', 'DEFAULT_GAMMA_B'), NaN);
+            GammaTest.verifyObject(testCase, obj, ConfigUtils.getValue('Distribution', 'DEFAULT_GAMMA_A'), ConfigUtils.getValue('Distribution', 'DEFAULT_GAMMA_B'), truePrior);
+            GammaTest.verifyObject(testCase, obj.getPrior, ConfigUtils.getValue('Distribution', 'DEFAULT_GAMMA_A'), ConfigUtils.getValue('Distribution', 'DEFAULT_GAMMA_B'), NaN);
           
             % Test 3: One parameter constructor - parameter is numeric,
             % thus value for a

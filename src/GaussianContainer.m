@@ -185,7 +185,7 @@ classdef GaussianContainer < handle
             obj.type = type;
             obj.cols = cols;
             obj.dim = dim;
-            obj.priorPrec = Utility.getConfigValue('Distribution', 'DEFAULT_GAUSS_PRECISION');
+            obj.priorPrec = ConfigUtils.getValue('Distribution', 'DEFAULT_GAUSS_PRECISION');
 
             % Preallocate + default values
             obj.mu = zeros(obj.dim, size_);

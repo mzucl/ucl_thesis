@@ -17,8 +17,8 @@ classdef SGFAGroup < BaseView
 
             %% Model setup and initialization
             tauPrior = Gamma( ...
-                Utility.getConfigValue('Distribution', 'DEFAULT_GAMMA_A'), ...
-                Utility.getConfigValue('Distribution', 'DEFAULT_GAMMA_B'));
+                ConfigUtils.getValue('Distribution', 'DEFAULT_GAMMA_A'), ...
+                ConfigUtils.getValue('Distribution', 'DEFAULT_GAMMA_B'));
 
             obj.tau = Gamma(tauPrior);
 

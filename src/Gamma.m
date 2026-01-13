@@ -113,8 +113,8 @@ classdef Gamma < handle
 
         % Default constructor: initializes with default values
         function obj = Gamma()
-            obj.a = Utility.getConfigValue('Distribution', 'DEFAULT_GAMMA_A');
-            obj.b = Utility.getConfigValue('Distribution', 'DEFAULT_GAMMA_B');
+            obj.a = ConfigUtils.getValue('Distribution', 'DEFAULT_GAMMA_A');
+            obj.b = ConfigUtils.getValue('Distribution', 'DEFAULT_GAMMA_B');
             obj.prior = NaN;
         end
 
@@ -128,8 +128,8 @@ classdef Gamma < handle
         %     %   obj = Gamma(a, b, prior)    % sets a, b, and prior
         %     %   obj = Gamma(priorGammaObj)  % copy constructor with prior
         % 
-        %     obj.a = Utility.getConfigValue('Distribution', 'DEFAULT_GAMMA_A');
-        %     obj.b = Utility.getConfigValue('Distribution', 'DEFAULT_GAMMA_B');
+        %     obj.a = ConfigUtils.getValue('Distribution', 'DEFAULT_GAMMA_A');
+        %     obj.b = ConfigUtils.getValue('Distribution', 'DEFAULT_GAMMA_B');
         %     obj.prior = NaN;
         % 
         %     switch nargin
@@ -286,8 +286,8 @@ classdef Gamma < handle
         %     %   obj = Gamma(a, b, prior)    % sets a, b, and prior
         %     %   obj = Gamma(priorGammaObj)  % copy constructor with prior
         % 
-        %     obj.a = Utility.getConfigValue('Distribution', 'DEFAULT_GAMMA_A');
-        %     obj.b = Utility.getConfigValue('Distribution', 'DEFAULT_GAMMA_B');
+        %     obj.a = ConfigUtils.getValue('Distribution', 'DEFAULT_GAMMA_A');
+        %     obj.b = ConfigUtils.getValue('Distribution', 'DEFAULT_GAMMA_B');
         %     obj.prior = NaN;
         % 
         %     switch nargin

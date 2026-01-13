@@ -34,8 +34,8 @@ classdef Experiment
             obj.numStabilityRuns = rc.numStabilityRuns;
             obj.elboRecalcInterval = rc.elboRecalcInterval;
 
-            obj.maxIter = Utility.getConfigValue('Optimization', 'DEFAULT_MAX_ITER');
-            obj.tol = Utility.getConfigValue('Optimization', 'DEFAULT_TOL');
+            obj.maxIter = ConfigUtils.getValue('Optimization', 'DEFAULT_MAX_ITER');
+            obj.tol = ConfigUtils.getValue('Optimization', 'DEFAULT_TOL');
             obj.doRotation = false;
 
             obj.logFileName = '';

@@ -14,85 +14,6 @@
 
 
 classdef Utility
-    methods (Static, Access = private)
-        function [constants, descriptions] = loadConstants(filename)
-            CustomError.validateNumberOfParameters(nargin, 1, 1);
-
-            % Assumption: filename (`config.txt`) is located in the project root (one level above helpers/)
-            thisFile = mfilename("fullpath");
-            rootDir  = fileparts(fileparts(thisFile));
-            filename = fullfile(rootDir, filename);
-                
-            lines = readlines(filename);
-            constants = struct();
-            descriptions = struct();
-            currentSection = '';
-        
-            for i = 1:length(lines)
-                line = strtrim(lines(i));
-        
-                % Skip empty lines and full-line comments
-                if line == "" || startsWith(line, "%")
-                    continue;
-                end
-        
-                % Detect section header
-                if startsWith(line, "[") && endsWith(line, "]")
-                    currentSection = extractBetween(line, "[", "]");
-                    currentSection = currentSection{1};
-                    constants.(currentSection) = struct();
-                    descriptions.(currentSection) = struct();
-                    continue;
-                end
-        
-                % Remove semicolon if present
-                if endsWith(line, ";")
-                    line = extractBefore(line, ";");
-                end
-        
-                % Handle key = value # comment
-                if contains(line, "=")
-                    kv = split(line, "=");
-                    key = strtrim(kv(1));
-                    rest = strtrim(kv(2));
-        
-                    % Split value and comment (on '#' or '%')
-                    valueStr = rest;
-                    commentSplit = regexp(rest, '[%]', 'split');
-                    if ~isempty(commentSplit)
-                        valueStr = strtrim(commentSplit{1});
-                    end
-        
-                    % `valueStr` is boolean
-                    if ismember(valueStr, {'true', 'false'})
-                        value = strcmp(valueStr, 'true');
-
-                    elseif contains(valueStr, '^')  % Check if the value has an exponent (e.g. '10^-14') 
-                            % Convert exponential string (e.g., '10^-14') to a number
-                        value = eval(valueStr);
-                    else
-                        value = str2double(valueStr);
-                        if isnan(value)
-                            value = valueStr; % fallback for string values
-                        end
-                    end
-        
-                    constants.(currentSection).(key) = value;
-        
-                    % Extract description if present
-                    descMatch = regexp(rest, '[%](.*)$', 'tokens');
-                    if ~isempty(descMatch)
-                        descriptions.(currentSection).(key) = strtrim(descMatch{1}{1});
-                    else
-                        descriptions.(currentSection).(key) = '';
-                    end
-                end
-            end
-        end
-    end
-
-
-
     methods (Static)
 
 
@@ -153,37 +74,7 @@ classdef Utility
             loss = -mean(yTrue .* log(yPred) + (1 - yTrue) .* log(1 - yPred));
         end
 
-        function val = getConfigValue(section, key, filename)
-            CustomError.validateNumberOfParameters(nargin, 2, 3);
-            
-            if nargin < 3
-                filename = 'config.txt';
-            end
-
-            persistent configVals
         
-            if isempty(configVals)
-                [configVals, ~] = Utility.loadConstants(filename);
-            end
-        
-            val = configVals.(section).(key);
-        end
-
-        function desc = getConfigDescription(section, key, filename)
-            CustomError.validateNumberOfParameters(nargin, 1, 3);
-
-            if nargin < 3
-                filename = 'config.txt';
-            end
-
-            persistent descriptions
-        
-            if isempty(descriptions)
-                [~, descriptions] = Utility.loadConstants(filename);
-            end
-        
-            desc = descriptions.(section).(key);
-        end
     end
 end
 

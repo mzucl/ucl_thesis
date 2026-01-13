@@ -144,17 +144,17 @@ classdef GammaContainer < handle
             obj.type = type;
 
             % Default values
-            obj.a = Utility.getConfigValue('Distribution', 'DEFAULT_GAMMA_A');
-            obj.b = Utility.getConfigValue('Distribution', 'DEFAULT_GAMMA_B'); % scalar
+            obj.a = ConfigUtils.getValue('Distribution', 'DEFAULT_GAMMA_A');
+            obj.b = ConfigUtils.getValue('Distribution', 'DEFAULT_GAMMA_B'); % scalar
             obj.prior = Gamma();
 
             switch nargin
                 case 2 % type, size
-                    obj.b = repmat(Utility.getConfigValue('Distribution', 'DEFAULT_GAMMA_B'), size_, 1);
+                    obj.b = repmat(ConfigUtils.getValue('Distribution', 'DEFAULT_GAMMA_B'), size_, 1);
 
                 case 3 % type, size, a
                     obj.a = a;
-                    obj.b = repmat(Utility.getConfigValue('Distribution', 'DEFAULT_GAMMA_B'), size_, 1);
+                    obj.b = repmat(ConfigUtils.getValue('Distribution', 'DEFAULT_GAMMA_B'), size_, 1);
                    
                 case {4, 5} % type, size, a, b
                     obj.a = a;

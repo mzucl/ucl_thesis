@@ -5,8 +5,8 @@ classdef SGFA < BaseModel
             
             % Set default values
             if nargin < 5, doRotation = false; end
-            if nargin < 4, tol = Utility.getConfigValue('Optimization', 'DEFAULT_TOL'); end
-            if nargin < 3, maxIter = Utility.getConfigValue('Optimization', 'DEFAULT_MAX_ITER'); end
+            if nargin < 4, tol = ConfigUtils.getValue('Optimization', 'DEFAULT_TOL'); end
+            if nargin < 3, maxIter = ConfigUtils.getValue('Optimization', 'DEFAULT_MAX_ITER'); end
 
             obj = obj@BaseModel(data, K, maxIter, tol, doRotation);
 

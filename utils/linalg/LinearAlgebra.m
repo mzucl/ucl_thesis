@@ -73,7 +73,7 @@ classdef LinearAlgebra
                 % Fallback for positive semi-definite matrices
                 warning('Matrix is not positive definite. Falling back to SVD.');
                 s = svd(A);
-                tol = Utility.getConfigValue('General', 'TOL'); % avoid log(0)
+                tol = ConfigUtils.getValue('General', 'TOL'); % avoid log(0)
                 s = s(s > tol);
                 logDetA = sum(log(s));
             end

@@ -89,7 +89,7 @@ classdef Visualization
                       'PaperUnits', 'centimeters', ...
                       'PaperSize', [pos(3), pos(4)]);
 
-            folderName = Utility.getConfigValue('Export', 'FIGURES_FOLDER');
+            folderName = ConfigUtils.getValue('Export', 'FIGURES_FOLDER');
 
             % If subfolder name is specified
             if isSubfolderSpecified
@@ -108,7 +108,7 @@ classdef Visualization
             exportgraphics(hfig, filePath, 'Resolution', 300);
 
             % Export to PDF
-            if Utility.getConfigValue('Export', 'EXPORT_TO_PDF')
+            if ConfigUtils.getValue('Export', 'EXPORT_TO_PDF')
                 figNamePDF = [figName, '.pdf'];
                 filePath = fullfile(folderName, figNamePDF);
                 set(gcf, 'PaperPositionMode', 'auto');
@@ -161,7 +161,7 @@ classdef Visualization
             axis(ax, 'equal'); % Set the same length in every direction
             
             if backgroundColor
-                set(ax, 'Color', Visualization.hexToRGB(Utility.getConfigValue('Colors', 'BLUE')));
+                set(ax, 'Color', Visualization.hexToRGB(ConfigUtils.getValue('Colors', 'BLUE')));
             end
 
             maxWeight = max(abs(matrix(:)));
@@ -237,7 +237,7 @@ classdef Visualization
             for k = 1:length(dimList) - 1 % Don't plot vertical line for the last view!
                 linePos = linePos + dimList(k);
                 labelText = ['$D_{', num2str(k), '}$'];
-                xline(linePos, 'Color', Utility.getConfigValue('Colors', 'DARK_BLUE'), 'LineWidth', 2, ...
+                xline(linePos, 'Color', ConfigUtils.getValue('Colors', 'DARK_BLUE'), 'LineWidth', 2, ...
                     'Label', labelText, 'LabelVerticalAlignment', labelPos, ...
                     'LabelHorizontalAlignment', 'left', 'Interpreter', 'latex');
             end

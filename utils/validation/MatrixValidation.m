@@ -52,7 +52,7 @@ classdef MatrixValidation
             arguments
                 matrix
             end
-            tol = Utility.getConfigValue('General', 'TOL');
+            tol = ConfigUtils.getValue('General', 'TOL');
             res = MatrixValidation.isSquareMatrix(matrix) && ...
                   norm(matrix - matrix', 'fro') < tol;
         end
@@ -67,7 +67,7 @@ classdef MatrixValidation
                 return;
             end
             % Condition number check
-            condThreshold = Utility.getConfigValue('General', 'COND_THRESHOLD');
+            condThreshold = ConfigUtils.getValue('General', 'COND_THRESHOLD');
             res = cond(matrix) > condThreshold;
         end
 
@@ -81,7 +81,7 @@ classdef MatrixValidation
                 return;
             end
             
-            tol = Utility.getConfigValue('General', 'TOL');
+            tol = ConfigUtils.getValue('General', 'TOL');
             
             % Orthogonality check: R' * R should be close to the identity matrix
             shouldBeIdentity = matrix' * matrix;

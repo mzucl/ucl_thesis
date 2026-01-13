@@ -6,8 +6,8 @@ classdef GammaContainerTest < matlab.unittest.TestCase
 
             testCase.verifyEqual(obj.Size, 1);
 
-            testCase.verifyEqual(obj.a, Utility.getConfigValue('Distribution', 'DEFAULT_GAMMA_A'));
-            testCase.verifyEqual(obj.b, Utility.getConfigValue('Distribution', 'DEFAULT_GAMMA_B'));
+            testCase.verifyEqual(obj.a, ConfigUtils.getValue('Distribution', 'DEFAULT_GAMMA_A'));
+            testCase.verifyEqual(obj.b, ConfigUtils.getValue('Distribution', 'DEFAULT_GAMMA_B'));
             testCase.verifyTrue(obj.prior == Gamma());
         end
 
@@ -17,8 +17,8 @@ classdef GammaContainerTest < matlab.unittest.TestCase
 
             testCase.verifyEqual(obj.Size, size);
 
-            testCase.verifyEqual(obj.a, Utility.getConfigValue('Distribution', 'DEFAULT_GAMMA_A'));
-            testCase.verifyEqual(obj.b, repmat(Utility.getConfigValue('Distribution', 'DEFAULT_GAMMA_B'), size, 1));
+            testCase.verifyEqual(obj.a, ConfigUtils.getValue('Distribution', 'DEFAULT_GAMMA_A'));
+            testCase.verifyEqual(obj.b, repmat(ConfigUtils.getValue('Distribution', 'DEFAULT_GAMMA_B'), size, 1));
             testCase.verifyTrue(obj.prior == Gamma());
         end
 
@@ -30,7 +30,7 @@ classdef GammaContainerTest < matlab.unittest.TestCase
             testCase.verifyEqual(obj.Size, size);
 
             testCase.verifyEqual(obj.a, a);
-            testCase.verifyEqual(obj.b, repmat(Utility.getConfigValue('Distribution', 'DEFAULT_GAMMA_B'), size, 1));
+            testCase.verifyEqual(obj.b, repmat(ConfigUtils.getValue('Distribution', 'DEFAULT_GAMMA_B'), size, 1));
             testCase.verifyTrue(obj.prior == Gamma());
         end
 
