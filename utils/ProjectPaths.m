@@ -1,5 +1,7 @@
 classdef ProjectPaths
     % PROJECTPATHS Centralized project path management
+    % Notes:
+    %   - Assumes config file (`config.txt`) is located in the project root
 
     methods (Static)
         function root = projectRoot()
