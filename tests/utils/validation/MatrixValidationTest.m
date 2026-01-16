@@ -1,51 +1,35 @@
 classdef MatrixValidationTest < matlab.unittest.TestCase
     % MATRIXVALIDATIONTEST Unit tests for MatrixValidation helper methods
     %
-    % Tests for:
-    %   - NumericValidation.isNumericVector
-    %   - (other methods can be added here in the future)
-    %
     % Example usage:
     %   runtests('MatrixValidationTest')
-    %   runtests('MatrixValidationTest', 'Tag', 'isNumericVector')
     methods(Test, TestTags = {'isNumericVector'})
-        function testRowVector(testCase)
-            x = [1, 2, 3];
+        function test_isNumericVector(testCase)
+            x = [1, 2, 3];             % row vector
             testCase.verifyTrue(MatrixValidation.isNumericVector(x));
-        end
-
-        function testColumnVector(testCase)
-            x = [1; 2; 3];
+                
+            x = [1; 2; 3];             % column vector
             testCase.verifyTrue(MatrixValidation.isNumericVector(x));
-        end
 
-        function testScalar(testCase)
-            x = 5;
+            x = ['a', 'b', 'c'];       % char row vector
             testCase.verifyFalse(MatrixValidation.isNumericVector(x));
-        end
 
-        function test2DMatrix(testCase)
-            x = [1, 2; 3, 4];
+            x = 5;                     % scalar
             testCase.verifyFalse(MatrixValidation.isNumericVector(x));
-        end
-
-        function test3DTensor(testCase)
-            x = rand(2,3,4);
+        
+            x = [1, 2; 3, 4];          % 2D matrix
             testCase.verifyFalse(MatrixValidation.isNumericVector(x));
-        end
 
-        function testCharRowVector(testCase)
-            x = ['a','b','c'];
+            x = rand(2, 3, 4);         % 3D tensor
             testCase.verifyFalse(MatrixValidation.isNumericVector(x));
-        end
 
-        function testCellColumnVector(testCase)
-            x = {1;2;3};
+            x = {1; 2; 3};             % cell column vector
             testCase.verifyFalse(MatrixValidation.isNumericVector(x));
-        end
 
-        function testEmptyVector(testCase)
-            x = [];
+            x = {1, 2, 3};             % cell row vector
+            testCase.verifyFalse(MatrixValidation.isNumericVector(x));
+
+            x = [];                    % empty vector
             testCase.verifyFalse(MatrixValidation.isNumericVector(x));
         end
     end
