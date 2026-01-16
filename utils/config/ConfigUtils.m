@@ -6,17 +6,16 @@ classdef ConfigUtils
     %   - Retrieve specific values or descriptions
     %
     % Notes:
-    %   - Assumes config file (`config.txt` by default) is located in the project root
-    %     project root
+    %   - Assumes config file (`config.txt`) is located in the project root
     %   - Caches loaded constants/descriptions in persistent variables.
 
     methods (Static, Access = private)
         %% Load constants and descriptions from file
-        function [constants, descriptions] = loadConstants(filename)
-            CustomError.validateNumberOfParameters(nargin, 1, 1);
+        function [constants, descriptions] = loadConstants()
+            % CustomError.validateNumberOfParameters(nargin, 0, 0);
 
             % Use current working directory as project root
-            filename = fullfile(pwd, filename);
+            filename = ProjectPaths.configFile();
                 
             lines = readlines(filename);
             constants = struct();
@@ -86,34 +85,32 @@ classdef ConfigUtils
 
     methods (Static)
         %% Get config value by section and key
-        function val = getValue(section, key, filename)
+        function val = getValue(section, key)
             arguments
                 section (1,1) string
                 key (1,1) string
-                filename (1,1) string = "config.txt"
             end
 
             persistent configVals
 
             if isempty(configVals)
-                [configVals, ~] = ConfigUtils.loadConstants(filename);
+                [configVals, ~] = ConfigUtils.loadConstants();
             end
 
             val = configVals.(section).(key);
         end
 
         %% Get description of a config entry
-        function desc = getDescription(section, key, filename)
+        function desc = getDescription(section, key)
             arguments
                 section (1,1) string
                 key (1,1) string
-                filename (1,1) string = "config.txt"
             end
 
             persistent descriptions
 
             if isempty(descriptions)
-                [~, descriptions] = ConfigUtils.loadConstants(filename);
+                [~, descriptions] = ConfigUtils.loadConstants();
             end
 
             desc = descriptions.(section).(key);

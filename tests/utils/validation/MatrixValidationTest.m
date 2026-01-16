@@ -3,7 +3,8 @@ classdef MatrixValidationTest < matlab.unittest.TestCase
     %
     % Example usage:
     %   runtests('MatrixValidationTest')
-    methods(Test, TestTags = {'isNumericVector'})
+    
+    methods(Test)
         function test_isNumericVector(testCase)
             x = [1, 2, 3];             % row vector
             testCase.verifyTrue(MatrixValidation.isNumericVector(x));
