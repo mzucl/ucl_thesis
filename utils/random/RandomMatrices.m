@@ -54,6 +54,20 @@ classdef RandomMatrices
             matrix = R' * R;
         end
 
+        %% Diagonal matrix
+        function matrix = diagonalMatrix(n, minVal, maxVal)
+            % DIAGONALMATRIX Generate n-by-n random diagonal matrix
+            arguments
+                n      (1,1) {mustBeInteger, mustBePositive}
+                minVal (1,1) double = 0
+                maxVal (1,1) double = 1
+            end
+        
+            diagVals = minVal + (maxVal - minVal) * rand(n, 1);
+            matrix   = diag(diagVals);
+        end
+
+
         %% Random rotation matrix
         function R = rotationMatrix(n)
             % ROTATIONMATRIX Generate a random n-by-n rotation matrix (det = 1)

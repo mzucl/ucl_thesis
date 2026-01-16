@@ -21,10 +21,10 @@ classdef LinearAlgebra
             % [NOTE] Validation is performed here instead of outside loops
             if RunConfig.getInstance().validateInput
                 if MatrixValidation.isSingularMatrix(matrix)
-                    CustomError.raiseError(CustomError.ERR_TYPE_INPUT_VALIDATION, ...
+                    CustomError.raiseError(CustomError.ERR_TYPE_ARG_VALIDATION, ...
                         CustomError.ERR_NON_SINGULAR_ARG);
                 elseif ~MatrixValidation.isSymmetricMatrix(matrix)
-                    CustomError.raiseError(CustomError.ERR_TYPE_INPUT_VALIDATION, ...
+                    CustomError.raiseError(CustomError.ERR_TYPE_ARG_VALIDATION, ...
                         CustomError.ERR_NON_SYMMETRIC_ARG);
                 end
             end
@@ -34,7 +34,7 @@ classdef LinearAlgebra
                 L = chol(matrix, 'lower');
             catch e
                 if strcmp(e.identifier, 'MATLAB:posdef')
-                    CustomError.raiseError(CustomError.ERR_TYPE_INPUT_VALIDATION, ...
+                    CustomError.raiseError(CustomError.ERR_TYPE_ARG_VALIDATION, ...
                         CustomError.ERR_NON_PD_ARG);
                 else
                     rethrow(e);
@@ -52,7 +52,7 @@ classdef LinearAlgebra
                 matrix
             end
             if RunConfig.getInstance().validateInput && MatrixValidation.isSingularMatrix(matrix)
-                CustomError.raiseError(CustomError.ERR_TYPE_INPUT_VALIDATION, ...
+                CustomError.raiseError(CustomError.ERR_TYPE_ARG_VALIDATION, ...
                         CustomError.ERR_NON_SINGULAR_ARG);
             end
 

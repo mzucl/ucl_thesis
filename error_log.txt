@@ -79,3 +79,4 @@
 ##### ERROR [InputCheck] 2025-06-06 18:35:33 in CustomError > validateNumberOfParameters: Not enough input arguments provided.
 ##### ERROR [InputCheck] 2025-09-07 14:22:29 in CustomError > validateNumberOfParameters: Not enough input arguments provided.
 ##### ERROR [InputCheck] 2025-09-07 14:28:09 in CustomError > validateNumberOfParameters: Not enough input arguments provided.
+##### ERROR [ValidateInput] 2026-01-16 17:48:31 LinearAlgebra > inverseCholesky: Input argument must be a symmetric matrix.
